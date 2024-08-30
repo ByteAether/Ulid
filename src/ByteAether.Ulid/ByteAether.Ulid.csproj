@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFrameworks>net8.0;net7.0;net6.0;netstandard2.1</TargetFrameworks>
+	<LangVersion>Latest</LangVersion>
+	<OutputType>Library</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	  
+	<GenerateDocumentationFile>True</GenerateDocumentationFile>
+	<IncludeSymbols>True</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	  
+	<Title>Ulid</Title>
+	<Authors>Joonatan Uusväli</Authors>
+	<Company>ByteAether</Company>
+	<Description>A .NET library for generating and working with Universally Unique Lexicographically Sortable Identifiers (ULIDs). ULIDs are designed to be globally unique, sortable, and human-readable, making them ideal for use in distributed systems and databases.</Description>
+	<PackageProjectUrl>https://github.com/ByteAether/Ulid</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/ByteAether/Ulid.git</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	
+	<PackageId>ByteAether.Ulid</PackageId>
+	<PackageTags>ulid;unique identifier;lexicographically sortable;globally unique;distributed systems;database;guid;uuid;sortable;human-readable</PackageTags>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+	<PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

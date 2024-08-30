@@ -1,0 +1,35 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: 'Get Version'
+      id: version
+      uses: battila7/get-version-action@v2
+
+    - name: Pack
+      run: dotnet pack --configuration Release /p:PackageVersion=${{ steps.version.outputs.version-without-v }} /p:PackageReleaseNotes="See https://github.com/ByteAether/Ulid/releases/tag/${{ github.event.release.tag_name }}" --output ./output src/ByteAether.Ulid/ByteAether.Ulid.csproj
+
+    - name: Upload NuGet package as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package
+        path: ./output/*.nupkg
+
+    - name: Publish to NuGet
+      run: dotnet nuget push ./output/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
