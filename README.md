@@ -1,8 +1,8 @@
 # ULID
 *from **ByteAether***
 
-![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ByteAether/Ulid/build-and-test.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid)](https://www.nuget.org/packages/ByteAether.Ulid/)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ByteAether/Ulid/build-and-test.yml)](https://github.com/ByteAether/Ulid/actions/workflows/build-and-test.yml)
 
 A .NET implementation of ULIDs (Universally Unique Lexicographically Sortable Identifiers) that is fully compatible with the [official ULID specification](https://github.com/ulid/spec).
 
