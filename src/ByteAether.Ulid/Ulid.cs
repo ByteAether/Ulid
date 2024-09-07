@@ -1,11 +1,11 @@
 ﻿using System.Buffers.Binary;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-using System.ComponentModel;
 #if NETCOREAPP3_0_OR_GREATER
 using System.Text.Json.Serialization;
 using System.Runtime.Intrinsics.X86;
@@ -16,9 +16,11 @@ using System.Runtime.Intrinsics;
 
 namespace ByteAether.Ulid;
 
+#if NET8_0_OR_GREATER
 // We need to target netstandard2.1, so keep using ref for MemoryMarshal.Write
 // CS9191: The 'ref' modifier for argument 2 corresponding to 'in' parameter is equivalent to 'in'. Consider using 'in' instead.
 #pragma warning disable CS9191
+#endif
 
 /// <summary>
 /// Represents a Universally Unique Lexicographically Sortable Identifier (ULID).
@@ -102,16 +104,20 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 	/// </summary>
 	/// <param name="bytes">The byte array to initialize the ULID with.</param>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Ulid New(ReadOnlySpan<byte> bytes) => new(bytes);
+	public static Ulid New(ReadOnlySpan<byte> bytes) => MemoryMarshal.Read<Ulid>(bytes);
+
 
 	/// <summary>
 	/// Creates a new ULID using the specified GUID.
 	/// </summary>
 	/// <param name="guid">The GUID to initialize the ULID with.</param>
+	// HACK: We assume the layout of a Guid is the following:
+	// Int32, Int16, Int16, Int8, Int8, Int8, Int8, Int8, Int8, Int8, Int8
+	// source: https://github.com/dotnet/runtime/blob/5c4686f831d34c2c127e943d0f0d144793eeb0ad/src/libraries/System.Private.CoreLib/src/System/Guid.cs
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
-	public static unsafe Ulid New(Guid guid)
+	public static Ulid New(Guid guid)
 	{
 #if NET6_0_OR_GREATER
 		if (_isVector128Supported && BitConverter.IsLittleEndian)
@@ -182,14 +188,39 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 		Span<byte> timestampBytes = stackalloc byte[8];
 		BinaryPrimitives.WriteInt64BigEndian(timestampBytes, timestamp);
 
-		return New(timestampBytes, isMonotonic);
+		return Create(timestampBytes, isMonotonic);
 	}
 
-	private static Ulid New(Span<byte> timestampBytes, bool isMonotonic = true)
+	/// <summary>
+	/// Creates a copy of the existing ULID.
+	/// </summary>
+	/// <returns>A new instance of <see cref="Ulid"/> that is a copy of the current instance.</returns>
+#if NET5_0_OR_GREATER
+	[SkipLocalsInit]
+#endif
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly Ulid Copy()
 	{
+		Span<byte> bytes = stackalloc byte[_ulidByteLength];
+
+		Unsafe.WriteUnaligned(ref bytes[0], this);
+
+		return New(bytes);
+	}
+
+#if NET5_0_OR_GREATER
+	[SkipLocalsInit]
+#endif
+	private static Ulid Create(Span<byte> timestampBytes, bool isMonotonic = true)
+	{
+		// We need a new copy to be returned, as our private _lastUlid changes over time
+		Span<byte> bytes = stackalloc byte[_ulidByteLength];
+
 		if (!isMonotonic)
 		{
-			return NewNonMonotonic(timestampBytes);
+			timestampBytes[2..].CopyTo(bytes);
+			RandomNumberGenerator.Fill(bytes[6..]);
+			return New(bytes);
 		}
 
 		lock (_lastUlid)
@@ -214,29 +245,10 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 				RandomNumberGenerator.Fill(lastUlidSpan[6..]);
 			}
 
-			return new Ulid(_lastUlid);
+			_lastUlid.CopyTo(bytes);
+
+			return New(bytes);
 		}
-	}
-
-	private unsafe Ulid(ReadOnlySpan<byte> bytes)
-	{
-		fixed (byte* ptr = _bytes)
-		{
-			bytes.CopyTo(new Span<byte>(ptr, _ulidByteLength));
-		}
-	}
-
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static Ulid NewNonMonotonic(Span<byte> timestampBytes)
-	{
-		Span<byte> bytes = stackalloc byte[_ulidByteLength];
-		timestampBytes[2..].CopyTo(bytes);
-		RandomNumberGenerator.Fill(bytes[6..]);
-
-		return new Ulid(bytes);
 	}
 	#endregion
 
@@ -303,10 +315,18 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 
 	/// <inheritdoc/>
 	public readonly string ToString(string? format = null, IFormatProvider? formatProvider = null)
-		=> string.Create(_ulidStringLength, this, delegate (Span<char> span, Ulid state)
+	{
+#if NETCOREAPP2_1_OR_GREATER
+		return string.Create(_ulidStringLength, this, (span, ulid) => ulid.WriteChars(span));
+#else
+		Span<char> span = stackalloc char[_ulidStringLength];
+		WriteChars(span);
+		unsafe
 		{
-			state.WriteChars(span);
-		});
+			return new string((char*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), 0, _ulidStringLength);
+		}
+#endif
+	}
 
 	/// <summary>
 	/// Explicitly converts a ULID to a GUID.
@@ -359,7 +379,7 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 		data[13] = (byte)((_inverseBase32[(uint)chars[21]] << 4) | (_inverseBase32[(uint)chars[22]] >> 1));                         // [11111111][11111111][11111111][11111111][11111111][11111111][1111111|1][1111|1111][1|1111111][11111111]
 		data[14] = (byte)((_inverseBase32[(uint)chars[22]] << 7) | (_inverseBase32[(uint)chars[23]] << 2) | (_inverseBase32[(uint)chars[24]] >> 3)); // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][1111|1111][1|11111|11][111|11111]
 
-		return new Ulid(data);
+		return MemoryMarshal.Read<Ulid>(data);
 	}
 
 	/// <inheritdoc/>
@@ -417,7 +437,7 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 	#region Comparisons
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public readonly unsafe bool Equals(Ulid other)
+	public readonly bool Equals(Ulid other)
 	{
 #if NET7_0_OR_GREATER
 		if (Vector128.IsHardwareAccelerated)
@@ -445,18 +465,7 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public override readonly bool Equals(object? obj) => obj is Ulid ulid && Equals(ulid);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public readonly unsafe int CompareTo(Ulid other)
-	{
-		fixed (byte* ptr = _bytes)
-		{
-			return new ReadOnlySpan<byte>(ptr, _ulidByteLength)
-				.SequenceCompareTo(new ReadOnlySpan<byte>(other._bytes, _ulidByteLength));
-		}
-	}
+	public override readonly bool Equals([NotNullWhen(true)] object? obj) => obj is Ulid ulid && Equals(ulid);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -473,6 +482,36 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 
 		return CompareTo((Ulid)obj);
 	}
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly unsafe int CompareTo(Ulid other)
+	{
+		fixed (byte* ptr = _bytes)
+		{
+			return
+				_bytes[0] != other._bytes[0] ? GetResult(_bytes[0], other._bytes[0])
+				: _bytes[1] != other._bytes[1] ? GetResult(_bytes[1], other._bytes[1])
+				: _bytes[2] != other._bytes[2] ? GetResult(_bytes[2], other._bytes[2])
+				: _bytes[3] != other._bytes[3] ? GetResult(_bytes[3], other._bytes[3])
+				: _bytes[4] != other._bytes[4] ? GetResult(_bytes[4], other._bytes[4])
+				: _bytes[5] != other._bytes[5] ? GetResult(_bytes[5], other._bytes[5])
+				: _bytes[6] != other._bytes[6] ? GetResult(_bytes[6], other._bytes[6])
+				: _bytes[7] != other._bytes[7] ? GetResult(_bytes[7], other._bytes[7])
+				: _bytes[8] != other._bytes[8] ? GetResult(_bytes[8], other._bytes[8])
+				: _bytes[9] != other._bytes[9] ? GetResult(_bytes[9], other._bytes[9])
+				: _bytes[10] != other._bytes[10] ? GetResult(_bytes[10], other._bytes[10])
+				: _bytes[11] != other._bytes[11] ? GetResult(_bytes[11], other._bytes[11])
+				: _bytes[12] != other._bytes[12] ? GetResult(_bytes[12], other._bytes[12])
+				: _bytes[13] != other._bytes[13] ? GetResult(_bytes[13], other._bytes[13])
+				: _bytes[14] != other._bytes[14] ? GetResult(_bytes[14], other._bytes[14])
+				: _bytes[15] != other._bytes[15] ? GetResult(_bytes[15], other._bytes[15])
+				: 0;
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static int GetResult(byte left, byte right) => left < right ? -1 : 1;
 
 	/// <summary>
 	/// Determines whether two specified ULIDs have the same value.
@@ -530,7 +569,7 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public override readonly unsafe int GetHashCode()
+	public override readonly int GetHashCode()
 	{
 		// 128bit = 4x 32bit int
 		ref var rA = ref Unsafe.As<Ulid, int>(ref Unsafe.AsRef(in this));
@@ -637,18 +676,12 @@ public struct Ulid : IComparable, IComparable<Ulid>, IEquatable<Ulid>
 		Debug.Assert(BitConverter.IsLittleEndian);
 		Debug.Assert(_isVector128Supported);
 
+		return
 #if NET7_0_OR_GREATER
-		if (Vector128.IsHardwareAccelerated)
-		{
-			return Vector128.Shuffle(value, mask);
-		}
+			Vector128.IsHardwareAccelerated ? Vector128.Shuffle(value, mask) :
 #endif
-		if (Ssse3.IsSupported)
-		{
-			return Ssse3.Shuffle(value, mask);
-		}
-
-		throw new NotImplementedException();
+			Ssse3.IsSupported ? Ssse3.Shuffle(value, mask) :
+			throw new NotImplementedException();
 	}
 #endif
 

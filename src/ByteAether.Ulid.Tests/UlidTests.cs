@@ -61,4 +61,13 @@ public class UlidTests
 		Assert.Equal(26, ulidString.Length);
 		Assert.Equal(ulid, ulid2);
 	}
+
+	[Fact]
+	public void Copy_AreEqual()
+	{
+		var ulid = Ulid.New();
+		var ulid2 = ulid.Copy();
+
+		Assert.Equal(ulid, ulid2);
+	}
 }

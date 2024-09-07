@@ -12,6 +12,8 @@ BenchmarkRunner.Run(
 		.WithOptions(ConfigOptions.DisableLogFile)
 );
 
+#pragma warning disable CA1822 // Benchmark methods can not be static
+
 [MemoryDiagnoser]
 public class Generate
 {
