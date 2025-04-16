@@ -9,6 +9,19 @@ namespace ByteAether.Ulid;
 
 public readonly partial struct Ulid
 {
+	/// <summary>
+	/// Whether <see cref="Ulid"/>s should be generated in a monotonic manner by default.<br />
+	/// Initial value is set to <c>true</c>.<br/>
+	/// <b>This setting applies globally without any scoping.</b>
+	/// </summary>
+	/// <remarks>
+	/// When set to <c>true</c> (default), <see cref="Ulid"/>s generated without explicitly specifying monotonicity
+	/// will ensure that they are monotonically increasing.<br />
+	/// When set to <c>false</c>, <see cref="Ulid"/>s generated without explicitly specifying monotonicity will be
+	/// generated with random <see cref="Random" /> value.
+	/// </remarks>
+	public static bool DefaultIsMonotonic { get; set; } = true;
+
 	private static readonly byte[] _lastUlid = new byte[_ulidSize];
 	private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
 
@@ -19,56 +32,69 @@ public readonly partial struct Ulid
 #endif
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="ByteAether.Ulid"/> struct using the specified byte array.
+	/// Initializes a new instance of the <see cref="Ulid"/> struct using the specified byte array.
 	/// </summary>
-	/// <param name="bytes">The byte array to initialize the ULID with.</param>
+	/// <param name="bytes">The byte array to initialize the <see cref="Ulid"/> with.</param>
+	/// <returns>Given bytes as an <see cref="Ulid"/> instance.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Ulid New(ReadOnlySpan<byte> bytes)
 		=> MemoryMarshal.Read<Ulid>(bytes);
 
 	/// <summary>
-	/// Creates a new ULID with the current timestamp.
+	/// Creates a new <see cref="Ulid"/> with the current timestamp.
 	/// </summary>
-	/// <param name="isMonotonic">If true, ensures the ULID is monotonically increasing.</param>
-	/// <returns>A new ULID instance.</returns>
+	/// <param name="isMonotonic">
+	/// If <c>null</c> (default), the value of <see cref="DefaultIsMonotonic"/> is used to determine monotonicity.<br />
+	/// If <c>true</c>, ensures the <see cref="Ulid"/> is monotonically increasing.<br />
+	/// If <c>false</c>, generates a random <see cref="Random" /> part in <see cref="Ulid"/>.
+	/// </param>
+	/// <returns>A new <see cref="Ulid"/> instance.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Ulid New(bool isMonotonic = true)
+	public static Ulid New(bool? isMonotonic = null)
 		=> New(DateTimeOffset.UtcNow, isMonotonic);
 
 	/// <summary>
-	/// Creates a new ULID with the specified timestamp.
+	/// Creates a new <see cref="Ulid"/> with the specified timestamp.
 	/// </summary>
-	/// <param name="dateTimeOffset">The timestamp to use for the ULID.</param>
-	/// <param name="isMonotonic">If true, ensures the ULID is monotonically increasing.</param>
-	/// <returns>A new ULID instance.</returns>
+	/// <param name="dateTimeOffset">The timestamp to use for the <see cref="Ulid"/>.</param>
+	/// <param name="isMonotonic">
+	/// If <c>null</c> (default), the value of <see cref="DefaultIsMonotonic"/> is used to determine monotonicity.<br />
+	/// If <c>true</c>, ensures the <see cref="Ulid"/> is monotonically increasing.<br />
+	/// If <c>false</c>, generates a random <see cref="Random" /> part in <see cref="Ulid"/>.
+	/// </param>
+	/// <returns>A new <see cref="Ulid"/> instance.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Ulid New(DateTimeOffset dateTimeOffset, bool isMonotonic = true)
+	public static Ulid New(DateTimeOffset dateTimeOffset, bool? isMonotonic = null)
 		=> New(dateTimeOffset.ToUnixTimeMilliseconds(), isMonotonic);
 
 	/// <summary>
-	/// Creates a new ULID with the specified timestamp.
+	/// Creates a new <see cref="Ulid"/> with the specified timestamp.
 	/// </summary>
-	/// <param name="dateTimeOffset">The timestamp to use for the ULID.</param>
+	/// <param name="dateTimeOffset">The timestamp to use for the <see cref="Ulid"/>.</param>
 	/// <param name="random" >
-	/// A span containing the random component of the ULID. 
-	/// It must be at least 10 bytes long, as the last 10 bytes of the ULID are derived from this span.
+	/// A span containing the random component of the <see cref="Ulid"/>. 
+	/// It must be at least 10 bytes long, as the last 10 bytes of the <see cref="Ulid"/> are derived from this span.
 	/// </param>
-	/// <returns>A new ULID instance.</returns>
+	/// <returns>A new <see cref="Ulid"/> instance.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Ulid New(DateTimeOffset dateTimeOffset, Span<byte> random)
 		=> New(dateTimeOffset.ToUnixTimeMilliseconds(), random);
 
 	/// <summary>
-	/// Creates a new ULID with the specified timestamp in milliseconds.
+	/// Creates a new <see cref="Ulid"/> with the specified timestamp in milliseconds.
 	/// </summary>
-	/// <param name="timestamp">The timestamp in milliseconds to use for the ULID.</param>
-	/// <param name="isMonotonic">If true, ensures the ULID is monotonically increasing.</param>
-	/// <returns>A new ULID instance.</returns>
+	/// <param name="timestamp">The timestamp in milliseconds to use for the <see cref="Ulid"/>.</param>
+	/// <param name="isMonotonic">
+	/// If <c>null</c> (default), the value of <see cref="DefaultIsMonotonic"/> is used to determine monotonicity.<br />
+	/// If <c>true</c>, ensures the <see cref="Ulid"/> is monotonically increasing.<br />
+	/// If <c>false</c>, generates a random <see cref="Random" /> part in <see cref="Ulid"/>.
+	/// </param>
+	/// <returns>A new <see cref="Ulid"/> instance.</returns>
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Ulid New(long timestamp, bool isMonotonic = true)
+	public static Ulid New(long timestamp, bool? isMonotonic = null)
 	{
 		Ulid ulid = default;
 
@@ -77,7 +103,7 @@ public readonly partial struct Ulid
 			var ulidBytes = new Span<byte>(Unsafe.AsPointer(ref Unsafe.AsRef(in ulid)), _ulidSize);
 
 			FillTime(ulidBytes, timestamp);
-			FillRandom(ulidBytes, isMonotonic);
+			FillRandom(ulidBytes, isMonotonic ?? DefaultIsMonotonic);
 		}
 
 		return ulid;
@@ -88,11 +114,11 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="timestamp">
 	/// A 64-bit integer representing the timestamp in milliseconds since the Unix epoch (1970-01-01T00:00:00Z).
-	/// This value will be encoded into the first 6 bytes of the ULID.
+	/// This value will be encoded into the first 6 bytes of the <see cref="Ulid"/>.
 	/// </param>
 	/// <param name="random">
-	/// A span containing the random component of the ULID. 
-	/// It must be at least 10 bytes long, as the last 10 bytes of the ULID are derived from this span.
+	/// A span containing the random component of the <see cref="Ulid"/>. 
+	/// It must be at least 10 bytes long, as the last 10 bytes of the <see cref="Ulid"/> are derived from this span.
 	/// </param>
 	/// <returns>
 	/// A new <see cref="Ulid"/> instance composed of the given timestamp and random byte sequence.

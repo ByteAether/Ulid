@@ -24,8 +24,8 @@ public class UlidComparableTests
 	public void CompareTo_CompareToNewerUlid_ShouldReturnNegative()
 	{
 		// Arrange
-		var ulid1 = Ulid.New();
-		var ulid2 = Ulid.New();
+		var ulid1 = Ulid.New(true);
+		var ulid2 = Ulid.New(true);
 
 		// Act
 		var comparisonResult = ulid1.CompareTo(ulid2);
@@ -42,8 +42,8 @@ public class UlidComparableTests
 	public void CompareTo_CompareToOlderUlid_ShouldReturnPositive()
 	{
 		// Arrange
-		var ulid1 = Ulid.New();
-		var ulid2 = Ulid.New();
+		var ulid1 = Ulid.New(true);
+		var ulid2 = Ulid.New(true);
 
 		// Act
 		var comparisonResult = ulid2.CompareTo(ulid1);

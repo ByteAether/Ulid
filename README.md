@@ -97,11 +97,13 @@ The `Ulid` implementation provides the following properties and methods:
 
 ### Creation
 
-- `Ulid.New(bool isMonotonic = true)`\
-Generates a new ULID. If `isMonotonic` is `true`, ensures monotonicity during timestamp collisions.
-- `Ulid.New(DateTimeOffset dateTimeOffset, bool isMonotonic = true)`\
+- `Ulid.DefaultIsMonotonic = true`\
+Sets the default behavior for generating ULIDs unless overridden during generation. If `true` (default), ensures monotonicity during timestamp collisions.
+- `Ulid.New(bool? isMonotonic = null)`\
+Generates a new ULID. If `isMonotonic` is `null` (default), uses `Ulid.DefaultIsMonotonic` for monotonicity setting.
+- `Ulid.New(DateTimeOffset dateTimeOffset, bool? isMonotonic = null)`\
 Generates a new ULID using the specified `DateTimeOffset`.
-- `Ulid.New(long timestamp, bool isMonotonic = true)`\
+- `Ulid.New(long timestamp, bool? isMonotonic = null)`\
 Generates a new ULID using the specified Unix timestamp in milliseconds (`long`).
 - `Ulid.New(DateTimeOffset dateTimeOffset, Span<byte> random)`\
 Generates a new ULID using the specified `DateTimeOffset` and a pre-existing random byte array.
