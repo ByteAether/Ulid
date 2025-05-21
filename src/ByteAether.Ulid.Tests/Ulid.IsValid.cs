@@ -5,6 +5,7 @@ public class UlidIsValidTests
 	[Theory]
 	[InlineData("01AN4Z07BY79KA1307SR9X4MV3")]
 	[InlineData("00000000000000000000000000")]
+	[InlineData("oooooooooooooooooooooooooo")]
 	[InlineData("7ZZZZZZZZZZZZZZZZZZZZZZZZZ")]
 	public void IsValid_GoodString(string goodString)
 	{
@@ -21,7 +22,7 @@ public class UlidIsValidTests
 	[InlineData("")]
 	[InlineData("01AN4Z07BY79KA1307SR9X4MV")]
 	[InlineData("01AN4Z07BY79KA1307SR9X4MV3A")]
-	[InlineData("01AN4Z07BY79KA1307SR9X4MVI")]
+	[InlineData("01AN4Z07BY79KA1307SR9X4MVU")]
 	[InlineData("01AN4Z07BY79KA1307SR9X4MV@")]
 	public void IsValid_BadString(string badString)
 	{
@@ -35,6 +36,7 @@ public class UlidIsValidTests
 	[Theory]
 	[InlineData("01AN4Z07BY79KA1307SR9X4MV3")]
 	[InlineData("00000000000000000000000000")]
+	[InlineData("oooooooooooooooooooooooooo")]
 	[InlineData("7ZZZZZZZZZZZZZZZZZZZZZZZZZ")]
 	public void IsValid_GoodStringSpan(string goodString)
 	{
@@ -51,7 +53,7 @@ public class UlidIsValidTests
 	[InlineData("")]
 	[InlineData("01AN4Z07BY79KA1307SR9X4MV")]
 	[InlineData("01AN4Z07BY79KA1307SR9X4MV3A")]
-	[InlineData("01AN4Z07BY79KA1307SR9X4MVI")]
+	[InlineData("01AN4Z07BY79KA1307SR9X4MVU")]
 	[InlineData("01AN4Z07BY79KA1307SR9X4MV@")]
 	public void IsValid_BadStringSpan(string badString)
 	{

@@ -32,26 +32,15 @@ public readonly partial struct Ulid
 			return false;
 		}
 
-		// First character check
-		var isValidFirstChar = false;
-		for (var i = 7; i >= 0; --i)
-		{
-			if (ulidString[0] == _base32Chars[i])
-			{
-				isValidFirstChar = true;
-				break;
-			}
-		}
-
-		if (!isValidFirstChar)
+		var firstChar = ulidString[0];
+		if (_inverseBase32[firstChar] > 7)
 		{
 			return false;
 		}
 
-		// Rest of the characters check
-		foreach (var c in ulidString[1..])
+		for (var i = 1; i < UlidStringLength; i++)
 		{
-			if (!_base32Chars.Contains(c))
+			if (_inverseBase32[ulidString[i]] == 255)
 			{
 				return false;
 			}
