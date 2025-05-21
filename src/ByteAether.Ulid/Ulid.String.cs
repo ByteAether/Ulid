@@ -80,10 +80,10 @@ public readonly partial struct Ulid
 	public readonly string ToString(string? format = null, IFormatProvider? formatProvider = null)
 	{
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
-		return string.Create(UlidStringLength, this, (span, ulid) => ulid.TryFill(span));
+		return string.Create(UlidStringLength, this, (span, ulid) => ulid.TryFill(span, _base32Chars));
 #else
 		Span<char> span = stackalloc char[UlidStringLength];
-		TryFill(span);
+		TryFill(span, _base32Chars);
 		unsafe
 		{
 			return new string((char*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), 0, UlidStringLength);
@@ -110,23 +110,23 @@ public readonly partial struct Ulid
 		{
 			var ulidBytes = new Span<byte>(Unsafe.AsPointer(ref Unsafe.AsRef(in ulid)), _ulidSize);
 
-			ulidBytes[15] = (byte)((_inverseBase32[(uint)chars[24]] << 5) | _inverseBase32[(uint)chars[25]]);
+			ulidBytes[15] = (byte)((_inverseBase32[chars[24]] << 5) | _inverseBase32[chars[25]]);
 
-			ulidBytes[00] = (byte)((_inverseBase32[(uint)chars[0]] << 5) | _inverseBase32[(uint)chars[1]]);
-			ulidBytes[01] = (byte)((_inverseBase32[(uint)chars[2]] << 3) | (_inverseBase32[(uint)chars[3]] >> 2));
-			ulidBytes[02] = (byte)((_inverseBase32[(uint)chars[3]] << 6) | (_inverseBase32[(uint)chars[4]] << 1) | (_inverseBase32[(uint)chars[5]] >> 4));
-			ulidBytes[03] = (byte)((_inverseBase32[(uint)chars[5]] << 4) | (_inverseBase32[(uint)chars[6]] >> 1));
-			ulidBytes[04] = (byte)((_inverseBase32[(uint)chars[6]] << 7) | (_inverseBase32[(uint)chars[7]] << 2) | (_inverseBase32[(uint)chars[8]] >> 3));
-			ulidBytes[05] = (byte)((_inverseBase32[(uint)chars[8]] << 5) | _inverseBase32[(uint)chars[9]]);
-			ulidBytes[06] = (byte)((_inverseBase32[(uint)chars[10]] << 3) | (_inverseBase32[(uint)chars[11]] >> 2));
-			ulidBytes[07] = (byte)((_inverseBase32[(uint)chars[11]] << 6) | (_inverseBase32[(uint)chars[12]] << 1) | (_inverseBase32[(uint)chars[13]] >> 4));
-			ulidBytes[08] = (byte)((_inverseBase32[(uint)chars[13]] << 4) | (_inverseBase32[(uint)chars[14]] >> 1));
-			ulidBytes[09] = (byte)((_inverseBase32[(uint)chars[14]] << 7) | (_inverseBase32[(uint)chars[15]] << 2) | (_inverseBase32[(uint)chars[16]] >> 3));
-			ulidBytes[10] = (byte)((_inverseBase32[(uint)chars[16]] << 5) | _inverseBase32[(uint)chars[17]]);
-			ulidBytes[11] = (byte)((_inverseBase32[(uint)chars[18]] << 3) | (_inverseBase32[(uint)chars[19]] >> 2));
-			ulidBytes[12] = (byte)((_inverseBase32[(uint)chars[19]] << 6) | (_inverseBase32[(uint)chars[20]] << 1) | (_inverseBase32[(uint)chars[21]] >> 4));
-			ulidBytes[13] = (byte)((_inverseBase32[(uint)chars[21]] << 4) | (_inverseBase32[(uint)chars[22]] >> 1));
-			ulidBytes[14] = (byte)((_inverseBase32[(uint)chars[22]] << 7) | (_inverseBase32[(uint)chars[23]] << 2) | (_inverseBase32[(uint)chars[24]] >> 3));
+			ulidBytes[00] = (byte)((_inverseBase32[chars[0]] << 5) | _inverseBase32[chars[1]]);
+			ulidBytes[01] = (byte)((_inverseBase32[chars[2]] << 3) | (_inverseBase32[chars[3]] >> 2));
+			ulidBytes[02] = (byte)((_inverseBase32[chars[3]] << 6) | (_inverseBase32[chars[4]] << 1) | (_inverseBase32[chars[5]] >> 4));
+			ulidBytes[03] = (byte)((_inverseBase32[chars[5]] << 4) | (_inverseBase32[chars[6]] >> 1));
+			ulidBytes[04] = (byte)((_inverseBase32[chars[6]] << 7) | (_inverseBase32[chars[7]] << 2) | (_inverseBase32[chars[8]] >> 3));
+			ulidBytes[05] = (byte)((_inverseBase32[chars[8]] << 5) | _inverseBase32[chars[9]]);
+			ulidBytes[06] = (byte)((_inverseBase32[chars[10]] << 3) | (_inverseBase32[chars[11]] >> 2));
+			ulidBytes[07] = (byte)((_inverseBase32[chars[11]] << 6) | (_inverseBase32[chars[12]] << 1) | (_inverseBase32[chars[13]] >> 4));
+			ulidBytes[08] = (byte)((_inverseBase32[chars[13]] << 4) | (_inverseBase32[chars[14]] >> 1));
+			ulidBytes[09] = (byte)((_inverseBase32[chars[14]] << 7) | (_inverseBase32[chars[15]] << 2) | (_inverseBase32[chars[16]] >> 3));
+			ulidBytes[10] = (byte)((_inverseBase32[chars[16]] << 5) | _inverseBase32[chars[17]]);
+			ulidBytes[11] = (byte)((_inverseBase32[chars[18]] << 3) | (_inverseBase32[chars[19]] >> 2));
+			ulidBytes[12] = (byte)((_inverseBase32[chars[19]] << 6) | (_inverseBase32[chars[20]] << 1) | (_inverseBase32[chars[21]] >> 4));
+			ulidBytes[13] = (byte)((_inverseBase32[chars[21]] << 4) | (_inverseBase32[chars[22]] >> 1));
+			ulidBytes[14] = (byte)((_inverseBase32[chars[22]] << 7) | (_inverseBase32[chars[23]] << 2) | (_inverseBase32[chars[24]] >> 3));
 		}
 
 		return ulid;
@@ -151,23 +151,23 @@ public readonly partial struct Ulid
 		{
 			var ulidBytes = new Span<byte>(Unsafe.AsPointer(ref Unsafe.AsRef(in ulid)), _ulidSize);
 
-			ulidBytes[15] = (byte)((_inverseBase32[(uint)chars[24]] << 5) | _inverseBase32[(uint)chars[25]]);
+			ulidBytes[15] = (byte)((_inverseBase32[chars[24]] << 5) | _inverseBase32[chars[25]]);
 
-			ulidBytes[00] = (byte)((_inverseBase32[(uint)chars[0]] << 5) | _inverseBase32[(uint)chars[1]]);
-			ulidBytes[01] = (byte)((_inverseBase32[(uint)chars[2]] << 3) | (_inverseBase32[(uint)chars[3]] >> 2));
-			ulidBytes[02] = (byte)((_inverseBase32[(uint)chars[3]] << 6) | (_inverseBase32[(uint)chars[4]] << 1) | (_inverseBase32[(uint)chars[5]] >> 4));
-			ulidBytes[03] = (byte)((_inverseBase32[(uint)chars[5]] << 4) | (_inverseBase32[(uint)chars[6]] >> 1));
-			ulidBytes[04] = (byte)((_inverseBase32[(uint)chars[6]] << 7) | (_inverseBase32[(uint)chars[7]] << 2) | (_inverseBase32[(uint)chars[8]] >> 3));
-			ulidBytes[05] = (byte)((_inverseBase32[(uint)chars[8]] << 5) | _inverseBase32[(uint)chars[9]]);
-			ulidBytes[06] = (byte)((_inverseBase32[(uint)chars[10]] << 3) | (_inverseBase32[(uint)chars[11]] >> 2));
-			ulidBytes[07] = (byte)((_inverseBase32[(uint)chars[11]] << 6) | (_inverseBase32[(uint)chars[12]] << 1) | (_inverseBase32[(uint)chars[13]] >> 4));
-			ulidBytes[08] = (byte)((_inverseBase32[(uint)chars[13]] << 4) | (_inverseBase32[(uint)chars[14]] >> 1));
-			ulidBytes[09] = (byte)((_inverseBase32[(uint)chars[14]] << 7) | (_inverseBase32[(uint)chars[15]] << 2) | (_inverseBase32[(uint)chars[16]] >> 3));
-			ulidBytes[10] = (byte)((_inverseBase32[(uint)chars[16]] << 5) | _inverseBase32[(uint)chars[17]]);
-			ulidBytes[11] = (byte)((_inverseBase32[(uint)chars[18]] << 3) | (_inverseBase32[(uint)chars[19]] >> 2));
-			ulidBytes[12] = (byte)((_inverseBase32[(uint)chars[19]] << 6) | (_inverseBase32[(uint)chars[20]] << 1) | (_inverseBase32[(uint)chars[21]] >> 4));
-			ulidBytes[13] = (byte)((_inverseBase32[(uint)chars[21]] << 4) | (_inverseBase32[(uint)chars[22]] >> 1));
-			ulidBytes[14] = (byte)((_inverseBase32[(uint)chars[22]] << 7) | (_inverseBase32[(uint)chars[23]] << 2) | (_inverseBase32[(uint)chars[24]] >> 3));
+			ulidBytes[00] = (byte)((_inverseBase32[chars[0]] << 5) | _inverseBase32[chars[1]]);
+			ulidBytes[01] = (byte)((_inverseBase32[chars[2]] << 3) | (_inverseBase32[chars[3]] >> 2));
+			ulidBytes[02] = (byte)((_inverseBase32[chars[3]] << 6) | (_inverseBase32[chars[4]] << 1) | (_inverseBase32[chars[5]] >> 4));
+			ulidBytes[03] = (byte)((_inverseBase32[chars[5]] << 4) | (_inverseBase32[chars[6]] >> 1));
+			ulidBytes[04] = (byte)((_inverseBase32[chars[6]] << 7) | (_inverseBase32[chars[7]] << 2) | (_inverseBase32[chars[8]] >> 3));
+			ulidBytes[05] = (byte)((_inverseBase32[chars[8]] << 5) | _inverseBase32[chars[9]]);
+			ulidBytes[06] = (byte)((_inverseBase32[chars[10]] << 3) | (_inverseBase32[chars[11]] >> 2));
+			ulidBytes[07] = (byte)((_inverseBase32[chars[11]] << 6) | (_inverseBase32[chars[12]] << 1) | (_inverseBase32[chars[13]] >> 4));
+			ulidBytes[08] = (byte)((_inverseBase32[chars[13]] << 4) | (_inverseBase32[chars[14]] >> 1));
+			ulidBytes[09] = (byte)((_inverseBase32[chars[14]] << 7) | (_inverseBase32[chars[15]] << 2) | (_inverseBase32[chars[16]] >> 3));
+			ulidBytes[10] = (byte)((_inverseBase32[chars[16]] << 5) | _inverseBase32[chars[17]]);
+			ulidBytes[11] = (byte)((_inverseBase32[chars[18]] << 3) | (_inverseBase32[chars[19]] >> 2));
+			ulidBytes[12] = (byte)((_inverseBase32[chars[19]] << 6) | (_inverseBase32[chars[20]] << 1) | (_inverseBase32[chars[21]] >> 4));
+			ulidBytes[13] = (byte)((_inverseBase32[chars[21]] << 4) | (_inverseBase32[chars[22]] >> 1));
+			ulidBytes[14] = (byte)((_inverseBase32[chars[22]] << 7) | (_inverseBase32[chars[23]] << 2) | (_inverseBase32[chars[24]] >> 3));
 		}
 
 		return ulid;
@@ -219,7 +219,7 @@ public readonly partial struct Ulid
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public readonly bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider = null)
 	{
-		if (TryFill(destination))
+		if (TryFill(destination, _base32Chars))
 		{
 			charsWritten = UlidStringLength;
 			return true;
@@ -233,7 +233,7 @@ public readonly partial struct Ulid
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public readonly bool TryFormat(Span<byte> destination, out int bytesWritten, ReadOnlySpan<char> format, IFormatProvider? provider = null)
 	{
-		if (TryFill(destination))
+		if (TryFill(destination, _base32Bytes))
 		{
 			bytesWritten = UlidStringLength;
 			return true;
@@ -243,7 +243,7 @@ public readonly partial struct Ulid
 		return false;
 	}
 
-	private readonly bool TryFill(Span<char> span)
+	private readonly bool TryFill<T>(Span<T> span, T[] map)
 	{
 		if (span.Length < UlidStringLength)
 		{
@@ -251,78 +251,36 @@ public readonly partial struct Ulid
 		}
 
 		// Eliminate bounds-check of span
-		span[25] = _base32Chars[_r9 & 0x1F];                      // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111|11111|]
+		span[25] = map[_r9 & 0x1F];                      // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111|11111|]
 
 		// Encode timestamp
-		span[0] = _base32Chars[_t0 >> 5];                         // |00[111|11111][11111111][11111111][11111111][11111111][11111111]
-		span[1] = _base32Chars[_t0 & 0x1F];                       // 00[111|11111|][11111111][11111111][11111111][11111111][11111111]
-		span[2] = _base32Chars[_t1 >> 3];                         // 00[11111111][|11111|111][11111111][11111111][11111111][11111111]
-		span[3] = _base32Chars[((_t1 & 0x7) << 2) | (_t2 >> 6)];  // 00[11111111][11111|111][11|111111][11111111][11111111][11111111]
-		span[4] = _base32Chars[(_t2 >> 1) & 0x1F];                // 00[11111111][11111111][11|11111|1][11111111][11111111][11111111]
-		span[5] = _base32Chars[((_t2 & 0x1) << 4) | (_t3 >> 4)];  // 00[11111111][11111111][1111111|1][1111|1111][11111111][11111111]
-		span[6] = _base32Chars[((_t3 & 0xF) << 1) | (_t4 >> 7)];  // 00[11111111][11111111][11111111][1111|1111][1|1111111][11111111]
-		span[7] = _base32Chars[(_t4 >> 2) & 0x1F];                // 00[11111111][11111111][11111111][11111111][1|11111|11][11111111]
-		span[8] = _base32Chars[((_t4 & 0x3) << 3) | (_t5 >> 5)];  // 00[11111111][11111111][11111111][11111111][111111|11][111|11111]
-		span[9] = _base32Chars[_t5 & 0x1F];                       // 00[11111111][11111111][11111111][11111111][11111111][111|11111|]
+		span[0] = map[_t0 >> 5];                         // |00[111|11111][11111111][11111111][11111111][11111111][11111111]
+		span[1] = map[_t0 & 0x1F];                       // 00[111|11111|][11111111][11111111][11111111][11111111][11111111]
+		span[2] = map[_t1 >> 3];                         // 00[11111111][|11111|111][11111111][11111111][11111111][11111111]
+		span[3] = map[((_t1 & 0x7) << 2) | (_t2 >> 6)];  // 00[11111111][11111|111][11|111111][11111111][11111111][11111111]
+		span[4] = map[(_t2 >> 1) & 0x1F];                // 00[11111111][11111111][11|11111|1][11111111][11111111][11111111]
+		span[5] = map[((_t2 & 0x1) << 4) | (_t3 >> 4)];  // 00[11111111][11111111][1111111|1][1111|1111][11111111][11111111]
+		span[6] = map[((_t3 & 0xF) << 1) | (_t4 >> 7)];  // 00[11111111][11111111][11111111][1111|1111][1|1111111][11111111]
+		span[7] = map[(_t4 >> 2) & 0x1F];                // 00[11111111][11111111][11111111][11111111][1|11111|11][11111111]
+		span[8] = map[((_t4 & 0x3) << 3) | (_t5 >> 5)];  // 00[11111111][11111111][11111111][11111111][111111|11][111|11111]
+		span[9] = map[_t5 & 0x1F];                       // 00[11111111][11111111][11111111][11111111][11111111][111|11111|]
 
 		// Encode randomness
-		span[10] = _base32Chars[(_r0 >> 3) & 0x1F];               // [|11111|111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[11] = _base32Chars[((_r0 & 0x7) << 2) | (_r1 >> 6)]; // [11111|111][11|111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[12] = _base32Chars[(_r1 >> 1) & 0x1F];               // [11111111][11|11111|1][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[13] = _base32Chars[((_r1 & 0x1) << 4) | (_r2 >> 4)]; // [11111111][1111111|1][1111|1111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[14] = _base32Chars[((_r2 & 0xF) << 1) | (_r3 >> 7)]; // [11111111][11111111][1111|1111][1|1111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[15] = _base32Chars[(_r3 >> 2) & 0x1F];               // [11111111][11111111][11111111][1|11111|11][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[16] = _base32Chars[((_r3 & 0x3) << 3) | (_r4 >> 5)]; // [11111111][11111111][11111111][111111|11][111|11111][11111111][11111111][11111111][11111111][11111111]
-		span[17] = _base32Chars[_r4 & 0x1F];                      // [11111111][11111111][11111111][11111111][111|11111|][11111111][11111111][11111111][11111111][11111111]
-		span[18] = _base32Chars[(_r5 >> 3) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][|11111|111][11111111][11111111][11111111][11111111]
-		span[19] = _base32Chars[((_r5 & 0x7) << 2) | (_r6 >> 6)]; // [11111111][11111111][11111111][11111111][11111111][11111|111][11|111111][11111111][11111111][11111111]
-		span[20] = _base32Chars[(_r6 >> 1) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11|11111|1][11111111][11111111][11111111]
-		span[21] = _base32Chars[((_r6 & 0x1) << 4) | (_r7 >> 4)]; // [11111111][11111111][11111111][11111111][11111111][11111111][1111111|1][1111|1111][11111111][11111111]
-		span[22] = _base32Chars[((_r7 & 0xF) << 1) | (_r8 >> 7)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][1111|1111][1|1111111][11111111]
-		span[23] = _base32Chars[(_r8 >> 2) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][1|11111|11][11111111]
-		span[24] = _base32Chars[((_r8 & 0x3) << 3) | (_r9 >> 5)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111111|11][111|11111]
-
-		return true;
-	}
-
-	private readonly bool TryFill(Span<byte> span)
-	{
-		if (span.Length < UlidStringLength)
-		{
-			return false;
-		}
-
-		// Eliminate bounds-check of span
-		span[25] = _base32Bytes[_r9 & 0x1F];                      // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111|11111|]
-
-		// Encode timestamp
-		span[0] = _base32Bytes[_t0 >> 5];                         // |00[111|11111][11111111][11111111][11111111][11111111][11111111]
-		span[1] = _base32Bytes[_t0 & 0x1F];                       // 00[111|11111|][11111111][11111111][11111111][11111111][11111111]
-		span[2] = _base32Bytes[_t1 >> 3];                         // 00[11111111][|11111|111][11111111][11111111][11111111][11111111]
-		span[3] = _base32Bytes[((_t1 & 0x7) << 2) | (_t2 >> 6)];  // 00[11111111][11111|111][11|111111][11111111][11111111][11111111]
-		span[4] = _base32Bytes[(_t2 >> 1) & 0x1F];                // 00[11111111][11111111][11|11111|1][11111111][11111111][11111111]
-		span[5] = _base32Bytes[((_t2 & 0x1) << 4) | (_t3 >> 4)];  // 00[11111111][11111111][1111111|1][1111|1111][11111111][11111111]
-		span[6] = _base32Bytes[((_t3 & 0xF) << 1) | (_t4 >> 7)];  // 00[11111111][11111111][11111111][1111|1111][1|1111111][11111111]
-		span[7] = _base32Bytes[(_t4 >> 2) & 0x1F];                // 00[11111111][11111111][11111111][11111111][1|11111|11][11111111]
-		span[8] = _base32Bytes[((_t4 & 0x3) << 3) | (_t5 >> 5)];  // 00[11111111][11111111][11111111][11111111][111111|11][111|11111]
-		span[9] = _base32Bytes[_t5 & 0x1F];                       // 00[11111111][11111111][11111111][11111111][11111111][111|11111|]
-
-		// Encode randomness
-		span[10] = _base32Bytes[(_r0 >> 3) & 0x1F];               // [|11111|111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[11] = _base32Bytes[((_r0 & 0x7) << 2) | (_r1 >> 6)]; // [11111|111][11|111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[12] = _base32Bytes[(_r1 >> 1) & 0x1F];               // [11111111][11|11111|1][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[13] = _base32Bytes[((_r1 & 0x1) << 4) | (_r2 >> 4)]; // [11111111][1111111|1][1111|1111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[14] = _base32Bytes[((_r2 & 0xF) << 1) | (_r3 >> 7)]; // [11111111][11111111][1111|1111][1|1111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[15] = _base32Bytes[(_r3 >> 2) & 0x1F];               // [11111111][11111111][11111111][1|11111|11][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[16] = _base32Bytes[((_r3 & 0x3) << 3) | (_r4 >> 5)]; // [11111111][11111111][11111111][111111|11][111|11111][11111111][11111111][11111111][11111111][11111111]
-		span[17] = _base32Bytes[_r4 & 0x1F];                      // [11111111][11111111][11111111][11111111][111|11111|][11111111][11111111][11111111][11111111][11111111]
-		span[18] = _base32Bytes[(_r5 >> 3) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][|11111|111][11111111][11111111][11111111][11111111]
-		span[19] = _base32Bytes[((_r5 & 0x7) << 2) | (_r6 >> 6)]; // [11111111][11111111][11111111][11111111][11111111][11111|111][11|111111][11111111][11111111][11111111]
-		span[20] = _base32Bytes[(_r6 >> 1) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11|11111|1][11111111][11111111][11111111]
-		span[21] = _base32Bytes[((_r6 & 0x1) << 4) | (_r7 >> 4)]; // [11111111][11111111][11111111][11111111][11111111][11111111][1111111|1][1111|1111][11111111][11111111]
-		span[22] = _base32Bytes[((_r7 & 0xF) << 1) | (_r8 >> 7)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][1111|1111][1|1111111][11111111]
-		span[23] = _base32Bytes[(_r8 >> 2) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][1|11111|11][11111111]
-		span[24] = _base32Bytes[((_r8 & 0x3) << 3) | (_r9 >> 5)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111111|11][111|11111]
+		span[10] = map[(_r0 >> 3) & 0x1F];               // [|11111|111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
+		span[11] = map[((_r0 & 0x7) << 2) | (_r1 >> 6)]; // [11111|111][11|111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
+		span[12] = map[(_r1 >> 1) & 0x1F];               // [11111111][11|11111|1][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
+		span[13] = map[((_r1 & 0x1) << 4) | (_r2 >> 4)]; // [11111111][1111111|1][1111|1111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
+		span[14] = map[((_r2 & 0xF) << 1) | (_r3 >> 7)]; // [11111111][11111111][1111|1111][1|1111111][11111111][11111111][11111111][11111111][11111111][11111111]
+		span[15] = map[(_r3 >> 2) & 0x1F];               // [11111111][11111111][11111111][1|11111|11][11111111][11111111][11111111][11111111][11111111][11111111]
+		span[16] = map[((_r3 & 0x3) << 3) | (_r4 >> 5)]; // [11111111][11111111][11111111][111111|11][111|11111][11111111][11111111][11111111][11111111][11111111]
+		span[17] = map[_r4 & 0x1F];                      // [11111111][11111111][11111111][11111111][111|11111|][11111111][11111111][11111111][11111111][11111111]
+		span[18] = map[(_r5 >> 3) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][|11111|111][11111111][11111111][11111111][11111111]
+		span[19] = map[((_r5 & 0x7) << 2) | (_r6 >> 6)]; // [11111111][11111111][11111111][11111111][11111111][11111|111][11|111111][11111111][11111111][11111111]
+		span[20] = map[(_r6 >> 1) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11|11111|1][11111111][11111111][11111111]
+		span[21] = map[((_r6 & 0x1) << 4) | (_r7 >> 4)]; // [11111111][11111111][11111111][11111111][11111111][11111111][1111111|1][1111|1111][11111111][11111111]
+		span[22] = map[((_r7 & 0xF) << 1) | (_r8 >> 7)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][1111|1111][1|1111111][11111111]
+		span[23] = map[(_r8 >> 2) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][1|11111|11][11111111]
+		span[24] = map[((_r8 & 0x3) << 3) | (_r9 >> 5)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111111|11][111|11111]
 
 		return true;
 	}
