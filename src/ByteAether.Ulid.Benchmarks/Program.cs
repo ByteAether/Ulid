@@ -50,6 +50,9 @@ public class GenerateNonMono
 
 	[Benchmark]
 	public System.Guid Guid() => System.Guid.NewGuid();
+
+	[Benchmark]
+	public System.Guid GuidV7() => System.Guid.CreateVersion7();
 }
 
 [MemoryDiagnoser]
