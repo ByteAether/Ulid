@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<Deterministic>True</Deterministic>
+	<IsAotCompatible>true</IsAotCompatible>
 	  
 	<GenerateDocumentationFile>True</GenerateDocumentationFile>
 	<IncludeSymbols>True</IncludeSymbols>
