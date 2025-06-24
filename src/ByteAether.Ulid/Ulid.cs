@@ -26,6 +26,15 @@ public readonly partial struct Ulid
 	private const byte _ulidSizeRandom = 10;
 	private const byte _ulidSize = _ulidSizeTime + _ulidSizeRandom;
 
+	/// <summary>
+	/// Represents an empty ULID value.
+	/// </summary>
+	/// <remarks>
+	/// The <see cref="Empty"/> field is a ULID with all components set to zero.
+	/// It can be used as a default or placeholder value.
+	/// </remarks>
+	public static readonly Ulid Empty = default;
+
 	[FieldOffset(00)] private readonly byte _t0;
 	[FieldOffset(01)] private readonly byte _t1;
 	[FieldOffset(02)] private readonly byte _t2;

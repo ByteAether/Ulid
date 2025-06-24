@@ -3,6 +3,17 @@
 namespace ByteAether.Ulid.Tests;
 public class UlidTests
 {
+	[Fact]
+	public void EmptyUlid_ShouldBeDefault()
+	{
+		// Arrange
+		var ulid = Ulid.Empty;
+
+		// Assert
+		Assert.Equal(default, ulid);
+		Assert.Equal(new byte[16], ulid.ToByteArray());
+	}
+
 	private static readonly byte[] _sampleUlidBytes =
 		[
             // Timestamp (6 bytes)

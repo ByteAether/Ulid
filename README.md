@@ -142,6 +142,8 @@ Gets the timestamp component of the ULID as a `DateTimeOffset`.
 Gets the time component of the ULID as a `ReadOnlySpan<byte>`.
 - `.Random`\
 Gets the random component of the ULID as a `ReadOnlySpan<byte>`.
+- `Ulid.Empty`\
+Represents an empty ULID, equivalent to `default(Ulid)` and `Ulid.New(new byte[16])`.
 
 ### Conversion Methods
 
