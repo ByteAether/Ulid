@@ -26,6 +26,7 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 - **Fast and Efficient**: Optimized for high performance and low memory usage.
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
+- **Ahead-of-Time (AoT) Compilation Compatible**: Fully compatible with AoT compilation for improved startup performance and smaller binary sizes.
 - **Error-Free Generation**: Prevents overflow exceptions by incrementing timestamps during random part overflow.
 
 ## Installation

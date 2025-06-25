@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UlidAotTest", "UlidAotTest\UlidAotTest.csproj", "{A16BAD2D-8F7F-49E5-880A-349E31F6E70E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByteAether.Ulid.Tests.AotConsole", "ByteAether.Ulid.Tests.AotConsole\ByteAether.Ulid.Tests.AotConsole.csproj", "{A16BAD2D-8F7F-49E5-880A-349E31F6E70E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

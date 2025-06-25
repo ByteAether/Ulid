@@ -17,7 +17,7 @@
 	<Title>Ulid</Title>
 	<Authors>Joonatan Uusväli</Authors>
 	<Company>ByteAether</Company>
-	<Description>A lightweight, high-performance library for generating and working with ULIDs (Universally Unique Lexicographically Sortable Identifiers) in .NET. Supports monotonic ULID generation, Base32 encoding, and cross-platform compatibility. Ideal for databases, distributed systems, and scenarios requiring unique, sortable, timestamped identifiers.</Description>
+	<Description>A lightweight, high-performance, AoT-compatible .NET library for generating and working with ULIDs (Universally Unique Lexicographically Sortable Identifiers). Supports monotonic ULID generation, Base32 encoding, and cross-platform compatibility. Ideal for databases, distributed systems, and scenarios requiring unique, sortable, timestamped identifiers.</Description>
 	<PackageProjectUrl>https://github.com/ByteAether/Ulid</PackageProjectUrl>
 	<RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
 	<RepositoryType>git</RepositoryType>

@@ -41,7 +41,7 @@ Console.WriteLine("\n--- ULID Conversion ---");
 
 // 2.1 ToByteArray()
 var ulid1ByteArray = ulid1.ToByteArray();
-Console.WriteLine($"2.1 ULID 1 ToByteArray(): {BitConverter.ToString(ulid1ByteArray).Replace("-", "")}");
+Console.WriteLine($"2.1 ULID 1 ToByteArray(): {Convert.ToHexString(ulid1ByteArray)}");
 
 // 2.2 ToGuid()
 var ulid1Guid = ulid1.ToGuid();
@@ -53,7 +53,7 @@ Console.WriteLine($"2.3 ULID 1 ToString():    {ulid1String}");
 
 // 2.4 AsByteSpan()
 var ulid1ByteSpan = ulid1.AsByteSpan();
-Console.WriteLine($"2.4 ULID 1 AsByteSpan() (first 4 bytes): {BitConverter.ToString(ulid1ByteSpan.Slice(0, 4).ToArray()).Replace("-", "")}");
+Console.WriteLine($"2.4 ULID 1 AsByteSpan() (first 4 bytes): {Convert.ToHexString(ulid1ByteSpan[..4].ToArray())}");
 
 
 // --- 3. ULID Parsing Tests ---
@@ -101,8 +101,8 @@ Console.WriteLine($"4.3 IsValid(byte[] of ulid1): {Ulid.IsValid(ulid1ByteArray)}
 Console.WriteLine("\n--- ULID Property Access ---");
 
 Console.WriteLine($"5.1 ULID 1 Time component:    {ulid1.Time}");
-Console.WriteLine($"5.2 ULID 1 TimeBytes (first 4 bytes): {BitConverter.ToString(ulid1.TimeBytes.Slice(0, 4).ToArray()).Replace("-", "")}");
-Console.WriteLine($"5.3 ULID 1 Random (first 4 bytes):    {BitConverter.ToString(ulid1.Random.Slice(0, 4).ToArray()).Replace("-", "")}");
+Console.WriteLine($"5.2 ULID 1 TimeBytes (first 4 bytes): {Convert.ToHexString(ulid1.TimeBytes[..4].ToArray())}");
+Console.WriteLine($"5.3 ULID 1 Random (first 4 bytes):    {Convert.ToHexString(ulid1.Random[..4].ToArray())}");
 Console.WriteLine($"5.4 Ulid.Empty:               {Ulid.Empty}");
 
 
