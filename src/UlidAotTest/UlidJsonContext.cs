@@ -3,6 +3,6 @@
 namespace ByteAether.Ulid;
 
 [JsonSerializable(typeof(Ulid))]
-[JsonSerializable(typeof(List<Ulid>))]
-public partial class UlidJsonContext : JsonSerializerContext
+[JsonSerializable(typeof(MyClassWithUlid))]
+internal partial class UlidJsonContext : JsonSerializerContext
 { }

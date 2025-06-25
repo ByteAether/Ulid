@@ -1,0 +1,42 @@
+name: ULID AOT Compatibility Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - src/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - src/**
+
+jobs:
+  build-and-test-aot:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+  
+    name: Build & Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 9.0.x
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore src/ByteAether.Ulid.sln --use-current-runtime -p:SelfContained=true
+
+    - name: Build and Publish AOT Console Application (${{ matrix.os }})
+      run: dotnet publish src/UlidAotTest/UlidAotTest.csproj --no-restore -c Release -r --use-current-runtime --self-contained true -o ./publish
+
+    - name: Run AOT Compiled Application (${{ matrix.os }})
+      shell: bash # Ensure bash is used on Windows as well for consistent pathing syntax (./)
+      run: ./publish/UlidAotTest
+      
