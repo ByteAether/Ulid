@@ -117,7 +117,7 @@ public class UlidTests
 			throw new ArgumentException("ULID byte array must be exactly 16 bytes.");
 		}
 
-		var ulid = new Ulid();
+		Ulid ulid;
 		unsafe
 		{
 			fixed (byte* ptr = bytes)

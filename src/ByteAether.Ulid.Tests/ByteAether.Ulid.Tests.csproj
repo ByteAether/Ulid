@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<LangVersion>Latest</LangVersion>
+    <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
@@ -9,15 +9,15 @@
     <IsTestProject>true</IsTestProject>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-	<UseDataCollector />
+    <UseDataCollector/>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-  	<TargetFrameworks>net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-  	<TargetFrameworks>net9.0;net8.0;net7.0;net6.0;net472</TargetFrameworks>
+    <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;net472</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,28 +25,28 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-	
-	<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0'" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" Condition="'$(TargetFramework)' != 'net6.0' And '$(TargetFramework)' != 'net7.0'" />
-	  
-	<PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0'">
-	  <PrivateAssets>all</PrivateAssets>
-	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0'"/>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" Condition="'$(TargetFramework)' != 'net6.0' And '$(TargetFramework)' != 'net7.0'"/>
+
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0'">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1" Condition="'$(TargetFramework)' != 'net6.0' And '$(TargetFramework)' != 'net7.0'">
-	  <PrivateAssets>all</PrivateAssets>
-	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    
-	<PackageReference Include="xunit" Version="2.9.3" />
+
+    <PackageReference Include="xunit" Version="2.9.3"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ByteAether.Ulid\ByteAether.Ulid.csproj" />
+    <ProjectReference Include="..\ByteAether.Ulid\ByteAether.Ulid.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
+    <Using Include="Xunit"/>
   </ItemGroup>
 
 </Project>

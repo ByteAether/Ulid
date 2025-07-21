@@ -10,8 +10,9 @@ namespace ByteAether.Ulid;
 
 [DebuggerDisplay("{ToString(),nq}")]
 public readonly partial struct Ulid
+	: IFormattable
 #if NET6_0_OR_GREATER
-	: ISpanFormattable
+	, ISpanFormattable
 #if NET7_0_OR_GREATER
 	, ISpanParsable<Ulid>
 #if NET8_0_OR_GREATER
@@ -72,7 +73,7 @@ public readonly partial struct Ulid
 		27, 28, 29, 30, 31, // v-z
 	];
 
-	/// <inheritdoc/>
+	/// <inheritdoc /> 
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
@@ -91,7 +92,13 @@ public readonly partial struct Ulid
 #endif
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Parses a ULID from the provided read-only span of characters.
+	/// </summary>
+	/// <param name="chars">The span of characters containing Crockford's Base32 representation of the ULID.</param>
+	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <returns>A parsed instance of <see cref="Ulid"/>.</returns>
+	/// <exception cref="FormatException">Thrown if the input span does not meet the ULID format requirements.</exception>
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
@@ -132,7 +139,13 @@ public readonly partial struct Ulid
 		return ulid;
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Parses a ULID from a read-only span of bytes and returns the corresponding ULID value.
+	/// </summary>
+	/// <param name="chars">The read-only span of bytes containing the ULID string representation in Crockford's Base32 format.</param>
+	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <returns>The ULID parsed from the specified byte span.</returns>
+	/// <exception cref="FormatException">Thrown if the input byte span does not contain a valid ULID string representation.</exception>
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
@@ -173,19 +186,36 @@ public readonly partial struct Ulid
 		return ulid;
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Parses a string representation of a ULID and returns the corresponding ULID instance.
+	/// </summary>
+	/// <param name="s">The string representation of the ULID to parse.</param>
+	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <returns>A new <see cref="Ulid"/> instance parsed from the specified string.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Ulid Parse(string s, IFormatProvider? provider = null)
 		=> Parse(s.AsSpan());
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Attempts to parse a string representation of a ULID into a <see cref="Ulid"/> instance.
+	/// </summary>
+	/// <param name="s">The string representation of the ULID to parse.</param>
+	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <param name="result">When this method returns, contains the parsed <see cref="Ulid"/> value if the parse was successful; otherwise, the default value of <see cref="Ulid"/>.</param>
+	/// <returns><c>true</c> if the parsing was successful; otherwise, <c>false</c>.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out Ulid result)
+	public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out Ulid result)
 		=> TryParse(s.AsSpan(), provider, out result);
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Attempts to parse a ULID from a read-only span of characters.
+	/// </summary>
+	/// <param name="s">The read-only span of characters to parse.</param>
+	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <param name="result">When the method returns, contains the parsed ULID if the operation succeeds, or the default value if it fails.</param>
+	/// <returns><c>true</c> if the parsing operation succeeded; otherwise, <c>false</c>.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out Ulid result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Ulid result)
 	{
 		try
 		{
@@ -199,9 +229,15 @@ public readonly partial struct Ulid
 		}
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Attempts to parse a ULID from the specified span of bytes.
+	/// </summary>
+	/// <param name="s">The span of bytes containing the ULID representation to parse.</param>
+	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <param name="result">When the method returns, contains the parsed ULID if parsing was successful; otherwise, the default value for ULID.</param>
+	/// <returns><c>true</c> if parsing was successful; otherwise, <c>false</c>.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<byte> s, IFormatProvider? provider, [MaybeNullWhen(false)] out Ulid result)
+	public static bool TryParse(ReadOnlySpan<byte> s, IFormatProvider? provider, out Ulid result)
 	{
 		try
 		{
@@ -215,9 +251,23 @@ public readonly partial struct Ulid
 		}
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Attempts to format the current instance of <see cref="Ulid"/> into the provided character span.
+	/// </summary>
+	/// <param name="destination">A span of characters where the formatted <see cref="Ulid"/> will be written, if successful.</param>
+	/// <param name="charsWritten">The number of characters written to the destination span.</param>
+	/// <param name="format">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <returns>
+	/// <c>true</c> if the formatting is successful and the destination span is large enough to contain the formatted data; otherwise, <c>false</c>.
+	/// </returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public readonly bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider = null)
+	public readonly bool TryFormat(
+		Span<char> destination,
+		out int charsWritten,
+		ReadOnlySpan<char> format,
+		IFormatProvider? provider = null
+	)
 	{
 		if (TryFill(destination, _base32Chars))
 		{
@@ -229,9 +279,23 @@ public readonly partial struct Ulid
 		return false;
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Attempts to format the current Ulid instance as a sequence of bytes.
+	/// </summary>
+	/// <param name="destination">The span of bytes to write the formatted Ulid into.</param>
+	/// <param name="bytesWritten">When this method returns, contains the number of bytes that were written to the <paramref name="destination"/> span.</param>
+	/// <param name="format">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
+	/// <returns>
+	/// <c>true</c> if the formatting was successful; <c>false</c> if the destination span was too short to contain the formatted value.
+	/// </returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public readonly bool TryFormat(Span<byte> destination, out int bytesWritten, ReadOnlySpan<char> format, IFormatProvider? provider = null)
+	public readonly bool TryFormat(
+		Span<byte> destination,
+		out int bytesWritten,
+		ReadOnlySpan<char> format,
+		IFormatProvider? provider = null
+	)
 	{
 		if (TryFill(destination, _base32Bytes))
 		{
@@ -243,7 +307,7 @@ public readonly partial struct Ulid
 		return false;
 	}
 
-	private readonly bool TryFill<T>(Span<T> span, T[] map)
+	private bool TryFill<T>(Span<T> span, T[] map)
 	{
 		if (span.Length < UlidStringLength)
 		{

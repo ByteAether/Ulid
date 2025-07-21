@@ -4,22 +4,23 @@ using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
 
-var benchamarkConfig = ManualConfig
+var benchmarkConfig = ManualConfig
 	.Create(DefaultConfig.Instance)
 	.WithOptions(ConfigOptions.JoinSummary)
-	.WithOrderer(new DefaultOrderer(SummaryOrderPolicy.Declared, MethodOrderPolicy.Declared))
+	.WithOrderer(new DefaultOrderer(SummaryOrderPolicy.Declared))
 	.WithOptions(ConfigOptions.DisableLogFile)
 	.HideColumns(Column.Job, Column.StdDev, Column.Median)
 ;
 
 BenchmarkRunner.Run(
 	typeof(Program).Assembly,
-	benchamarkConfig
+	benchmarkConfig
 );
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
 #pragma warning disable CA1822 // Benchmark methods can not be static
 #pragma warning disable CA1050 // Declare types in namespaces
+// ReSharper disable PossiblyImpureMethodCallOnReadonlyVariable NetUlid.ToString() is not marked as pure function.
 
 [MemoryDiagnoser]
 public class Generate

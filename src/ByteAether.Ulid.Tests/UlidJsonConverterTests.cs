@@ -94,7 +94,7 @@ public class UlidJsonConverterTests
 
 		// Assert
 		Assert.NotNull(resultDto);
-		Assert.Equal(ulid, resultDto!.UlidProperty);
+		Assert.Equal(ulid, resultDto.UlidProperty);
 	}
 
 	[Theory]
@@ -132,7 +132,7 @@ public class UlidJsonConverterTests
 
 		// Assert
 		Assert.NotNull(deserializedDictionary);
-		Assert.True(deserializedDictionary!.ContainsKey(ulid));
+		Assert.True(deserializedDictionary.ContainsKey(ulid));
 		Assert.Equal("value", deserializedDictionary[ulid]);
 	}
 }

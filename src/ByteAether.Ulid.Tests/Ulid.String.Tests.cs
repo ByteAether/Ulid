@@ -150,7 +150,7 @@ public class UlidStringTests
 	public void Parse_ReadOnlySpanByte_ShouldReturnUlid()
 	{
 		// Arrange
-		var bytes = System.Text.Encoding.UTF8.GetBytes(_goodUlidString);
+		var bytes = Encoding.UTF8.GetBytes(_goodUlidString);
 
 		// Act
 		var result = Ulid.Parse(bytes.AsSpan());
@@ -191,7 +191,7 @@ public class UlidStringTests
 	public void TryParse_ReadOnlySpanByte_ShouldReturnTrueAndUlid()
 	{
 		// Arrange
-		var bytes = System.Text.Encoding.UTF8.GetBytes(_goodUlidString);
+		var bytes = Encoding.UTF8.GetBytes(_goodUlidString);
 
 		// Act
 		var success = Ulid.TryParse(bytes.AsSpan(), null, out var result);
@@ -210,7 +210,7 @@ public class UlidStringTests
 	[InlineData("2222222222222222222222222222222222222")]
 	public void TryParse_ReadOnlySpanByte_InvalidInput_ShouldReturnFalse(string inputString)
 	{
-		var bytes = System.Text.Encoding.UTF8.GetBytes(inputString);
+		var bytes = Encoding.UTF8.GetBytes(inputString);
 
 		var result = Ulid.TryParse(bytes.AsSpan(), null, out var ulid);
 
@@ -222,8 +222,8 @@ public class UlidStringTests
 	public void ToString_WrongLetters_ShouldReplaceWithCorrect()
 	{
 		// Crockford's Base32 subtitution test
-		var inputChars = new char[] { 'O', 'o', 'I', 'i', 'L', 'l', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z' };
-		var outputChars = new char[] { '0', '0', '1', '1', '1', '1', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z' };
+		var inputChars = new[] { 'O', 'o', 'I', 'i', 'L', 'l', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z' };
+		var outputChars = new[] { '0', '0', '1', '1', '1', '1', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z' };
 
 		for (var i = 0; i < inputChars.Length; i++)
 		{

@@ -46,12 +46,13 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 		{
 			return 1;
 		}
-		else if (obj.GetType() != GetType())
+		
+		if (obj is not Ulid ulid)
 		{
-			throw new ArgumentException($"The value is not an instance of {GetType()}.", nameof(obj));
+			throw new ArgumentException($"The value is not an instance of {nameof(Ulid)}.", nameof(obj));
 		}
 
-		return CompareTo((Ulid)obj);
+		return CompareTo(ulid);
 	}
 
 	/// <inheritdoc/>

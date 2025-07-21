@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using ByteAether.Ulid;
 
 Console.WriteLine("Starting ByteAether.Ulid AOT Compatibility Test...");
@@ -151,3 +152,8 @@ internal class MyClassWithUlid
 	public Ulid Id { get; set; }
 	public string? Name { get; set; }
 }
+
+[JsonSerializable(typeof(Ulid))]
+[JsonSerializable(typeof(MyClassWithUlid))]
+internal partial class UlidJsonContext : JsonSerializerContext
+{ }

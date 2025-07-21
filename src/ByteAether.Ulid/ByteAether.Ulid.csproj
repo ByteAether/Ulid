@@ -1,41 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<TargetFrameworks>net9.0;net8.0;net7.0;net6.0;net5.0;netstandard2.1;netstandard2.0</TargetFrameworks>
-	<LangVersion>Latest</LangVersion>
-	<OutputType>Library</OutputType>
+    <TargetFrameworks>net9.0;net8.0;net7.0;net6.0;net5.0;netstandard2.1;netstandard2.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <OutputType>library</OutputType>
+
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	<Deterministic>True</Deterministic>
-	<IsAotCompatible>true</IsAotCompatible>
-	  
-	<GenerateDocumentationFile>True</GenerateDocumentationFile>
-	<IncludeSymbols>True</IncludeSymbols>
-	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-	  
-	<Title>Ulid</Title>
-	<Authors>Joonatan Uusväli</Authors>
-	<Company>ByteAether</Company>
-	<Description>A lightweight, high-performance, AoT-compatible .NET library for generating and working with ULIDs (Universally Unique Lexicographically Sortable Identifiers). Supports monotonic ULID generation, Base32 encoding, and cross-platform compatibility. Ideal for databases, distributed systems, and scenarios requiring unique, sortable, timestamped identifiers.</Description>
-	<PackageProjectUrl>https://github.com/ByteAether/Ulid</PackageProjectUrl>
-	<RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
-	<RepositoryType>git</RepositoryType>
-	
-	<PackageId>ByteAether.Ulid</PackageId>
-	<PackageTags>ulid;identifier;unique-identifier;universal-identifier;lexicographically-sortable;id-generator;globally-unique;globally-unique-identifier;distributed-systems;database;guid;uuid;sortable;human-readable;monotonic;primary-key;base32;cross-platform</PackageTags>
-	<PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
-	<PackageLicenseFile>LICENSE</PackageLicenseFile>
-	<PackageIcon>logo.png</PackageIcon>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))">true</TreatWarningsAsErrors>
+
+    <Deterministic>true</Deterministic>
+    <IsAotCompatible>true</IsAotCompatible>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <Title>Ulid</Title>
+    <Authors>Joonatan Uusväli</Authors>
+    <Company>ByteAether</Company>
+    <Description>A lightweight, high-performance, AoT-compatible .NET library for generating and working with ULIDs (Universally Unique Lexicographically Sortable Identifiers). Supports monotonic ULID generation, Base32 encoding, and cross-platform compatibility. Ideal for databases, distributed systems, and scenarios requiring unique, sortable, timestamped identifiers.</Description>
+    <PackageProjectUrl>https://github.com/ByteAether/Ulid</PackageProjectUrl>
+    <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <PackageId>ByteAether.Ulid</PackageId>
+    <PackageTags>ulid;identifier;unique-identifier;universal-identifier;lexicographically-sortable;id-generator;globally-unique;globally-unique-identifier;distributed-systems;database;guid;uuid;sortable;human-readable;monotonic;primary-key;base32;cross-platform</PackageTags>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-  	<PackageReference Include="System.Memory" Version="4.6.3" />
-  	<PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+    <PackageReference Include="System.Memory" Version="4.6.3"/>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2"/>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-	<PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -47,10 +51,10 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-	<None Include="..\..\assets\logo.png">
-	  <Pack>True</Pack>
-	  <PackagePath>\</PackagePath>
-	</None>
+    <None Include="..\..\assets\logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
