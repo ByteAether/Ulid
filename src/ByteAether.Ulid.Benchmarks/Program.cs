@@ -31,6 +31,12 @@ public class Generate
 	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.New();
 
 	[Benchmark]
+	public ByteAether.Ulid.Ulid ByteAetherUlid1BR() => ByteAether.Ulid.Ulid.New(ByteAether.Ulid.Ulid.Monotonicity.MonotonicRandom1Byte);
+
+	[Benchmark]
+	public ByteAether.Ulid.Ulid ByteAetherUlid4BR() => ByteAether.Ulid.Ulid.New(ByteAether.Ulid.Ulid.Monotonicity.MonotonicRandom4Byte);
+
+	[Benchmark]
 	public NetUlid.Ulid NetUlid() => global::NetUlid.Ulid.Generate();
 
 	[Benchmark]

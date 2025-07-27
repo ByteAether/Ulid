@@ -95,11 +95,16 @@ public readonly partial struct Ulid
 
 	private static readonly byte[] _lastUlid = new byte[_ulidSize];
 	private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
+#if NET6_0_OR_GREATER
+	private static Random _rngSimple => System.Random.Shared;
+#else
+	private static readonly Random _rngSimple = new();
+#endif
 
 #if NET9_0_OR_GREATER
 	private static readonly Lock _lock = new();
 #else
-    private static readonly object _lock = new();
+	private static readonly object _lock = new();
 #endif
 
 	/// <summary>
@@ -213,6 +218,7 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void FillTime(Span<byte> bytes, long timestamp)
 	{
 		unsafe
@@ -248,6 +254,7 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void FillRandom(Span<byte> bytes, Monotonicity monotonicity)
 	{
 		if (monotonicity == Monotonicity.NonMonotonic)
@@ -263,17 +270,16 @@ public readonly partial struct Ulid
 			// If the timestamp is the same or lesser than the last one, increment the last ULID by one
 			if (bytes[.._ulidSizeTime].SequenceCompareTo(lastUlidSpan[.._ulidSizeTime]) <= 0)
 			{
-				if (monotonicity == Monotonicity.MonotonicIncrement)
+				// We can use the last bytes of incomplete ULID for the increment parameter
+				var randomByteCount = (int)monotonicity;
+				var tempSpan = bytes.Slice(_ulidSize - randomByteCount, randomByteCount);
+
+				if (randomByteCount > 0)
 				{
-					IncrementByteSpan(lastUlidSpan, ReadOnlySpan<byte>.Empty);
+					_rngSimple.NextBytes(tempSpan);
 				}
-				else
-				{
-					var randomByteCount = (int)monotonicity;
-					// We can use the last bytes of incomplete ULID for the increment parameter
-					_rng.GetBytes(bytes[..^randomByteCount]);
-					IncrementByteSpan(lastUlidSpan, bytes[..^randomByteCount]);
-				}
+
+				IncrementByteSpan(lastUlidSpan, tempSpan);
 			}
 			// Otherwise, generate a new ULID
 			else
@@ -289,7 +295,6 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void IncrementByteSpan(Span<byte> targetSpan, ReadOnlySpan<byte> sourceSpan)
 	{
 		ushort carry = 1; // max sum 255+255+1 = 511; guarantee at least +1
