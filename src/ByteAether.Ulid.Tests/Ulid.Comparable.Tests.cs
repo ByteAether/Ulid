@@ -20,12 +20,18 @@ public class UlidComparableTests
 		Assert.False(ulid1 > ulid2);
 	}
 
-	[Fact]
-	public void CompareTo_CompareToNewerUlid_ShouldReturnNegative()
+	[Theory]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicIncrement)]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom1Byte)]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom2Byte)]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom3Byte)]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom4Byte)]
+	public void CompareTo_CompareToNewerUlid_ShouldReturnNegative(Ulid.GenerationOptions.MonotonicityOptions monotonicity)
 	{
 		// Arrange
-		var ulid1 = Ulid.New(Ulid.Monotonicity.MonotonicIncrement);
-		var ulid2 = Ulid.New(Ulid.Monotonicity.MonotonicIncrement);
+		var options = new Ulid.GenerationOptions { Monotonicity = monotonicity };
+		var ulid1 = Ulid.New(options);
+		var ulid2 = Ulid.New(options);
 
 		// Act
 		var comparisonResult = ulid1.CompareTo(ulid2);
@@ -38,12 +44,18 @@ public class UlidComparableTests
 		Assert.False(ulid1 >= ulid2);
 	}
 
-	[Fact]
-	public void CompareTo_CompareToOlderUlid_ShouldReturnPositive()
+	[Theory]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicIncrement)]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom1Byte)]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom2Byte)]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom3Byte)]
+	[InlineData(Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom4Byte)]
+	public void CompareTo_CompareToOlderUlid_ShouldReturnPositive(Ulid.GenerationOptions.MonotonicityOptions monotonicity)
 	{
 		// Arrange
-		var ulid1 = Ulid.New(Ulid.Monotonicity.MonotonicIncrement);
-		var ulid2 = Ulid.New(Ulid.Monotonicity.MonotonicIncrement);
+		var options = new Ulid.GenerationOptions { Monotonicity = monotonicity };
+		var ulid1 = Ulid.New(options);
+		var ulid2 = Ulid.New(options);
 
 		// Act
 		var comparisonResult = ulid2.CompareTo(ulid1);

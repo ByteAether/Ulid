@@ -5,6 +5,8 @@ using ByteAether.Ulid;
 Console.WriteLine("Starting ByteAether.Ulid AOT Compatibility Test...");
 Console.WriteLine("--------------------------------------------------");
 
+var options = Ulid.DefaultGenerationOptions;
+
 // --- 1. ULID Creation Tests ---
 Console.WriteLine("\n--- ULID Creation ---");
 
@@ -13,23 +15,23 @@ var ulid1_1 = Ulid.New();
 Console.WriteLine($"1.1 New ULID (default monotonic): {ulid1_1}");
 
 // 1.2 Create a new non-monotonic ULID
-var ulid1_2 = Ulid.New(Ulid.Monotonicity.NonMonotonic);
+var ulid1_2 = Ulid.New(options with { Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.NonMonotonic });
 Console.WriteLine($"1.2 New ULID (non-monotonic):     {ulid1_2}");
 
 // 1.3 Create a new ULID with MonotonicRandom1Byte
-var ulid1_3 = Ulid.New(Ulid.Monotonicity.MonotonicRandom1Byte);
+var ulid1_3 = Ulid.New(options with { Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom1Byte });
 Console.WriteLine($"1.3 New ULID (1-byte monotonic):  {ulid1_3}");
 
 // 1.4 Create a new ULID with MonotonicRandom2Byte
-var ulid1_4 = Ulid.New(Ulid.Monotonicity.MonotonicRandom2Byte);
+var ulid1_4 = Ulid.New(options with { Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom2Byte });
 Console.WriteLine($"1.4 New ULID (2-byte monotonic):  {ulid1_4}");
 
 // 1.5 Create a new ULID with MonotonicRandom3Byte
-var ulid1_5 = Ulid.New(Ulid.Monotonicity.MonotonicRandom3Byte);
+var ulid1_5 = Ulid.New(options with { Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom3Byte });
 Console.WriteLine($"1.5 New ULID (3-byte monotonic):  {ulid1_5}");
 
 // 1.6 Create a new ULID with MonotonicRandom4Byte
-var ulid1_6 = Ulid.New(Ulid.Monotonicity.MonotonicRandom4Byte);
+var ulid1_6 = Ulid.New(options with { Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom4Byte });
 Console.WriteLine($"1.6 New ULID (4-byte monotonic):  {ulid1_6}");
 
 // 1.7 Create a new ULID from DateTimeOffset

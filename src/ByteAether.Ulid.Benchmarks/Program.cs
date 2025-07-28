@@ -26,15 +26,41 @@ BenchmarkRunner.Run(
 public class Generate
 {
 	private static readonly NUlid.Rng.IUlidRng _nUlidRandomProvider = new NUlid.Rng.MonotonicUlidRng();
+	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsR1Bp = new()
+	{
+		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom1Byte,
+		IncrementRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.PseudoRandom
+	};
+	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsR4Bp = new()
+	{
+		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom4Byte,
+		IncrementRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.PseudoRandom
+	};
+	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsR1Bc = new()
+	{
+		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom1Byte,
+		IncrementRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.CryptographicallySecure
+	};
+	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsR4Bc = new()
+	{
+		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom4Byte,
+		IncrementRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.CryptographicallySecure
+	};
 
 	[Benchmark]
 	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.New();
 
 	[Benchmark]
-	public ByteAether.Ulid.Ulid ByteAetherUlid1BR() => ByteAether.Ulid.Ulid.New(ByteAether.Ulid.Ulid.Monotonicity.MonotonicRandom1Byte);
+	public ByteAether.Ulid.Ulid ByteAetherUlidR1Bp() => ByteAether.Ulid.Ulid.New(_byteAetherUlidOptionsR1Bp);
 
 	[Benchmark]
-	public ByteAether.Ulid.Ulid ByteAetherUlid4BR() => ByteAether.Ulid.Ulid.New(ByteAether.Ulid.Ulid.Monotonicity.MonotonicRandom4Byte);
+	public ByteAether.Ulid.Ulid ByteAetherUlidR4Bp() => ByteAether.Ulid.Ulid.New(_byteAetherUlidOptionsR4Bp);
+
+	[Benchmark]
+	public ByteAether.Ulid.Ulid ByteAetherUlidR1Bc() => ByteAether.Ulid.Ulid.New(_byteAetherUlidOptionsR1Bc);
+
+	[Benchmark]
+	public ByteAether.Ulid.Ulid ByteAetherUlidR4Bc() => ByteAether.Ulid.Ulid.New(_byteAetherUlidOptionsR4Bc);
 
 	[Benchmark]
 	public NetUlid.Ulid NetUlid() => global::NetUlid.Ulid.Generate();
@@ -46,8 +72,22 @@ public class Generate
 [MemoryDiagnoser]
 public class GenerateNonMono
 {
+	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsNonMono = new()
+	{
+		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.NonMonotonic
+	};
+
+	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsNonMonoP = new()
+	{
+		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.NonMonotonic,
+		InitialRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.PseudoRandom
+	};
+
 	[Benchmark]
-	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.New(ByteAether.Ulid.Ulid.Monotonicity.NonMonotonic);
+	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.New(_byteAetherUlidOptionsNonMono);
+
+	[Benchmark]
+	public ByteAether.Ulid.Ulid ByteAetherUlidP() => ByteAether.Ulid.Ulid.New(_byteAetherUlidOptionsNonMonoP);
 
 	[Benchmark]
 	public System.Ulid Ulid() => System.Ulid.NewUlid();

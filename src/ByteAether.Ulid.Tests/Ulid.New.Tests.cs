@@ -2,6 +2,10 @@
 
 public class UlidNewTests
 {
+	// A lock object to synchronize tests that rely on shared static state in the Ulid class,
+	// preventing race conditions and ensuring test isolation.
+	private static readonly object _staticStateLock = new();
+
 	[Fact]
 	public void ToByteArray_ShouldConvertToByteArrayAndBack()
 	{
@@ -19,65 +23,82 @@ public class UlidNewTests
 
 	[Theory]
 	[CombinatorialData]
-	public void New_ShouldGenerateUniqueUlids(Ulid.Monotonicity monotonicity)
+	public void New_ShouldGenerateUniqueUlids(Ulid.GenerationOptions.MonotonicityOptions monotonicity)
 	{
-		// Act
-		var ulid1 = Ulid.New(monotonicity);
-		var ulid2 = Ulid.New(monotonicity);
+		var options = new Ulid.GenerationOptions { Monotonicity = monotonicity };
 
-		// Assert
-		Assert.NotEqual(ulid1, ulid2);
-	}
-
-	[Theory]
-	[CombinatorialData]
-	public void New_WithDateTime_ShouldGenerateUniqueUlids(Ulid.Monotonicity monotonicity)
-	{
-		// Arrange
-		var dateTimeOffset = DateTimeOffset.UtcNow;
-		var timestamp = dateTimeOffset.ToUnixTimeMilliseconds();
-
-		// Act
-		var ulid1 = Ulid.New(dateTimeOffset, monotonicity);
-		var ulid2 = Ulid.New(dateTimeOffset, monotonicity);
-
-		// Assert
-		Assert.NotEqual(ulid1, ulid2);
-
-		Assert.True(ulid1.Time.ToUnixTimeMilliseconds() <= ulid2.Time.ToUnixTimeMilliseconds());
-		Assert.True(timestamp <= ulid1.Time.ToUnixTimeMilliseconds());
-		Assert.True(timestamp <= ulid2.Time.ToUnixTimeMilliseconds());
-
-		if (monotonicity != Ulid.Monotonicity.NonMonotonic)
+		lock (_staticStateLock)
 		{
-			Assert.True(MemoryExtensions.SequenceCompareTo(ulid1.AsByteSpan(), ulid2.AsByteSpan()) < 0);
-			Assert.True(ulid1 < ulid2);
+			// Act
+			var ulid1 = Ulid.New(options);
+			var ulid2 = Ulid.New(options);
+
+			// Assert
+			Assert.NotEqual(ulid1, ulid2);
 		}
 	}
 
 	[Theory]
 	[CombinatorialData]
-	public void New_WithTimestamp_ShouldGenerateUniqueUlids(Ulid.Monotonicity monotonicity)
+	public void New_WithDateTime_ShouldGenerateUniqueUlids(Ulid.GenerationOptions.MonotonicityOptions monotonicity)
 	{
 		// Arrange
 		var dateTimeOffset = DateTimeOffset.UtcNow;
 		var timestamp = dateTimeOffset.ToUnixTimeMilliseconds();
+		var options = new Ulid.GenerationOptions { Monotonicity = monotonicity };
 
-		// Act
-		var ulid1 = Ulid.New(timestamp, monotonicity);
-		var ulid2 = Ulid.New(timestamp, monotonicity);
-
-		// Assert
-		Assert.NotEqual(ulid1, ulid2);
-
-		Assert.True(ulid1.Time.ToUnixTimeMilliseconds() <= ulid2.Time.ToUnixTimeMilliseconds());
-		Assert.True(timestamp <= ulid1.Time.ToUnixTimeMilliseconds());
-		Assert.True(timestamp <= ulid2.Time.ToUnixTimeMilliseconds());
-
-		if (monotonicity != Ulid.Monotonicity.NonMonotonic)
+		lock (_staticStateLock)
 		{
-			Assert.True(MemoryExtensions.SequenceCompareTo(ulid1.AsByteSpan(), ulid2.AsByteSpan()) < 0);
-			Assert.True(ulid1 < ulid2);
+			Ulid.New(options); // Prime the pump to ensure the last-generated ULID state is recent.
+
+			// Act
+			var ulid1 = Ulid.New(dateTimeOffset, options);
+			var ulid2 = Ulid.New(dateTimeOffset, options);
+
+			// Assert
+			Assert.NotEqual(ulid1, ulid2);
+
+			Assert.True(ulid1.Time.ToUnixTimeMilliseconds() <= ulid2.Time.ToUnixTimeMilliseconds());
+			Assert.True(timestamp <= ulid1.Time.ToUnixTimeMilliseconds());
+			Assert.True(timestamp <= ulid2.Time.ToUnixTimeMilliseconds());
+
+			if (monotonicity != Ulid.GenerationOptions.MonotonicityOptions.NonMonotonic)
+			{
+				Assert.True(ulid1.AsByteSpan().SequenceCompareTo(ulid2.AsByteSpan()) < 0);
+				Assert.True(ulid1 < ulid2);
+			}
+		}
+	}
+
+	[Theory]
+	[CombinatorialData]
+	public void New_WithTimestamp_ShouldGenerateUniqueUlids(Ulid.GenerationOptions.MonotonicityOptions monotonicity)
+	{
+		// Arrange
+		var dateTimeOffset = DateTimeOffset.UtcNow;
+		var timestamp = dateTimeOffset.ToUnixTimeMilliseconds();
+		var options = new Ulid.GenerationOptions { Monotonicity = monotonicity };
+
+		lock (_staticStateLock)
+		{
+			Ulid.New(options); // Prime the pump to ensure the last-generated ULID state is recent.
+
+			// Act
+			var ulid1 = Ulid.New(timestamp, options);
+			var ulid2 = Ulid.New(timestamp, options);
+
+			// Assert
+			Assert.NotEqual(ulid1, ulid2);
+
+			Assert.True(ulid1.Time.ToUnixTimeMilliseconds() <= ulid2.Time.ToUnixTimeMilliseconds());
+			Assert.True(timestamp <= ulid1.Time.ToUnixTimeMilliseconds());
+			Assert.True(timestamp <= ulid2.Time.ToUnixTimeMilliseconds());
+
+			if (monotonicity != Ulid.GenerationOptions.MonotonicityOptions.NonMonotonic)
+			{
+				Assert.True(ulid1.AsByteSpan().SequenceCompareTo(ulid2.AsByteSpan()) < 0);
+				Assert.True(ulid1 < ulid2);
+			}
 		}
 	}
 
@@ -131,28 +152,88 @@ public class UlidNewTests
 
 	[Theory]
 	[CombinatorialData]
-	public void New_WithTimestampAndMonotonicSet_ShouldGenerateUniqueUlids(Ulid.Monotonicity? monotonicity, Ulid.Monotonicity defaultMonotonicity)
+	public void New_WithTimestampAndMonotonicSet_ShouldGenerateUniqueUlids(
+		Ulid.GenerationOptions.MonotonicityOptions? monotonicity,
+		Ulid.GenerationOptions.MonotonicityOptions defaultMonotonicity
+	)
 	{
 		// Arrange
-		Ulid.DefaultMonotonicity = defaultMonotonicity;
-		var dateTimeOffset = DateTimeOffset.UtcNow;
-		var timestamp = dateTimeOffset.ToUnixTimeMilliseconds();
+		var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-		// Act
-		var ulid1 = Ulid.New(timestamp, monotonicity);
-		var ulid2 = Ulid.New(timestamp, monotonicity);
+		// When monotonicity is specified, it creates new options. Otherwise, null is passed to Ulid.New
+		// and DefaultGenerationOptions should be used.
+		var options = monotonicity.HasValue
+			? Ulid.DefaultGenerationOptions with { Monotonicity = monotonicity.Value }
+			: (Ulid.GenerationOptions?)null;
 
-		// Assert
-		Assert.NotEqual(ulid1, ulid2);
-
-		Assert.True(ulid1.Time.ToUnixTimeMilliseconds() <= ulid2.Time.ToUnixTimeMilliseconds());
-		Assert.True(timestamp <= ulid1.Time.ToUnixTimeMilliseconds());
-		Assert.True(timestamp <= ulid2.Time.ToUnixTimeMilliseconds());
-
-		if ((monotonicity ?? defaultMonotonicity) != Ulid.Monotonicity.NonMonotonic)
+		lock (_staticStateLock)
 		{
-			Assert.True(MemoryExtensions.SequenceCompareTo(ulid1.AsByteSpan(), ulid2.AsByteSpan()) < 0);
-			Assert.True(ulid1 < ulid2);
+			var originalOptions = Ulid.DefaultGenerationOptions;
+			try
+			{
+				Ulid.DefaultGenerationOptions = originalOptions with { Monotonicity = defaultMonotonicity };
+
+				// The Ulid generation with the same timestamp depends on a static last-ulid state.
+				Ulid.New(options); // Reset the static state by generating a ULID with a fresh, higher timestamp.
+
+				// Act
+				var ulid1 = Ulid.New(timestamp, options);
+				var ulid2 = Ulid.New(timestamp, options);
+
+				// Assert
+				Assert.NotEqual(ulid1, ulid2);
+
+				Assert.True(ulid1.Time.ToUnixTimeMilliseconds() <= ulid2.Time.ToUnixTimeMilliseconds());
+				Assert.True(timestamp <= ulid1.Time.ToUnixTimeMilliseconds());
+				Assert.True(timestamp <= ulid2.Time.ToUnixTimeMilliseconds());
+
+				var expectedMonotonicity = monotonicity ?? defaultMonotonicity;
+				if (expectedMonotonicity != Ulid.GenerationOptions.MonotonicityOptions.NonMonotonic)
+				{
+					Assert.True(ulid1.AsByteSpan().SequenceCompareTo(ulid2.AsByteSpan()) < 0);
+					Assert.True(ulid1 < ulid2);
+				}
+			}
+			finally
+			{
+				Ulid.DefaultGenerationOptions = originalOptions;
+			}
+		}
+	}
+
+	[Theory]
+	[CombinatorialData]
+	public void New_WithAllGenerationOptions_ShouldGenerateCorrectly(
+		Ulid.GenerationOptions.MonotonicityOptions monotonicity,
+		Ulid.GenerationOptions.RandomSourceOptions initialRandomSource,
+		Ulid.GenerationOptions.RandomSourceOptions incrementRandomSource
+	)
+	{
+		// Arrange
+		var options = new Ulid.GenerationOptions
+		{
+			Monotonicity = monotonicity,
+			InitialRandomSource = initialRandomSource,
+			IncrementRandomSource = incrementRandomSource
+		};
+		var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+		lock (_staticStateLock)
+		{
+			Ulid.New(options); // Ensure _lastUlid is recent
+
+			// Act
+			var ulid1 = Ulid.New(timestamp, options);
+			var ulid2 = Ulid.New(timestamp, options);
+
+			// Assert
+			Assert.NotEqual(ulid1, ulid2);
+
+			if (monotonicity != Ulid.GenerationOptions.MonotonicityOptions.NonMonotonic)
+			{
+				Assert.True(ulid1.Time.ToUnixTimeMilliseconds() <= ulid2.Time.ToUnixTimeMilliseconds());
+				Assert.True(ulid1 < ulid2, "ULIDs should be monotonic");
+			}
 		}
 	}
 }
