@@ -5,7 +5,7 @@ public readonly partial struct Ulid
 	/// <summary>
 	/// Specifies the configuration options for ULID generation.
 	/// </summary>
-	public readonly record struct GenerationOptions()
+	public class GenerationOptions
 	{
 		/// <summary>
 		/// Defines the monotonicity behavior for ULID generation.
@@ -86,38 +86,6 @@ public readonly partial struct Ulid
 		}
 
 		/// <summary>
-		/// Specifies the random source options for ULID generation.
-		/// </summary>
-		/// <remarks>
-		/// The <see cref="RandomSourceOptions"/> enum determines the source of randomness
-		/// used during the generation of ULIDs. It provides options to enable secure
-		/// or fast generation based on the application's requirements.
-		/// </remarks>
-		public enum RandomSourceOptions
-		{
-			/// <summary>
-			/// Indicates that ULIDs are generated using a cryptographically secure random source.
-			/// </summary>
-			/// <remarks>
-			/// When <see cref="CryptographicallySecure"/> is selected, the random component of the ULID
-			/// uses a cryptographically strong source of randomness. This ensures high entropy and
-			/// resistance to prediction, making it suitable for scenarios requiring enhanced security.
-			/// </remarks>
-			CryptographicallySecure,
-
-			/// <summary>
-			/// Indicates that ULIDs are generated using a pseudo-random source for randomness.
-			/// </summary>
-			/// <remarks>
-			/// When <see cref="PseudoRandom"/> is used, the random component of the ULID
-			/// is generated using a pseudo-random algorithm. This option provides a balance
-			/// between performance and randomness but does not guarantee cryptographic security.
-			/// It is suitable for scenarios where speed is prioritized over secure randomness.
-			/// </remarks>
-			PseudoRandom,
-		}
-
-		/// <summary>
 		/// Gets or sets the monotonicity behavior for ULID generation.
 		/// </summary>
 		/// <remarks>
@@ -145,47 +113,32 @@ public readonly partial struct Ulid
 		/// Gets or sets the initial random source used for ULID generation.
 		/// </summary>
 		/// <remarks>
-		/// This property specifies the type of randomness used when generating
-		/// the initial components of a ULID:
-		/// - CryptographicallySecure: Utilizes a cryptographically secure random number generator,
-		/// providing higher entropy and resistance to predictability.
-		/// - PseudoRandom: Relies on a pseudo-random number generator, which is faster but less secure.
+		/// This property specifies the random number generator to be used for the initial
+		/// randomness during ULID creation. By default, a cryptographically secure random
+		/// provider is used, ensuring high unpredictability and security for generated IDs.
 		/// </remarks>
 		/// <value>
-		/// A value of the <see cref="RandomSourceOptions"/> enum that specifies the initial random source.
-		/// Defaults to <see cref="RandomSourceOptions.CryptographicallySecure"/>.
+		/// An instance of a class that implements the <see cref="IRandomProvider"/> interface
+		/// to provide the random number generation logic for the initial randomness component.
+		/// Defaults to <see cref="CryptographicallySecureRandomProvider"/>.
 		/// </value>
-		public RandomSourceOptions InitialRandomSource
-		{
-			get;
-			init => field = Enum.IsDefined(typeof(RandomSourceOptions), value)
-				? value
-				: throw new ArgumentOutOfRangeException(nameof(value), value, "Invalid initial random source option.");
-		} = RandomSourceOptions.CryptographicallySecure;
+		public IRandomProvider InitialRandomSource { get; init; } = new CryptographicallySecureRandomProvider();
 
 		/// <summary>
-		/// Gets or sets the random source used for generating incremental randomness
-		/// in ULID generation when ensuring monotonicity.
+		/// Gets or sets the random source used during monotonic ULID generation when
+		/// timestamps are identical and incremental randomness is required.
 		/// </summary>
 		/// <remarks>
-		/// This property determines which strategy is employed for generating the random
-		/// component when monotonicity adjustments are necessary:
-		/// - CryptographicallySecure: Uses a cryptographically secure random number generator
-		/// for enhanced unpredictability and security.
-		/// - PseudoRandom: Uses a pseudo-random number generator for improved performance,
-		/// potentially at the cost of slightly reduced randomness quality.
+		/// Specifies the random provider used to supply entropy for the Random
+		/// component when consecutive ULIDs share the same timestamp. It is utilized
+		/// in maintaining monotonicity while ensuring random variation in ULID values.
+		/// The default provider is <see cref="PseudoRandomProvider"/>, which uses a deterministic
+		/// pseudo-random approach.
 		/// </remarks>
 		/// <value>
-		/// A value of the <see cref="RandomSourceOptions"/> enum that specifies the
-		/// random generation strategy during monotonic sequence generation.
-		/// Defaults to <see cref="RandomSourceOptions.PseudoRandom"/>.
+		/// An implementation of the <see cref="IRandomProvider"/> interface that provides
+		/// randomness for incremental updates. Defaults to an instance of <see cref="PseudoRandomProvider"/>.
 		/// </value>
-		public RandomSourceOptions IncrementRandomSource
-		{
-			get;
-			init => field = Enum.IsDefined(typeof(RandomSourceOptions), value)
-				? value
-				: throw new ArgumentOutOfRangeException(nameof(value), value, "Invalid increment random source option.");
-		} = RandomSourceOptions.PseudoRandom;
+		public IRandomProvider IncrementRandomSource { get; init; } = new PseudoRandomProvider();
 	};
 }

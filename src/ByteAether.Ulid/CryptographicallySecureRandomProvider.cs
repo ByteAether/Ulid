@@ -1,0 +1,18 @@
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+
+namespace ByteAether.Ulid;
+
+/// <summary>
+/// Provides cryptographically secure random number generation functionality.
+/// Implements the <see cref="IRandomProvider"/> interface to generate random bytes
+/// securely using a system-provided implementation of the RNGCryptoServiceProvider.
+/// </summary>
+public readonly struct CryptographicallySecureRandomProvider : IRandomProvider
+{
+	private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void GetBytes(Span<byte> buffer) => _rng.GetBytes(buffer);
+}

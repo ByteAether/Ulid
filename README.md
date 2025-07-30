@@ -6,7 +6,7 @@
 [![GitHub Build Status](https://img.shields.io/github/actions/workflow/status/ByteAether/Ulid/build-and-test.yml?logo=github&label=Build%20%26%20Test)](https://github.com/ByteAether/Ulid/actions/workflows/build-and-test.yml)
 [![GitHub Security](https://img.shields.io/github/actions/workflow/status/ByteAether/Ulid/codeql.yml?logo=github&label=Security%20Validation)](https://github.com/ByteAether/Ulid/actions/workflows/codeql.yml)
 
-A high-performance .NET implementation of ULIDs (Universally Unique Lexicographically Sortable Identifiers) that fully complies with the [official ULID specification](https://github.com/ulid/spec).
+A high-performance, fully compliant .NET implementation of ULIDs (Universally Unique Lexicographically Sortable Identifiers), adhering to the [official ULID specification](https://github.com/ulid/spec).
 
 ## Table of Contents
 
@@ -25,15 +25,13 @@ A high-performance .NET implementation of ULIDs (Universally Unique Lexicographi
 
 <img align="right" width="100px" src="assets/logo.png" />
 
-ULIDs are identifiers designed to be universally unique and lexicographically sortable, making them ideal for distributed systems and time-ordered data. Unlike GUIDs, ULIDs are both sortable and human-readable. This library provides a robust and fully compliant .NET implementation of ULIDs, addressing some limitations found in other implementations.
+ULIDs are universally unique, lexicographically sortable identifiers, ideal for distributed systems and time-ordered data due to their sortability and human-readability—advantages GUIDs lack. This library offers a robust, fully compliant .NET implementation, addressing limitations found in other ULID solutions.
 
-This implementation addresses a potential issue in the official specification where generating multiple ULIDs within the same millisecond can cause the "random" part of the ULID to overflow. To ensure dependability and guarantee the generation of unique ULIDs, this implementation allows overflow to increment the "timestamp" part of the ULID, thereby eliminating the possibility of randomly occurring exceptions.
+This implementation addresses a potential `OverflowException` that can occur when generating multiple ULIDs within the same millisecond due to the "random" part overflowing. To ensure dependable, unique ULID generation, our solution increments the timestamp component upon random part overflow, eliminating such exceptions. This behavior aligns with discussions in [ULID specification issue #39](https://github.com/ulid/spec/issues/39#issuecomment-2252145597).
 
-Relevant issue with same suggestion is opened on official ULID specification: [Guarantee a minimum number of IDs before overflow of the random component #39](https://github.com/ulid/spec/issues/39#issuecomment-2252145597)
+This library uniquely addresses the predictability of monotonic ULIDs generated within the same millisecond by allowing random increments to the random component. This mitigates enumeration attack vulnerabilities, as discussed in [ULID specification issue #105](https://github.com/ulid/spec/issues/105). You can configure the random increment with a random value ranging from 1-byte (1–256) to 4-bytes (1–4,294,967,296), enhancing randomness while preserving lexicographical sortability.
 
-A unique feature of this library is the ability to introduce random increments during monotonic ULID generation. As pointed out in [issue #105 of the ULID specification](https://github.com/ulid/spec/issues/105), simply incrementing the random part by 1 makes ULIDs generated in the same millisecond predictable and vulnerable to enumeration attacks. To mitigate this, our library allows you to configure a random increment. This adds an extra layer of randomness, making the ULIDs harder to guess while preserving their lexicographical sortability. You can configure the random part to be incremented by a random value, spanning from a 1-byte (1–256) to a 4-byte (1–4,294,967,296) range.
-
-For almost all systems in the world, both GUID and integer IDs should be abandoned in favor of ULIDs. GUIDs, while unique, lack sortability and readability, making them less efficient for indexing and querying. Integer IDs, on the other hand, are sortable but not universally unique, leading to potential conflicts in distributed systems. ULIDs combine the best of both worlds, offering both uniqueness and sortability, making them an ideal choice for modern applications that require scalable and efficient identifier generation. This library provides a robust and reliable implementation of ULIDs, ensuring that your application can benefit from these advantages without compromising on performance or compliance with the official specification.
+For most modern systems, ULIDs offer a superior alternative to both GUIDs and integer IDs. While GUIDs provide uniqueness, they lack sortability and readability, impacting indexing and querying efficiency. Integer IDs are sortable but not universally unique, leading to potential conflicts in distributed environments. ULIDs combine universal uniqueness with lexicographical sortability, making them the optimal choice for scalable and efficient identifier generation in modern applications. This library provides a robust, reliable, and compliant ULID implementation, enabling your application to leverage these benefits without compromising performance or adherence to the official specification.
 
 ## Features
 
@@ -51,7 +49,9 @@ For almost all systems in the world, both GUID and integer IDs should be abandon
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
 - **Ahead-of-Time (AoT) Compilation Compatible**: Fully compatible with AoT compilation for improved startup performance and smaller binary sizes.
-- **Error-Free Generation**: Prevents overflow exceptions by incrementing timestamps during random part overflow.
+- **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
+
+These features collectively make ByteAether.Ulid a robust and efficient choice for managing unique identifiers in your .NET applications.
 
 ## Installation
 
@@ -59,7 +59,10 @@ Install the latest stable package via NuGet:
 ```sh
 dotnet add package ByteAether.Ulid
 ```
-Use the `--version` option to specify a [preview version](https://www.nuget.org/packages/ByteAether.Ulid/absoluteLatest) to install.
+To install a specific [preview version](https://www.nuget.org/packages/ByteAether.Ulid/absoluteLatest), use the `--version` option:
+```sh
+dotnet add package ByteAether.Ulid --version <VERSION_NUMBER>
+```
 
 ## Usage
 
@@ -68,28 +71,22 @@ Here is a basic example of how to use the ULID implementation:
 using System;
 using ByteAether.Ulid;
 
-class Program
-{
-	static void Main()
-	{
-		// Create a new ULID
-		var ulid = Ulid.New();
+// Create a new ULID
+var ulid = Ulid.New();
 
-		// Convert to byte array and back
-		byte[] byteArray = ulid.ToByteArray();
-		var ulidFromByteArray = Ulid.New(byteArray);
+// Convert to byte array and back
+byte[] byteArray = ulid.ToByteArray();
+var ulidFromByteArray = Ulid.New(byteArray);
 
-		// Convert to GUID and back
-		Guid guid = ulid.ToGuid();
-		var ulidFromGuid = Ulid.New(guid);
+// Convert to GUID and back
+Guid guid = ulid.ToGuid();
+var ulidFromGuid = Ulid.New(guid);
 
-		// Convert to string and back
-		string ulidString = ulid.ToString();
-		var ulidFromString = Ulid.Parse(ulidString);
+// Convert to string and back
+string ulidString = ulid.ToString();
+var ulidFromString = Ulid.Parse(ulidString);
 
-		Console.WriteLine($"ULID: {ulid}, GUID: {guid}, String: {ulidString}");
-	}
-}
+Console.WriteLine($"ULID: {ulid}, GUID: {guid}, String: {ulidString}");
 ```
 ### Advanced Generation
 
@@ -104,7 +101,7 @@ using ByteAether.Ulid;
 using static ByteAether.Ulid.Ulid.GenerationOptions;
 
 // Configure options for a 2-byte random increment
-var options = new GenerationOptions
+var options = new Ulid.GenerationOptions
 {
 	Monotonicity = MonotonicityOptions.MonotonicRandom2Byte
 };
@@ -126,8 +123,8 @@ using static ByteAether.Ulid.Ulid.GenerationOptions;
 Ulid.DefaultGenerationOptions = new()
 {
 	Monotonicity = MonotonicityOptions.MonotonicIncrement,
-	InitialRandomSource = RandomSourceOptions.PseudoRandom,
-	IncrementRandomSource = RandomSourceOptions.PseudoRandom
+	InitialRandomSource = new PseudoRandomProvider(),
+	IncrementRandomSource = new PseudoRandomProvider()
 };
 
 // Now, any subsequent call to Ulid.New() will use these options
@@ -216,29 +213,25 @@ Converts the ULID to a canonical string representation. Format arguments are ign
 
 ### GenerationOptions
 
-The `GenerationOptions` allows you to customize the behavior of ULID generation.
+The `GenerationOptions` class provides detailed configuration for ULID generation, with the following key properties:
 
-#### `Monotonicity`
+- `Monotonicity`\
+  Controls the behavior of ULID generation when multiple identifiers are created within the same millisecond. It determines whether ULIDs are strictly increasing or allow for random ordering within that millisecond. Available options include: `NonMonotonic`, `MonotonicIncrement` (default), `MonotonicRandom1Byte`, `MonotonicRandom2Byte`, `MonotonicRandom3Byte`, `MonotonicRandom4Byte`.
 
-Gets or sets the monotonicity behavior for ULID generation. Default: `MonotonicityOptions.MonotonicIncrement`.
+- `InitialRandomSource`\
+An `IRandomProvider` for generating the random bytes of a ULID. The default `CryptographicallySecureRandomProvider` ensures robust, unpredictable ULIDs using a cryptographically secure generator.
 
-- **`NonMonotonic`**: ULIDs are generated without any monotonic guarantees. The random component is entirely random.
-- **`MonotonicIncrement`**: Guarantees strict monotonic progression by incrementing the random portion of the ULID.
-- **`MonotonicRandom1Byte`, `MonotonicRandom2Byte`, `MonotonicRandom3Byte`, `MonotonicRandom4Byte`**: Ensures monotonicity by adding a random value of 1 to 4 bytes to the random component. This mitigates the risk of predictable ULIDs when generated in the same millisecond.
+- `IncrementRandomSource`\
+An `IRandomProvider` that provides randomness for monotonic random increments. The default `PseudoRandomProvider` is a faster, non-cryptographically secure source optimized for this specific purpose.
 
-#### `InitialRandomSource`
+This library comes with two default `IRandomProvider` implementations:
 
-Gets or sets the random source used for generating the initial random component of the ULID. Default: `RandomSourceOptions.CryptographicallySecure`.
+- **`CryptographicallySecureRandomProvider`**\
+Utilizes `System.Security.Cryptography.RandomNumberGenerator` for high-quality, cryptographically secure random data.
+- **`PseudoRandomProvider`**\
+A faster, non-cryptographically secure option based on `System.Random`, ideal for performance-critical scenarios where cryptographic security is not required for random increments.
 
-- **`CryptographicallySecure`**: Uses a cryptographically strong source of randomness, ensuring high entropy.
-- **`PseudoRandom`**: Uses a pseudo-random algorithm, which is faster but not cryptographically secure.
-
-#### `IncrementRandomSource`
-
-Gets or sets the random source used for generating the random increment when ensuring monotonicity. Default: `RandomSourceOptions.PseudoRandom`.
-
-- **`CryptographicallySecure`**: Uses a cryptographically secure random number generator for the increment.
-- **`PseudoRandom`**: Uses a pseudo-random number generator for the increment, prioritizing performance.
+Custom `IRandomProvider` implementations can also be created.
 
 ## Integration with Other Libraries
 
@@ -396,12 +389,12 @@ var json = JsonConvert.SerializeObject(myObject, settings);
 var deserializedObject = JsonConvert.DeserializeObject<MyObject>(json, settings);
 ```
 ## Benchmarking
-To ensure the performance and efficiency of this ULID implementation, benchmarking was conducted using [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet).
 
-For comparison, [NetUlid](https://github.com/ultimicro/netulid) 2.1.0, [Ulid](https://github.com/Cysharp/Ulid) 1.3.4 and [NUlid](https://github.com/RobThree/NUlid) 1.7.3 implementations were benchmarked alongside ByteAether.Ulid v1.1.1.
+Benchmarking was performed using [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) to demonstrate the performance and efficiency of this ULID implementation. Comparisons include [NetUlid](https://github.com/ultimicro/netulid) 2.1.0, [Ulid](https://github.com/Cysharp/Ulid) 1.3.4, [NUlid](https://github.com/RobThree/NUlid) 1.7.3, and `Guid` for overlapping functionalities like creation, parsing, and byte conversions.
 
 Benchmark scenarios also include comparisons against `Guid`, where functionality overlaps, such as creation, parsing, and byte conversions.
 
+*Note:*
 * `ByteAetherUlidR1Bc` & `ByteAetherUlidR4Bc` are configured to use a cryptographically secure random increment of 1 byte and 4 bytes, respectively, during monotonic ULID generation.
 * `ByteAetherUlidR1Bp` & `ByteAetherUlidR4Bp` are configured to use a pseudo-random increment of 1 byte and 4 bytes, respectively, during monotonic ULID generation.
 * `ByteAetherUlidP` is configured to use a pseudo-random source for the random component during non-monotonic ULID generation.
@@ -477,16 +470,16 @@ The following benchmarks were performed:
 
 ```
 
-All competitive libraries deviate from the official ULID specification in various ways or have other drawbacks:
-  1. `NetUlid`: Can only maintain monotonicity in the scope of a single thread.
-  2. `NUlid`: Requires special configuration to enable monotonic generation. You have to write your own wrapper with state.
-  3. `Ulid` & `GuidV7`: Does not implement monotonicity.
-  4. `Ulid`: This library uses a cryptographically non-secure `XOR-Shift` random value generation. Only the initial seed is generated by a cryptographically secure generator.
+Existing competitive libraries exhibit various deviations from the official ULID specification or present drawbacks:
+  1. `NetUlid`: Only supports monotonicity within a single thread.
+  2. `NUlid`: Requires custom wrappers and state management for monotonic generation.
+  3. `Ulid` & `GuidV7`: Do not implement monotonicity.
+  4. `Ulid`: Utilizes a cryptographically non-secure `XOR-Shift` for random value generation, with only the initial seed being cryptographically secure.
   5. `Guid` & `GuidV7`: [The Guid documentation explicitly states](https://learn.microsoft.com/en-us/dotnet/api/system.guid.newguid?view=net-9.0#remarks) that its random component may not be generated using a cryptographically secure random number generator (RNG), and that `Guid` values should not be used for cryptographic purposes.
 
-Both `NetUlid` and `NUlid`, which do provide monotonicity, may randomly throw `OverflowException`, when stars align against you. (Random-part overflow)
+Furthermore, both `NetUlid` and `NUlid`, despite offering monotonicity, are susceptible to `OverflowException` due to random-part overflow.
 
-As such, it can be concluded that this implementation is either the fastest or very close to the fastest ones, while also adhering most completely to the official ULID specification and can be relied on.
+This implementation demonstrates performance comparable to or exceeding its closest competitors. Crucially, it provides the most complete adherence to the official ULID specification, ensuring superior reliability and robustness for your applications compared to other libraries.
 
 ## Prior Art
 

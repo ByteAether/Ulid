@@ -12,8 +12,8 @@ var benchmarkConfig = ManualConfig
 	.HideColumns(Column.Job, Column.StdDev, Column.Median)
 ;
 
-BenchmarkRunner.Run(
-	typeof(Program).Assembly,
+BenchmarkRunner.Run<Generate>(
+	//typeof(Program).Assembly,
 	benchmarkConfig
 );
 
@@ -29,22 +29,22 @@ public class Generate
 	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsR1Bp = new()
 	{
 		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom1Byte,
-		IncrementRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.PseudoRandom
+		IncrementRandomSource = new ByteAether.Ulid.PseudoRandomProvider()
 	};
 	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsR4Bp = new()
 	{
 		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom4Byte,
-		IncrementRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.PseudoRandom
+		IncrementRandomSource = new ByteAether.Ulid.PseudoRandomProvider()
 	};
 	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsR1Bc = new()
 	{
 		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom1Byte,
-		IncrementRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.CryptographicallySecure
+		IncrementRandomSource = new ByteAether.Ulid.CryptographicallySecureRandomProvider()
 	};
 	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsR4Bc = new()
 	{
 		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.MonotonicRandom4Byte,
-		IncrementRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.CryptographicallySecure
+		IncrementRandomSource = new ByteAether.Ulid.CryptographicallySecureRandomProvider()
 	};
 
 	[Benchmark]
@@ -80,7 +80,7 @@ public class GenerateNonMono
 	private static readonly ByteAether.Ulid.Ulid.GenerationOptions _byteAetherUlidOptionsNonMonoP = new()
 	{
 		Monotonicity = ByteAether.Ulid.Ulid.GenerationOptions.MonotonicityOptions.NonMonotonic,
-		InitialRandomSource = ByteAether.Ulid.Ulid.GenerationOptions.RandomSourceOptions.PseudoRandom
+		InitialRandomSource = new ByteAether.Ulid.PseudoRandomProvider()
 	};
 
 	[Benchmark]

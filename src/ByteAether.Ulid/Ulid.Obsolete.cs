@@ -20,7 +20,7 @@ public readonly partial struct Ulid
 	public static bool DefaultIsMonotonic
 	{
 		get => ObsoleteHelper.GetByGenerationOptions(DefaultGenerationOptions);
-		set => DefaultGenerationOptions = ObsoleteHelper.GetByBoolean(value).Value;
+		set => DefaultGenerationOptions = ObsoleteHelper.GetByBoolean(value);
 	}
 
 	/// <summary>
@@ -71,8 +71,8 @@ internal static class ObsoleteHelper
 
 	private static readonly Ulid.GenerationOptions _nonmonotonicDefaultOptions = new()
 	{
-		InitialRandomSource = Ulid.GenerationOptions.RandomSourceOptions.CryptographicallySecure,
-		IncrementRandomSource = Ulid.GenerationOptions.RandomSourceOptions.PseudoRandom,
+		InitialRandomSource = new CryptographicallySecureRandomProvider(),
+		IncrementRandomSource = new PseudoRandomProvider(), // This has no effect
 		Monotonicity = Ulid.GenerationOptions.MonotonicityOptions.NonMonotonic
 	};
 

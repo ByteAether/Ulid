@@ -7,7 +7,7 @@
 [![GitHub Build Status](https://img.shields.io/github/actions/workflow/status/ByteAether/Ulid/build-and-test.yml?logo=github&label=Build%20%26%20Test)](https://github.com/ByteAether/Ulid/actions/workflows/build-and-test.yml)
 [![GitHub Security](https://img.shields.io/github/actions/workflow/status/ByteAether/Ulid/codeql.yml?logo=github&label=Security%20Validation)](https://github.com/ByteAether/Ulid/actions/workflows/codeql.yml)
 
-A high-performance .NET implementation of ULIDs (Universally Unique Lexicographically Sortable Identifiers) that fully complies with the [official ULID specification](https://github.com/ulid/spec).
+A high-performance, fully compliant .NET implementation of ULIDs (Universally Unique Lexicographically Sortable Identifiers), adhering to the [official ULID specification](https://github.com/ulid/spec).
 
 For more detailed documentation, visit our [GitHub repository](https://github.com/ByteAether/Ulid).
 
@@ -27,7 +27,7 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
 - **Ahead-of-Time (AoT) Compilation Compatible**: Fully compatible with AoT compilation for improved startup performance and smaller binary sizes.
-- **Error-Free Generation**: Prevents overflow exceptions by incrementing timestamps during random part overflow.
+- **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
 
 ## Installation
 
@@ -35,7 +35,10 @@ Install the latest stable package via NuGet:
 ```sh
 dotnet add package ByteAether.Ulid
 ```
-Use the `--version` option to specify a [preview version](https://www.nuget.org/packages/ByteAether.Ulid/absoluteLatest) to install.
+To install a specific [preview version](https://www.nuget.org/packages/ByteAether.Ulid/absoluteLatest), use the `--version` option:
+```sh
+dotnet add package ByteAether.Ulid --version <VERSION_NUMBER>
+```
 
 ## Usage
 
@@ -44,28 +47,22 @@ Here is a basic example of how to use the ULID implementation:
 using System;
 using ByteAether.Ulid;
 
-class Program
-{
-	static void Main()
-	{
-		// Create a new ULID
-		var ulid = Ulid.New();
+// Create a new ULID
+var ulid = Ulid.New();
 
-		// Convert to byte array and back
-		byte[] byteArray = ulid.ToByteArray();
-		var ulidFromByteArray = Ulid.New(byteArray);
+// Convert to byte array and back
+byte[] byteArray = ulid.ToByteArray();
+var ulidFromByteArray = Ulid.New(byteArray);
 
-		// Convert to GUID and back
-		Guid guid = ulid.ToGuid();
-		var ulidFromGuid = Ulid.New(guid);
+// Convert to GUID and back
+Guid guid = ulid.ToGuid();
+var ulidFromGuid = Ulid.New(guid);
 
-		// Convert to string and back
-		string ulidString = ulid.ToString();
-		var ulidFromString = Ulid.Parse(ulidString);
+// Convert to string and back
+string ulidString = ulid.ToString();
+var ulidFromString = Ulid.Parse(ulidString);
 
-		Console.WriteLine($"ULID: {ulid}, GUID: {guid}, String: {ulidString}");
-	}
-}
+Console.WriteLine($"ULID: {ulid}, GUID: {guid}, String: {ulidString}");
 ```
 
 ## API
@@ -149,29 +146,25 @@ The `Ulid` implementation provides the following properties and methods:
 
 ### GenerationOptions
 
-The `GenerationOptions` allows you to customize the behavior of ULID generation.
+The `GenerationOptions` class provides detailed configuration for ULID generation, with the following key properties:
 
-#### `Monotonicity`
+- `Monotonicity`\
+  Controls the behavior of ULID generation when multiple identifiers are created within the same millisecond. It determines whether ULIDs are strictly increasing or allow for random ordering within that millisecond. Available options include: `NonMonotonic`, `MonotonicIncrement` (default), `MonotonicRandom1Byte`, `MonotonicRandom2Byte`, `MonotonicRandom3Byte`, `MonotonicRandom4Byte`.
 
-Gets or sets the monotonicity behavior for ULID generation. Default: `MonotonicityOptions.MonotonicIncrement`.
+- `InitialRandomSource`\
+  An `IRandomProvider` for generating the random bytes of a ULID. The default `CryptographicallySecureRandomProvider` ensures robust, unpredictable ULIDs using a cryptographically secure generator.
 
-- **`NonMonotonic`**: ULIDs are generated without any monotonic guarantees. The random component is entirely random.
-- **`MonotonicIncrement`**: Guarantees strict monotonic progression by incrementing the random portion of the ULID.
-- **`MonotonicRandom1Byte` to `MonotonicRandom4Byte`**: Ensures monotonicity by adding a random value of 1 to 4 bytes to the random component. This mitigates the risk of predictable ULIDs when generated in the same millisecond.
+- `IncrementRandomSource`\
+  An `IRandomProvider` that provides randomness for monotonic random increments. The default `PseudoRandomProvider` is a faster, non-cryptographically secure source optimized for this specific purpose.
 
-#### `InitialRandomSource`
+This library comes with two default `IRandomProvider` implementations:
 
-Gets or sets the random source used for generating the initial random component of the ULID. Default: `RandomSourceOptions.CryptographicallySecure`.
+- **`CryptographicallySecureRandomProvider`**\
+  Utilizes `System.Security.Cryptography.RandomNumberGenerator` for high-quality, cryptographically secure random data.
+- **`PseudoRandomProvider`**\
+  A faster, non-cryptographically secure option based on `System.Random`, ideal for performance-critical scenarios where cryptographic security is not required for random increments.
 
-- **`CryptographicallySecure`**: Uses a cryptographically strong source of randomness, ensuring high entropy.
-- **`PseudoRandom`**: Uses a pseudo-random algorithm, which is faster but not cryptographically secure.
-
-#### `IncrementRandomSource`
-
-Gets or sets the random source used for generating the random increment when ensuring monotonicity. Default: `RandomSourceOptions.PseudoRandom`.
-
-- **`CryptographicallySecure`**: Uses a cryptographically secure random number generator for the increment.
-- **`PseudoRandom`**: Uses a pseudo-random number generator for the increment, prioritizing performance.
+Custom `IRandomProvider` implementations can also be created.
 
 ## Integration with Other Libraries
 

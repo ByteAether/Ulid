@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 
 namespace ByteAether.Ulid;
 
@@ -18,12 +17,6 @@ public readonly partial struct Ulid
 	public static GenerationOptions DefaultGenerationOptions { get; set; } = new();
 
 	private static readonly byte[] _lastUlid = new byte[_ulidSize];
-	private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
-#if NET6_0_OR_GREATER
-	private static Random _rngSimple => System.Random.Shared;
-#else
-	private static readonly Random _rngSimple = new();
-#endif
 
 #if NET9_0_OR_GREATER
 	private static readonly Lock _lock = new();
@@ -183,18 +176,11 @@ public readonly partial struct Ulid
 	{
 		if (options.Monotonicity == GenerationOptions.MonotonicityOptions.NonMonotonic)
 		{
-			switch (options)
-			{
-				case { InitialRandomSource: GenerationOptions.RandomSourceOptions.CryptographicallySecure }:
-					_rng.GetBytes(bytes[_ulidSizeTime..]);
-					break;
-				case { InitialRandomSource: GenerationOptions.RandomSourceOptions.PseudoRandom }:
-					_rngSimple.NextBytes(bytes[_ulidSizeTime..]);
-					break;
-			}
+			options.InitialRandomSource.GetBytes(bytes[_ulidSizeTime..]);
 			return;
 		}
 
+		// ReSharper disable once InconsistentlySynchronizedField creating a span is safe
 		var lastUlidSpan = _lastUlid.AsSpan();
 
 		lock (_lock)
@@ -208,15 +194,7 @@ public readonly partial struct Ulid
 
 				if (randomByteCount > 0)
 				{
-					switch (options)
-					{
-						case { IncrementRandomSource: GenerationOptions.RandomSourceOptions.CryptographicallySecure }:
-							_rng.GetBytes(tempSpan);
-							break;
-						case { IncrementRandomSource: GenerationOptions.RandomSourceOptions.PseudoRandom }:
-							_rngSimple.NextBytes(tempSpan);
-							break;
-					}
+					options.IncrementRandomSource.GetBytes(tempSpan);
 				}
 
 				IncrementByteSpan(lastUlidSpan, tempSpan);
@@ -225,16 +203,7 @@ public readonly partial struct Ulid
 			else
 			{
 				bytes[.._ulidSizeTime].CopyTo(lastUlidSpan);
-
-				switch (options)
-				{
-					case { InitialRandomSource: GenerationOptions.RandomSourceOptions.CryptographicallySecure }:
-						_rng.GetBytes(_lastUlid[_ulidSizeTime..]);
-						break;
-					case { InitialRandomSource: GenerationOptions.RandomSourceOptions.PseudoRandom }:
-						_rngSimple.NextBytes(lastUlidSpan[_ulidSizeTime..]);
-						break;
-				}
+				options.InitialRandomSource.GetBytes(lastUlidSpan[_ulidSizeTime..]);
 			}
 
 			_lastUlid.CopyTo(bytes);
@@ -247,7 +216,7 @@ public readonly partial struct Ulid
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void IncrementByteSpan(Span<byte> targetSpan, ReadOnlySpan<byte> sourceSpan)
 	{
-		ushort carry = 1; // max sum 255+255+1 = 511; guarantee at least +1
+		ushort carry = 1; // max sum 255 + 255 + 1 = 511; guarantee at least +1
 
 		// This value represents the offset from the start of targetSpan to the start of sourceSpan
 		var lengthDifference = targetSpan.Length - sourceSpan.Length;
@@ -267,16 +236,16 @@ public readonly partial struct Ulid
 				targetSpan[i] = (byte)(sum & 0xFF);
 				carry = (ushort)(sum >> 8);
 			}
+
+			if (carry == 0)
+			{
+				return;
+			}
 		}
 
 		// Phase 2: Process the remaining part of targetSpan (only carry propagation)
-		if (carry == 0)
-		{
-			return;
-		}
-
 		// Runs from the point where sourceSpan ended, towards the MSB end of targetSpan
-		for (var i = lengthDifference - 1; i >= 0; i--)
+		for (var i = lengthDifference - 1; i >= 0; --i)
 		{
 			var byteFromTarget = targetSpan[i];
 			sum = (ushort)(byteFromTarget + carry);
