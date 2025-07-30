@@ -77,11 +77,11 @@ class Program
 
 		// Convert to byte array and back
 		byte[] byteArray = ulid.ToByteArray();
-		var ulidFromByteArray = new Ulid(byteArray);
+		var ulidFromByteArray = Ulid.New(byteArray);
 
 		// Convert to GUID and back
 		Guid guid = ulid.ToGuid();
-		var ulidFromGuid = new Ulid(guid);
+		var ulidFromGuid = Ulid.New(guid);
 
 		// Convert to string and back
 		string ulidString = ulid.ToString();
