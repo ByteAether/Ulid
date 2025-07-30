@@ -1,4 +1,10 @@
-﻿using System.ComponentModel;
+﻿#if !NET6_0_OR_GREATER
+// ReSharper disable NullnessAnnotationConflictWithJetBrainsAnnotations
+// ReSharper disable AssignNullToNotNullAttribute
+// ReSharper disable ReturnTypeCanBeNotNullable
+#endif
+
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 

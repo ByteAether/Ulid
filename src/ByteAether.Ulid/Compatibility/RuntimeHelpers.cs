@@ -1,5 +1,6 @@
 ﻿#if NETSTANDARD2_0
 
+// ReSharper disable All
 #pragma warning disable
 // https://github.com/dotnet/runtime/blob/v9.0.0/src/libraries/Common/tests/System/Runtime/CompilerServices/RuntimeHelpers.cs
 

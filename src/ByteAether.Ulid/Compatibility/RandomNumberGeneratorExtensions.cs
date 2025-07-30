@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 
+// ReSharper disable once CheckNamespace
 namespace ByteAether.Ulid;
 
 internal static class RandomNumberGeneratorExtensions
