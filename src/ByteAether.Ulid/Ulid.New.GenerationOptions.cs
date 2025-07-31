@@ -5,7 +5,7 @@ public readonly partial struct Ulid
 	/// <summary>
 	/// Configuration options for ULID generation.
 	/// </summary>
-	public class GenerationOptions
+	public record GenerationOptions
 	{
 		/// <summary>
 		/// Monotonicity behavior for ULID generation.
