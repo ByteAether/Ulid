@@ -3,40 +3,40 @@ namespace ByteAether.Ulid;
 public readonly partial struct Ulid
 {
 	/// <summary>
-	/// Specifies the configuration options for ULID generation.
+	/// Configuration options for ULID generation.
 	/// </summary>
 	public class GenerationOptions
 	{
 		/// <summary>
-		/// Defines the monotonicity behavior for ULID generation.
+		/// Monotonicity behavior for ULID generation.
 		/// </summary>
 		/// <remarks>
 		/// The <see cref="MonotonicityOptions"/> enum provides various options to configure
-		/// the generation of ULIDs with respect to their monotonic properties.
+		/// the generation of ULIDs with respect to their monotonic properties.<br/>
 		/// These options determine how the ULID sequence behaves in scenarios
 		/// where time does not progress or progresses non-linearly.
 		/// </remarks>
 		public enum MonotonicityOptions
 		{
 			/// <summary>
-			/// Indicates that ULIDs are generated in a completely non-monotonic manner.
+			/// ULIDs are generated in a completely non-monotonic manner.
 			/// </summary>
 			/// <remarks>
 			/// When <see cref="NonMonotonic"/> is used, ULIDs are created
 			/// without any monotonic guarantees. The random component of the ULID is
 			/// entirely random, and the sequence does not ensure order or incrementality.
-			/// This is the default behavior when monotonicity settings are not explicitly defined.
 			/// </remarks>
 			NonMonotonic = -1,
 
 			/// <summary>
-			/// Indicates that ULIDs are generated with a strictly monotonic increment in the random component.
+			/// ULIDs are generated with a strictly monotonic increment in the random component.
 			/// </summary>
 			/// <remarks>
 			/// When <see cref="MonotonicIncrement"/> is used, the random portion of the ULID is
 			/// adjusted to ensure strict monotonic progression. This guarantees that the sequence of generated
 			/// ULIDs is always ordered and incremental, making it suitable for scenarios where strict ordering
-			/// is required without introducing additional randomness.
+			/// is required without introducing additional randomness.<br/>
+			/// This is the default behavior when monotonicity settings are not explicitly defined.
 			/// </remarks>
 			MonotonicIncrement = 0,
 
@@ -86,16 +86,16 @@ public readonly partial struct Ulid
 		}
 
 		/// <summary>
-		/// Gets or sets the monotonicity behavior for ULID generation.
+		/// Monotonicity behavior for ULID generation.
 		/// </summary>
 		/// <remarks>
 		/// This property determines how the timestamp and randomness components
-		/// will behave in regard to ordering and predictability:
-		/// - NonMonotonic: No monotonic guarantees, randomness is fully independent.
+		/// will behave in regard to ordering and predictability:<br/>
+		/// - NonMonotonic: No monotonic guarantees, Random part will be fully randomized.<br/>
 		/// - MonotonicIncrement: Guarantees monotonic ordering by incrementing
-		/// the previous timestamp if the same timestamp is generated consecutively.
-		/// - MonotonicRandom1Byte to MonotonicRandom4Byte: Ensures monotonicity by introducing
-		/// a pseudo-randomized variation in 1 to 4 bytes when timestamps are identical.
+		/// the previous random by one if the same timestamp is generated consecutively.<br/>
+		/// - MonotonicRandom1Byte to MonotonicRandom4Byte: Ensures monotonicity by introducing a
+		/// randomized 1 to 4 bytes value as increment to previous Random part when timestamps are identical.
 		/// </remarks>
 		/// <value>
 		/// A value of the <see cref="MonotonicityOptions"/> enum that specifies the monotonicity behavior.
@@ -110,34 +110,32 @@ public readonly partial struct Ulid
 		} = MonotonicityOptions.MonotonicIncrement;
 
 		/// <summary>
-		/// Gets or sets the initial random source used for ULID generation.
+		/// Initial random source used for ULID generation.
 		/// </summary>
 		/// <remarks>
 		/// This property specifies the random number generator to be used for the initial
-		/// randomness during ULID creation. By default, a cryptographically secure random
-		/// provider is used, ensuring high unpredictability and security for generated IDs.
+		/// randomness during ULID creation.
 		/// </remarks>
 		/// <value>
 		/// An instance of a class that implements the <see cref="IRandomProvider"/> interface
-		/// to provide the random number generation logic for the initial randomness component.
+		/// to provide the random number generation logic for the initial randomness component.<br/>
 		/// Defaults to <see cref="CryptographicallySecureRandomProvider"/>.
 		/// </value>
 		public IRandomProvider InitialRandomSource { get; init; } = new CryptographicallySecureRandomProvider();
 
 		/// <summary>
-		/// Gets or sets the random source used during monotonic ULID generation when
-		/// timestamps are identical and incremental randomness is required.
+		/// Random source used during monotonic ULID generation when timestamps
+		/// are identical and incremental randomness is required.
 		/// </summary>
 		/// <remarks>
-		/// Specifies the random provider used to supply entropy for the Random
-		/// component when consecutive ULIDs share the same timestamp. It is utilized
-		/// in maintaining monotonicity while ensuring random variation in ULID values.
-		/// The default provider is <see cref="PseudoRandomProvider"/>, which uses a deterministic
-		/// pseudo-random approach.
+		/// Specifies the random provider used to supply entropy for the Random component
+		/// during monotonic increments when consecutive ULIDs share the same timestamp.<br/>
+		/// It is utilized in maintaining monotonicity while ensuring random variation in ULID values.
 		/// </remarks>
 		/// <value>
 		/// An implementation of the <see cref="IRandomProvider"/> interface that provides
-		/// randomness for incremental updates. Defaults to an instance of <see cref="PseudoRandomProvider"/>.
+		/// randomness for monotonic increments.<br/>
+		/// Defaults to an instance of <see cref="PseudoRandomProvider"/>.
 		/// </value>
 		public IRandomProvider IncrementRandomSource { get; init; } = new PseudoRandomProvider();
 	};

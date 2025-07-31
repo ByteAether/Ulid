@@ -12,7 +12,7 @@ namespace ByteAether.Ulid;
 /// Represents a Universally Unique Lexicographically Sortable Identifier (ULID).
 /// </summary>
 /// <remarks>
-/// A ULID is a 128-bit identifier that is sortable by time and consists of a timestamp and random components.
+/// A ULID is a 128-bit identifier that is sortable by time and consists of a timestamp and random components.<br/>
 /// For more information, visit <see href="https://github.com/ByteAether/Ulid">the GitHub repository</see>.
 /// </remarks>
 #if NETCOREAPP
@@ -57,7 +57,7 @@ public readonly partial struct Ulid
 	/// Gets the random component of the ULID as a byte array.
 	/// </summary>
 	/// <remarks>
-	/// The random component consists of the last 10 bytes of the ULID and is generated randomly to ensure uniqueness.
+	/// The random component consists of the last 10 bytes of the ULID and is generated randomly to ensure uniqueness.<br/>
 	/// This component does not encode any timestamp or other structured information.
 	/// </remarks>
 	/// <returns>
@@ -92,8 +92,7 @@ public readonly partial struct Ulid
 	/// <remarks>
 	/// The timestamp component represents the number of milliseconds since the Unix epoch
 	/// (1970-01-01T00:00:00Z). It is stored in the first 6 bytes of the ULID and ensures
-	/// lexicographical sorting by time.
-	///
+	/// lexicographical sorting by time.<br/>
 	/// The timestamp is extracted in a way that is compatible with both little-endian and big-endian systems.
 	/// </remarks>
 	/// <returns>

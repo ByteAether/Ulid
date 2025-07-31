@@ -6,13 +6,13 @@ namespace ByteAether.Ulid;
 public readonly partial struct Ulid
 {
 	/// <summary>
-	/// Gets or sets the default <see cref="GenerationOptions"/> used for generating new ULIDs.
+	/// The default <see cref="GenerationOptions"/> used for generating new ULIDs.
 	/// </summary>
 	/// <remarks>
-	/// This property allows customization of the generation behavior for all new ULIDs.
-	/// It includes settings for monotonicity and the source of randomness for initial
-	/// and incremented parts of the ULID. Modifying this property affects the global default
-	/// behavior for ULID generation across the application.
+	/// Allows customization of the generation behavior for all new ULIDs.<br/>
+	/// It includes settings for monotonicity and the source of randomness for initial and
+	/// incremented scenarios during the generation of the ULID. Modifying this property
+	/// affects the global default behavior for ULID generation across the application.
 	/// </remarks>
 	public static GenerationOptions DefaultGenerationOptions { get; set; } = new();
 
@@ -37,7 +37,7 @@ public readonly partial struct Ulid
 	/// Creates a new <see cref="Ulid"/> with the current timestamp.
 	/// </summary>
 	/// <param name="options">
-	/// If <c>null</c> (default), the value of <see cref="DefaultGenerationOptions"/> is used.<br />
+	/// If <c>null</c> (default), the value of <see cref="DefaultGenerationOptions"/> is used.<br/>
 	/// Otherwise, uses the specified <see cref="GenerationOptions"/> to control the ULID generation behavior.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
@@ -50,7 +50,7 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="dateTimeOffset">The timestamp to use for the <see cref="Ulid"/>.</param>
 	/// <param name="options">
-	/// If <c>null</c> (default), the value of <see cref="DefaultGenerationOptions"/> is used.<br />
+	/// If <c>null</c> (default), the value of <see cref="DefaultGenerationOptions"/> is used.<br/>
 	/// Otherwise, uses the specified <see cref="GenerationOptions"/> to control the ULID generation behavior.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
@@ -63,8 +63,8 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="dateTimeOffset">The timestamp to use for the <see cref="Ulid"/>.</param>
 	/// <param name="random" >
-	/// A span containing the random component of the <see cref="Ulid"/>.
-	/// Must be at least 10 bytes long to populate the random component of the Ulid
+	/// A span containing the random component of the <see cref="Ulid"/>.<br/>
+	/// Must be at least 10 bytes long to populate the random component of the Ulid.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -76,7 +76,7 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="timestamp">The timestamp in milliseconds to use for the <see cref="Ulid"/>.</param>
 	/// <param name="options">
-	/// If <c>null</c> (default), the value of <see cref="DefaultGenerationOptions"/> is used.<br />
+	/// If <c>null</c> (default), the value of <see cref="DefaultGenerationOptions"/> is used.<br/>
 	/// Otherwise, uses the specified <see cref="GenerationOptions"/> to control the ULID generation behavior.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
@@ -103,11 +103,11 @@ public readonly partial struct Ulid
 	/// Creates a new instance of the <see cref="Ulid"/> struct using the specified timestamp and random byte sequence.
 	/// </summary>
 	/// <param name="timestamp">
-	/// A 64-bit integer representing the timestamp in milliseconds since the Unix epoch (1970-01-01T00:00:00Z).
+	/// A 64-bit integer representing the timestamp in milliseconds since the Unix epoch (1970-01-01T00:00:00Z).<br/>
 	/// This value will be encoded into the first 6 bytes of the <see cref="Ulid"/>.
 	/// </param>
 	/// <param name="random">
-	/// A span containing the random component of the <see cref="Ulid"/>.
+	/// A span containing the random component of the <see cref="Ulid"/>.<br/>
 	/// It must be at least 10 bytes long, as the last 10 bytes of the <see cref="Ulid"/> are derived from this span.
 	/// </param>
 	/// <returns>

@@ -4,9 +4,9 @@ using System.Security.Cryptography;
 namespace ByteAether.Ulid;
 
 /// <summary>
-/// Provides cryptographically secure random number generation functionality.
+/// Provides cryptographically secure random number generation functionality.<br/>
 /// Implements the <see cref="IRandomProvider"/> interface to generate random bytes
-/// securely using a system-provided implementation of the RNGCryptoServiceProvider.
+/// securely using a system-provided implementation of the <see cref="RandomNumberGenerator"/>.
 /// </summary>
 public readonly struct CryptographicallySecureRandomProvider : IRandomProvider
 {

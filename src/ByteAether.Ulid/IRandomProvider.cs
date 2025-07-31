@@ -2,12 +2,12 @@ namespace ByteAether.Ulid;
 
 /// <summary>
 /// Implementations of this interface dictate the method by which randomness
-/// is produced, whether pseudo-random or cryptographically secure.
+/// is produced.
 /// </summary>
 public interface IRandomProvider
 {
 	/// <summary>
-	/// Fills the specified buffer with random byte values.
+	/// Fills the specified buffer with random byte values.<br/>
 	/// The implementation determines the source of randomness.
 	/// </summary>
 	/// <param name="buffer">

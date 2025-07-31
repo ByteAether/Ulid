@@ -12,8 +12,8 @@ var benchmarkConfig = ManualConfig
 	.HideColumns(Column.Job, Column.StdDev, Column.Median)
 ;
 
-BenchmarkRunner.Run<Generate>(
-	//typeof(Program).Assembly,
+BenchmarkRunner.Run(
+	typeof(Program).Assembly,
 	benchmarkConfig
 );
 
