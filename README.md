@@ -401,22 +401,30 @@ Benchmark scenarios also include comparisons against `Guid`, where functionality
 
 The following benchmarks were performed:
 ```
+BenchmarkDotNet v0.15.2, Windows 10 (10.0.19044.6093/21H2/November2021Update)
+AMD Ryzen 7 3700X 3.60GHz, 1 CPU, 12 logical and 6 physical cores
+.NET SDK 9.0.302
+  [Host]     : .NET 9.0.7 (9.0.725.31616), X64 RyuJIT AVX2
+  DefaultJob : .NET 9.0.7 (9.0.725.31616), X64 RyuJIT AVX2
+
+Job=DefaultJob
+
 | Type            | Method             | Mean        | Error     | Gen0   | Allocated |
 |---------------- |------------------- |------------:|----------:|-------:|----------:|
-| Generate        | ByteAetherUlid     |  57.5334 ns | 0.2025 ns |      - |         - |
-| Generate        | ByteAetherUlidR1Bp |  59.2619 ns | 0.1826 ns |      - |         - |
-| Generate        | ByteAetherUlidR4Bp |  61.6151 ns | 0.3321 ns |      - |         - |
-| Generate        | ByteAetherUlidR1Bc | 103.0781 ns | 0.3069 ns |      - |         - |
-| Generate        | ByteAetherUlidR4Bc | 111.0007 ns | 0.4637 ns |      - |         - |
-| Generate        | NetUlid *(1)       | 170.9066 ns | 0.5480 ns | 0.0095 |      80 B |
-| Generate        | NUlid *(2)         |  61.5115 ns | 0.1697 ns |      - |         - |
+| Generate        | ByteAetherUlid     |    55.12 ns |  0.083 ns |      - |         - |
+| Generate        | ByteAetherUlidR1Bp |    59.51 ns |  0.262 ns |      - |         - |
+| Generate        | ByteAetherUlidR4Bp |    60.13 ns |  0.571 ns |      - |         - |
+| Generate        | ByteAetherUlidR1Bc |    99.95 ns |  0.358 ns |      - |         - |
+| Generate        | ByteAetherUlidR4Bc |   106.63 ns |  0.288 ns |      - |         - |
+| Generate        | NetUlid *(1)       |   164.01 ns |  0.696 ns | 0.0095 |      80 B |
+| Generate        | NUlid *(2)         |    59.39 ns |  0.219 ns |      - |         - |
 
-| GenerateNonMono | ByteAetherUlid     |  96.6751 ns | 0.3895 ns |      - |         - |
-| GenerateNonMono | ByteAetherUlidP    |  48.5291 ns | 0.2535 ns |      - |         - |
-| GenerateNonMono | Ulid *(3,4)        |  44.0179 ns | 0.0977 ns |      - |         - |
-| GenerateNonMono | NUlid              |  99.4871 ns | 0.2127 ns |      - |         - |
-| GenerateNonMono | Guid *(5)          |  49.1184 ns | 0.1089 ns |      - |         - |
-| GenerateNonMono | GuidV7 *(3,5)      |  82.8572 ns | 0.1700 ns |      - |         - |
+| GenerateNonMono | ByteAetherUlid     |    96.07 ns |  0.253 ns |      - |         - |
+| GenerateNonMono | ByteAetherUlidP    |    46.87 ns |  0.205 ns |      - |         - |
+| GenerateNonMono | Ulid *(3,4)        |    41.80 ns |  0.200 ns |      - |         - |
+| GenerateNonMono | NUlid              |    97.89 ns |  0.462 ns |      - |         - |
+| GenerateNonMono | Guid *(5)          |    46.63 ns |  0.163 ns |      - |         - |
+| GenerateNonMono | GuidV7 *(3,5)      |    82.66 ns |  1.670 ns |      - |         - |
 
 | FromByteArray   | ByteAetherUlid     |   0.0215 ns | 0.0040 ns |      - |         - |
 | FromByteArray   | NetUlid            |   0.5729 ns | 0.0120 ns |      - |         - |
@@ -467,7 +475,6 @@ The following benchmarks were performed:
 | GetHashCode     | Ulid               |   0.0280 ns | 0.0020 ns |      - |         - |
 | GetHashCode     | NUlid              |   9.0439 ns | 0.0316 ns |      - |         - |
 | GetHashCode     | Guid               |   0.0631 ns | 0.0297 ns |      - |         - |
-
 ```
 
 Existing competitive libraries exhibit various deviations from the official ULID specification or present drawbacks:
