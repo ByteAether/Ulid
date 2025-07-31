@@ -138,18 +138,12 @@ The `Ulid` implementation provides the following properties and methods:
 
 ### Creation
 
-- `Ulid.New()`\
-Generates a new ULID using default generation options.
-- `Ulid.New(GenerationOptions options)`\
-Generates a new ULID using the specified generation options.
-- `Ulid.New(DateTimeOffset dateTimeOffset)`\
-Generates a new ULID using the specified `DateTimeOffset` and default generation options.
-- `Ulid.New(DateTimeOffset dateTimeOffset, GenerationOptions options)`\
-Generates a new ULID using the specified `DateTimeOffset` and generation options.
-- `Ulid.New(long timestamp)`\
-Generates a new ULID using the specified Unix timestamp in milliseconds (`long`) and default generation options.
-- `Ulid.New(long timestamp, GenerationOptions options)`\
-Generates a new ULID using the specified Unix timestamp in milliseconds (`long`) and generation options.
+- `Ulid.New(GenerationOptions? options = null)`\
+Generates a new ULID using default generation options. Accepts an optional `GenerationOptions` parameter to customize the generation behavior.
+- `Ulid.New(DateTimeOffset dateTimeOffset, GenerationOptions? options = null)`\
+Generates a new ULID using the specified `DateTimeOffset` and default generation options. Accepts an optional `GenerationOptions` parameter to customize the generation behavior.
+- `Ulid.New(long timestamp, GenerationOptions? options = null)`\
+Generates a new ULID using the specified Unix timestamp in milliseconds (`long`) and default generation options. Accepts an optional `GenerationOptions` parameter to customize the generation behavior.
 - `Ulid.New(DateTimeOffset dateTimeOffset, ReadOnlySpan<byte> random)`\
 Generates a new ULID using the specified `DateTimeOffset` and a pre-existing random byte array.
 - `Ulid.New(long timestamp, ReadOnlySpan<byte> random)`\
