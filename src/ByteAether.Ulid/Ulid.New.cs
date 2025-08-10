@@ -18,12 +18,6 @@ public readonly partial struct Ulid
 
 	private static readonly byte[] _lastUlid = new byte[_ulidSize];
 
-#if NET9_0_OR_GREATER
-	private static readonly Lock _lock = new();
-#else
-	private static readonly object _lock = new();
-#endif
-
 	/// <summary>
 	/// Initializes a new instance of the <see cref="Ulid"/> struct using the specified byte array.
 	/// </summary>
@@ -196,6 +190,8 @@ public readonly partial struct Ulid
 		}
 	}
 
+	private static int _lastUlidLock;
+
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
@@ -212,10 +208,11 @@ public readonly partial struct Ulid
 			return;
 		}
 
-		// ReSharper disable once InconsistentlySynchronizedField creating a span is safe
 		var lastUlidSpan = _lastUlid.AsSpan();
 
-		lock (_lock)
+		// Acquire lightweight spinlock
+		AcquireSpinLock();
+		try
 		{
 			// If the timestamp is the same or lesser than the last one, increment the last ULID by one
 			if (bytes[.._ulidSizeTime].SequenceCompareTo(lastUlidSpan[.._ulidSizeTime]) <= 0)
@@ -239,6 +236,35 @@ public readonly partial struct Ulid
 			}
 
 			_lastUlid.CopyTo(bytes);
+		}
+		finally
+		{
+			// Release the spinlock
+			Volatile.Write(ref _lastUlidLock, 0);
+		}
+	}
+
+#if NET5_0_OR_GREATER
+	[SkipLocalsInit]
+#endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+	private static void AcquireSpinLock()
+	{
+		// Hot-path
+		if (Interlocked.CompareExchange(ref _lastUlidLock, 1, 0) == 0)
+		{
+			return;
+		}
+
+		// Spin until the lock is acquired
+		var spinner = new SpinWait();
+		while (Interlocked.CompareExchange(ref _lastUlidLock, 1, 0) == 1)
+		{
+			spinner.SpinOnce();
 		}
 	}
 
