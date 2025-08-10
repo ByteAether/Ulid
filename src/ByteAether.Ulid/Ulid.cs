@@ -66,7 +66,11 @@ public readonly partial struct Ulid
 	[IgnoreDataMember]
 	public ReadOnlySpan<byte> Random
 	{
+#if NETCOREAPP3_0_OR_GREATER
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 		get => AsByteSpan()[_ulidSizeTime..];
 	}
 
@@ -82,7 +86,11 @@ public readonly partial struct Ulid
 	[IgnoreDataMember]
 	public ReadOnlySpan<byte> TimeBytes
 	{
+#if NETCOREAPP3_0_OR_GREATER
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 		get => AsByteSpan()[.._ulidSizeTime];
 	}
 
@@ -104,7 +112,11 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 		[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 		get
 		{
 			// Combine the 6 bytes into a 48-bit timestamp (big-endian order)
@@ -130,7 +142,11 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public unsafe ReadOnlySpan<byte> AsByteSpan()
 		=> new(Unsafe.AsPointer(ref Unsafe.AsRef(in this)), _ulidSize);
 
@@ -141,7 +157,11 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public byte[] ToByteArray()
 	{
 		var bytes = new byte[_ulidSize];

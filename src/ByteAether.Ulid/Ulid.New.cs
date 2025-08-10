@@ -29,7 +29,11 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="bytes">The byte array to initialize the <see cref="Ulid"/> with.</param>
 	/// <returns>Given bytes as an <see cref="Ulid"/> instance.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static Ulid New(ReadOnlySpan<byte> bytes)
 		=> MemoryMarshal.Read<Ulid>(bytes);
 
@@ -41,7 +45,11 @@ public readonly partial struct Ulid
 	/// Otherwise, uses the specified <see cref="GenerationOptions"/> to control the ULID generation behavior.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static Ulid New(GenerationOptions? options = null)
 		=> New(DateTimeOffset.UtcNow, options);
 
@@ -54,7 +62,11 @@ public readonly partial struct Ulid
 	/// Otherwise, uses the specified <see cref="GenerationOptions"/> to control the ULID generation behavior.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static Ulid New(DateTimeOffset dateTimeOffset, GenerationOptions? options = null)
 		=> New(dateTimeOffset.ToUnixTimeMilliseconds(), options);
 
@@ -67,7 +79,11 @@ public readonly partial struct Ulid
 	/// Must be at least 10 bytes long to populate the random component of the Ulid.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static Ulid New(DateTimeOffset dateTimeOffset, Span<byte> random)
 		=> New(dateTimeOffset.ToUnixTimeMilliseconds(), random);
 
@@ -83,7 +99,11 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static Ulid New(long timestamp, GenerationOptions? options = null)
 	{
 		Ulid ulid = default;
@@ -116,7 +136,11 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static Ulid New(long timestamp, Span<byte> random)
 	{
 		Ulid ulid = default;
@@ -135,7 +159,11 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	private static void FillTime(Span<byte> bytes, long timestamp)
 	{
 		unsafe
@@ -171,7 +199,11 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	private static void FillRandom(Span<byte> bytes, GenerationOptions options)
 	{
 		if (options.Monotonicity == GenerationOptions.MonotonicityOptions.NonMonotonic)
@@ -213,7 +245,11 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	private static void IncrementByteSpan(Span<byte> targetSpan, ReadOnlySpan<byte> sourceSpan)
 	{
 		ushort carry = 1; // max sum 255 + 255 + 1 = 511; guarantee at least +1

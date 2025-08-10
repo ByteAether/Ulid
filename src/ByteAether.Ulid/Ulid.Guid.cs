@@ -26,6 +26,9 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+#endif
 	public static Ulid New(Guid guid)
 	{
 #if NET6_0_OR_GREATER
@@ -72,6 +75,9 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+#endif
 	public readonly Guid ToGuid()
 	{
 #if NETCOREAPP
@@ -114,7 +120,11 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="ulid">The ULID to convert.</param>
 	/// <returns>A GUID representing the ULID.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static implicit operator Guid(Ulid ulid) => ulid.ToGuid();
 
 	/// <summary>
@@ -122,7 +132,11 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="guid">The GUID to convert.</param>
 	/// <returns>A ULID representing the GUID.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static implicit operator Ulid(Guid guid) => New(guid);
 
 #if NETCOREAPP
@@ -136,7 +150,11 @@ public readonly partial struct Ulid
 	private static readonly Vector128<byte> _shuffleMask
 		= Vector128.Create((byte)3, 2, 1, 0, 5, 4, 7, 6, 8, 9, 10, 11, 12, 13, 14, 15);
 
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	private static Vector128<byte> Shuffle(Vector128<byte> value)
 	{
 		return

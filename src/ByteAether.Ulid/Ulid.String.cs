@@ -73,11 +73,15 @@ public readonly partial struct Ulid
 		27, 28, 29, 30, 31, // v-z
 	];
 
-	/// <inheritdoc /> 
+	/// <inheritdoc />
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public readonly string ToString(string? format = null, IFormatProvider? formatProvider = null)
 	{
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
@@ -101,6 +105,9 @@ public readonly partial struct Ulid
 	/// <exception cref="FormatException">Thrown if the input span does not meet the ULID format requirements.</exception>
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
+#endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
 	public static Ulid Parse(ReadOnlySpan<char> chars, IFormatProvider? provider = null)
 	{
@@ -149,6 +156,9 @@ public readonly partial struct Ulid
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+#endif
 	public static Ulid Parse(ReadOnlySpan<byte> chars, IFormatProvider? provider = null)
 	{
 		// Sanity check.
@@ -192,7 +202,11 @@ public readonly partial struct Ulid
 	/// <param name="s">The string representation of the ULID to parse.</param>
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <returns>A new <see cref="Ulid"/> instance parsed from the specified string.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static Ulid Parse(string s, IFormatProvider? provider = null)
 		=> Parse(s.AsSpan());
 
@@ -203,7 +217,11 @@ public readonly partial struct Ulid
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <param name="result">When this method returns, contains the parsed <see cref="Ulid"/> value if the parse was successful; otherwise, the default value of <see cref="Ulid"/>.</param>
 	/// <returns><c>true</c> if the parsing was successful; otherwise, <c>false</c>.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out Ulid result)
 		=> TryParse(s.AsSpan(), provider, out result);
 
@@ -214,7 +232,11 @@ public readonly partial struct Ulid
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <param name="result">When the method returns, contains the parsed ULID if the operation succeeds, or the default value if it fails.</param>
 	/// <returns><c>true</c> if the parsing operation succeeded; otherwise, <c>false</c>.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Ulid result)
 	{
 		try
@@ -236,7 +258,11 @@ public readonly partial struct Ulid
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <param name="result">When the method returns, contains the parsed ULID if parsing was successful; otherwise, the default value for ULID.</param>
 	/// <returns><c>true</c> if parsing was successful; otherwise, <c>false</c>.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static bool TryParse(ReadOnlySpan<byte> s, IFormatProvider? provider, out Ulid result)
 	{
 		try
@@ -261,7 +287,11 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the formatting is successful and the destination span is large enough to contain the formatted data; otherwise, <c>false</c>.
 	/// </returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public readonly bool TryFormat(
 		Span<char> destination,
 		out int charsWritten,
@@ -289,7 +319,11 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the formatting was successful; <c>false</c> if the destination span was too short to contain the formatted value.
 	/// </returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public readonly bool TryFormat(
 		Span<byte> destination,
 		out int bytesWritten,
@@ -307,6 +341,9 @@ public readonly partial struct Ulid
 		return false;
 	}
 
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+#endif
 	private bool TryFill<T>(Span<T> span, T[] map)
 	{
 		if (span.Length < UlidStringLength)

@@ -13,6 +13,10 @@ public readonly struct CryptographicallySecureRandomProvider : IRandomProvider
 	private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
 
 	/// <inheritdoc/>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public void GetBytes(Span<byte> buffer) => _rng.GetBytes(buffer);
 }

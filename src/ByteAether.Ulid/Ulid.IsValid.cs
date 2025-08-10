@@ -11,7 +11,11 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the string is a valid ULID, <c>false</c> otherwise.
 	/// </returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static bool IsValid(string ulidString) => IsValid(ulidString.AsSpan());
 
 	/// <summary>
@@ -23,6 +27,9 @@ public readonly partial struct Ulid
 	/// </returns>
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
+#endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
 	public static bool IsValid(ReadOnlySpan<char> ulidString)
 	{
@@ -56,6 +63,10 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the byte array is a valid ULID, <c>false</c> otherwise.
 	/// </returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public static bool IsValid(ReadOnlySpan<byte> ulidBytes) => ulidBytes.Length == _ulidSize;
 }

@@ -13,7 +13,11 @@ public readonly partial struct Ulid : IEquatable<Ulid>
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	public override readonly int GetHashCode()
 	{
 		ref var rA = ref Unsafe.As<Ulid, int>(ref Unsafe.AsRef(in this));
@@ -21,10 +25,16 @@ public readonly partial struct Ulid : IEquatable<Ulid>
 	}
 
 	/// <inheritdoc/>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+#endif
 	public readonly bool Equals(Ulid other)
 		=> EqualsCore(this, other);
 
 	/// <inheritdoc/>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+#endif
 	public override bool Equals([NotNullWhen(true)] object? obj)
 		=> obj is Ulid ulid && EqualsCore(this, ulid);
 
@@ -34,6 +44,9 @@ public readonly partial struct Ulid : IEquatable<Ulid>
 	/// <param name="left">The first ULID to compare.</param>
 	/// <param name="right">The second ULID to compare.</param>
 	/// <returns>True if the value of the left ULID is equal to the value of the right ULID; otherwise, false.</returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+#endif
 	public static bool operator ==(Ulid left, Ulid right)
 		=> EqualsCore(left, right);
 
@@ -49,7 +62,11 @@ public readonly partial struct Ulid : IEquatable<Ulid>
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	private static bool EqualsCore(in Ulid left, in Ulid right)
 	{
 #if NET7_0_OR_GREATER
