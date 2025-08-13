@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace ByteAether.Ulid;
@@ -160,34 +161,12 @@ public readonly partial struct Ulid
 #endif
 	private static void FillTime(Span<byte> bytes, long timestamp)
 	{
-		unsafe
-		{
-			// Get a pointer to the timestamp and convert it to a reference to the first byte.
-			ref var firstByte = ref Unsafe.AsRef<byte>(Unsafe.AsPointer(ref timestamp));
-
-			if (BitConverter.IsLittleEndian)
-			{
-				// If the system is little-endian, reverse the bytes to store in big-endian format.
-				bytes[5] = Unsafe.Add(ref firstByte, 0);
-
-				bytes[0] = Unsafe.Add(ref firstByte, 5);
-				bytes[1] = Unsafe.Add(ref firstByte, 4);
-				bytes[2] = Unsafe.Add(ref firstByte, 3);
-				bytes[3] = Unsafe.Add(ref firstByte, 2);
-				bytes[4] = Unsafe.Add(ref firstByte, 1);
-			}
-			else
-			{
-				// If the system is big-endian, copy the bytes directly.
-				bytes[5] = Unsafe.Add(ref firstByte, 7);
-
-				bytes[0] = Unsafe.Add(ref firstByte, 2);
-				bytes[1] = Unsafe.Add(ref firstByte, 3);
-				bytes[2] = Unsafe.Add(ref firstByte, 4);
-				bytes[3] = Unsafe.Add(ref firstByte, 5);
-				bytes[4] = Unsafe.Add(ref firstByte, 6);
-			}
-		}
+		bytes[0] = (byte)((timestamp >> 40) & 0xFF);
+		bytes[1] = (byte)((timestamp >> 32) & 0xFF);
+		bytes[2] = (byte)((timestamp >> 24) & 0xFF);
+		bytes[3] = (byte)((timestamp >> 16) & 0xFF);
+		bytes[4] = (byte)((timestamp >>  8) & 0xFF);
+		bytes[5] = (byte)( timestamp        & 0xFF);
 	}
 
 	private static int _lastUlidLock;
@@ -209,13 +188,15 @@ public readonly partial struct Ulid
 		}
 
 		var lastUlidSpan = _lastUlid.AsSpan();
+		var currentTime = ReadTimestamp48BigEndian(bytes);
 
 		// Acquire lightweight spinlock
 		AcquireSpinLock();
 		try
 		{
+			var lastTime = ReadTimestamp48BigEndian(lastUlidSpan);
 			// If the timestamp is the same or lesser than the last one, increment the last ULID by one
-			if (bytes[.._ulidSizeTime].SequenceCompareTo(lastUlidSpan[.._ulidSizeTime]) <= 0)
+			if (currentTime <= lastTime)
 			{
 				// We can use the last bytes of incomplete ULID for the increment parameter
 				var randomByteCount = (int)options.Monotonicity;
@@ -242,6 +223,23 @@ public readonly partial struct Ulid
 			// Release the spinlock
 			Volatile.Write(ref _lastUlidLock, 0);
 		}
+	}
+
+#if NET5_0_OR_GREATER
+	[SkipLocalsInit]
+#endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+	private static ulong ReadTimestamp48BigEndian(ReadOnlySpan<byte> bytes)
+	{
+		// We can always call ReverseEndianness - it becomes no-op by JIT on BE systems.
+		var val = BinaryPrimitives.ReverseEndianness(
+			Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetReference(bytes))
+		);
+		return val & 0x0000FFFFFFFFFFFFUL;
 	}
 
 #if NET5_0_OR_GREATER
