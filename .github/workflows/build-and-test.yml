@@ -41,7 +41,7 @@ jobs:
       run: dotnet test --no-build --verbosity normal --logger "trx" --configuration Release src/ByteAether.Ulid.sln
 
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: test-results
         path: ./**/TestResults/**/*.trx
