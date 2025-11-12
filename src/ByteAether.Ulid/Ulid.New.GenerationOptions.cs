@@ -106,7 +106,7 @@ public readonly partial struct Ulid
 			get;
 			init => field = Enum.IsDefined(typeof(MonotonicityOptions), value)
 				? value
-				: throw new ArgumentOutOfRangeException(nameof(value), value, "Invalid monotonicity option.");
+				: throw new ArgumentOutOfRangeException(nameof(Monotonicity), value, "Invalid monotonicity option.");
 		} = MonotonicityOptions.MonotonicIncrement;
 
 		/// <summary>

@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-  
+
     name: Build & Test on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
@@ -25,10 +25,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
 
-    - name: Setup .NET 9.0.x
+    - name: Setup .NET 10.0.x
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: '9.0.x'
+        dotnet-version: '10.0.x'
 
     - name: Restore dependencies
       run: dotnet restore src/ByteAether.Ulid.sln --use-current-runtime -p:SelfContained=true
@@ -39,4 +39,3 @@ jobs:
     - name: Run AOT Compiled Application (${{ matrix.os }})
       shell: bash # Ensure bash is used on Windows as well for consistent pathing syntax (./)
       run: ./publish/ByteAether.Ulid.Tests.AotConsole
-      

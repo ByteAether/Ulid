@@ -13,6 +13,7 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 
 ## Features
 
+![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
 ![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)

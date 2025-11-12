@@ -17,11 +17,12 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: |
-            9.x
-            8.x
-            7.x
-            6.x
-            5.x
+          10.x
+          9.x
+          8.x
+          7.x
+          6.x
+          5.x
 
     - name: 'Get Version'
       id: version
