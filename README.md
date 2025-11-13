@@ -385,7 +385,7 @@ var deserializedObject = JsonConvert.DeserializeObject<MyObject>(json, settings)
 ```
 ## Benchmarking
 
-Benchmarking was performed using [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) to demonstrate the performance and efficiency of this ULID implementation. Comparisons include [NetUlid](https://github.com/ultimicro/netulid) 2.1.0, [Ulid](https://github.com/Cysharp/Ulid) 1.3.4, [NUlid](https://github.com/RobThree/NUlid) 1.7.3, and `Guid` for overlapping functionalities like creation, parsing, and byte conversions.
+Benchmarking was performed using [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) to demonstrate the performance and efficiency of this ULID implementation. Comparisons include [NetUlid](https://github.com/ultimicro/netulid) 2.1.0, [Ulid](https://github.com/Cysharp/Ulid) 1.4.1, [NUlid](https://github.com/RobThree/NUlid) 1.7.3, and `Guid` for overlapping functionalities like creation, parsing, and byte conversions.
 
 Benchmark scenarios also include comparisons against `Guid`, where functionality overlaps, such as creation, parsing, and byte conversions.
 
@@ -396,80 +396,80 @@ Benchmark scenarios also include comparisons against `Guid`, where functionality
 
 The following benchmarks were performed:
 ```
-BenchmarkDotNet v0.15.2, Windows 10 (10.0.19044.6216/21H2/November2021Update)
+BenchmarkDotNet v0.15.7, Windows 10 (10.0.19044.6575/21H2/November2021Update)
 AMD Ryzen 7 3700X 3.60GHz, 1 CPU, 12 logical and 6 physical cores
-.NET SDK 9.0.304
-  [Host]     : .NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2
-  DefaultJob : .NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2
+.NET SDK 10.0.100
+  [Host]     : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
 
 Job=DefaultJob
 
 | Type            | Method             | Mean        | Error     | Gen0   | Allocated |
 |---------------- |------------------- |------------:|----------:|-------:|----------:|
-| Generate        | ByteAetherUlid     |  49.8213 ns | 0.9882 ns |      - |         - |
-| Generate        | ByteAetherUlidR1Bp |  57.9895 ns | 1.1243 ns |      - |         - |
-| Generate        | ByteAetherUlidR4Bp |  61.2364 ns | 1.1938 ns |      - |         - |
-| Generate        | ByteAetherUlidR1Bc | 103.1759 ns | 2.0739 ns |      - |         - |
-| Generate        | ByteAetherUlidR4Bc | 110.4977 ns | 2.0647 ns |      - |         - |
-| Generate        | NetUlid *(1)       | 173.9626 ns | 3.4647 ns | 0.0095 |      80 B |
-| Generate        | NUlid *(2)         |  63.4684 ns | 1.2116 ns |      - |         - |
+| Generate        | ByteAetherUlid     |  46.1867 ns | 0.0914 ns |      - |         - |
+| Generate        | ByteAetherUlidR1Bp |  51.5996 ns | 0.1552 ns |      - |         - |
+| Generate        | ByteAetherUlidR4Bp |  56.5170 ns | 0.1043 ns |      - |         - |
+| Generate        | ByteAetherUlidR1Bc |  94.8500 ns | 0.2545 ns |      - |         - |
+| Generate        | ByteAetherUlidR4Bc | 100.9761 ns | 0.3672 ns |      - |         - |
+| Generate        | NetUlid *(1)       | 159.2965 ns | 1.3950 ns | 0.0095 |      80 B |
+| Generate        | NUlid *(2)         |  49.2036 ns | 0.1911 ns |      - |         - |
 
-| GenerateNonMono | ByteAetherUlid     | 100.3030 ns | 1.9431 ns |      - |         - |
-| GenerateNonMono | ByteAetherUlidP    |  48.5570 ns | 0.9774 ns |      - |         - |
-| GenerateNonMono | Ulid *(3,4)        |  45.5564 ns | 0.3956 ns |      - |         - |
-| GenerateNonMono | NUlid              | 102.3512 ns | 2.0692 ns |      - |         - |
-| GenerateNonMono | Guid *(5)          |  50.4565 ns | 0.9795 ns |      - |         - |
-| GenerateNonMono | GuidV7 *(3,5)      |  85.8855 ns | 1.7043 ns |      - |         - |
+| GenerateNonMono | ByteAetherUlid     |  91.3682 ns | 0.2455 ns |      - |         - |
+| GenerateNonMono | ByteAetherUlidP    |  42.5785 ns | 0.1397 ns |      - |         - |
+| GenerateNonMono | Ulid *(3,4)        |  39.1454 ns | 0.0491 ns |      - |         - |
+| GenerateNonMono | NUlid              |  91.0387 ns | 0.2620 ns |      - |         - |
+| GenerateNonMono | Guid *(5)          |  48.1872 ns | 0.1581 ns |      - |         - |
+| GenerateNonMono | GuidV7 *(3,5)      |  77.2375 ns | 0.2567 ns |      - |         - |
 
-| FromByteArray   | ByteAetherUlid     |   0.0132 ns | 0.0166 ns |      - |         - |
-| FromByteArray   | NetUlid            |   0.7006 ns | 0.0280 ns |      - |         - |
-| FromByteArray   | Ulid               |   7.2749 ns | 0.1728 ns |      - |         - |
-| FromByteArray   | NUlid              |   2.0677 ns | 0.0350 ns |      - |         - |
-| FromByteArray   | Guid               |   0.0096 ns | 0.0098 ns |      - |         - |
+| FromByteArray   | ByteAetherUlid     |   0.0302 ns | 0.0045 ns |      - |         - |
+| FromByteArray   | NetUlid            |   0.7515 ns | 0.0083 ns |      - |         - |
+| FromByteArray   | Ulid               |   0.0263 ns | 0.0036 ns |      - |         - |
+| FromByteArray   | NUlid              |   0.0439 ns | 0.0130 ns |      - |         - |
+| FromByteArray   | Guid               |   0.0397 ns | 0.0131 ns |      - |         - |
 
-| FromGuid        | ByteAetherUlid     |   1.4945 ns | 0.0241 ns |      - |         - |
-| FromGuid        | NetUlid            |   5.1354 ns | 0.0806 ns | 0.0048 |      40 B |
-| FromGuid        | Ulid               |   1.7319 ns | 0.0624 ns |      - |         - |
-| FromGuid        | NUlid              |   4.3828 ns | 0.1125 ns |      - |         - |
+| FromGuid        | ByteAetherUlid     |   0.0533 ns | 0.0216 ns |      - |         - |
+| FromGuid        | NetUlid            |   3.2410 ns | 0.0616 ns |      - |         - |
+| FromGuid        | Ulid               |   1.7144 ns | 0.0092 ns |      - |         - |
+| FromGuid        | NUlid              |   0.5250 ns | 0.0085 ns |      - |         - |
 
-| FromString      | ByteAetherUlid     |  15.6314 ns | 0.3041 ns |      - |         - |
-| FromString      | NetUlid            |  27.8379 ns | 0.5770 ns |      - |         - |
-| FromString      | Ulid               |  15.4837 ns | 0.3308 ns |      - |         - |
-| FromString      | NUlid              |  63.1436 ns | 1.1317 ns | 0.0124 |     104 B |
-| FromString      | Guid               |  23.5391 ns | 0.4718 ns |      - |         - |
+| FromString      | ByteAetherUlid     |  14.7203 ns | 0.0557 ns |      - |         - |
+| FromString      | NetUlid            |  26.7763 ns | 0.1008 ns |      - |         - |
+| FromString      | Ulid               |  14.6891 ns | 0.0547 ns |      - |         - |
+| FromString      | NUlid              |  51.7824 ns | 0.1617 ns | 0.0086 |      72 B |
+| FromString      | Guid               |  20.0958 ns | 0.1317 ns |      - |         - |
 
-| ToByteArray     | ByteAetherUlid     |   3.9866 ns | 0.1315 ns | 0.0048 |      40 B |
-| ToByteArray     | NetUlid            |  10.5484 ns | 0.2627 ns | 0.0048 |      40 B |
-| ToByteArray     | Ulid               |   4.0185 ns | 0.1314 ns | 0.0048 |      40 B |
-| ToByteArray     | NUlid              |   7.0865 ns | 0.1908 ns | 0.0048 |      40 B |
+| ToByteArray     | ByteAetherUlid     |   4.1367 ns | 0.1012 ns | 0.0048 |      40 B |
+| ToByteArray     | NetUlid            |   9.4660 ns | 0.1082 ns | 0.0048 |      40 B |
+| ToByteArray     | Ulid               |   4.0211 ns | 0.0809 ns | 0.0048 |      40 B |
+| ToByteArray     | NUlid              |   4.2021 ns | 0.0903 ns | 0.0048 |      40 B |
 
-| ToGuid          | ByteAetherUlid     |   0.3066 ns | 0.0361 ns |      - |         - |
-| ToGuid          | NetUlid            |  12.7650 ns | 0.2810 ns | 0.0048 |      40 B |
-| ToGuid          | Ulid               |   0.7936 ns | 0.0454 ns |      - |         - |
-| ToGuid          | NUlid              |   0.2509 ns | 0.0286 ns |      - |         - |
+| ToGuid          | ByteAetherUlid     |   0.2625 ns | 0.0051 ns |      - |         - |
+| ToGuid          | NetUlid            |  10.3348 ns | 0.0326 ns |      - |         - |
+| ToGuid          | Ulid               |   0.7462 ns | 0.0117 ns |      - |         - |
+| ToGuid          | NUlid              |   0.2691 ns | 0.0070 ns |      - |         - |
 
-| ToString        | ByteAetherUlid     |  20.1908 ns | 0.4528 ns | 0.0095 |      80 B |
-| ToString        | NetUlid            |  26.1708 ns | 0.5517 ns | 0.0095 |      80 B |
-| ToString        | Ulid               |  20.6022 ns | 0.4536 ns | 0.0095 |      80 B |
-| ToString        | NUlid              |  28.4933 ns | 0.6250 ns | 0.0095 |      80 B |
-| ToString        | Guid               |  13.2287 ns | 0.3185 ns | 0.0115 |      96 B |
+| ToString        | ByteAetherUlid     |  12.2227 ns | 0.2543 ns | 0.0096 |      80 B |
+| ToString        | NetUlid            |  23.7706 ns | 0.2422 ns | 0.0095 |      80 B |
+| ToString        | Ulid               |  11.1126 ns | 0.2121 ns | 0.0096 |      80 B |
+| ToString        | NUlid              |  28.9672 ns | 0.1506 ns | 0.0095 |      80 B |
+| ToString        | Guid               |   7.2446 ns | 0.0341 ns | 0.0115 |      96 B |
 
-| CompareTo       | ByteAetherUlid     |   0.0000 ns | 0.0000 ns |      - |         - |
-| CompareTo       | NetUlid            |   3.3984 ns | 0.0210 ns |      - |         - |
-| CompareTo       | Ulid               |   2.1589 ns | 0.0365 ns |      - |         - |
-| CompareTo       | NUlid              |   9.6859 ns | 0.2093 ns | 0.0048 |      40 B |
+| CompareTo       | ByteAetherUlid     |   0.0007 ns | 0.0022 ns |      - |         - |
+| CompareTo       | NetUlid            |   3.6812 ns | 0.0298 ns |      - |         - |
+| CompareTo       | Ulid               |   0.0002 ns | 0.0006 ns |      - |         - |
+| CompareTo       | NUlid              |   0.4122 ns | 0.0062 ns |      - |         - |
 
-| Equals          | ByteAetherUlid     |   0.0113 ns | 0.0110 ns |      - |         - |
-| Equals          | NetUlid            |   0.9295 ns | 0.0461 ns |      - |         - |
-| Equals          | Ulid               |   0.0000 ns | 0.0000 ns |      - |         - |
+| Equals          | ByteAetherUlid     |   0.0016 ns | 0.0028 ns |      - |         - |
+| Equals          | NetUlid            |   1.0102 ns | 0.0059 ns |      - |         - |
+| Equals          | Ulid               |   0.0011 ns | 0.0020 ns |      - |         - |
 | Equals          | NUlid              |   0.0000 ns | 0.0000 ns |      - |         - |
-| Equals          | Guid               |   0.0106 ns | 0.0117 ns |      - |         - |
+| Equals          | Guid               |   0.0010 ns | 0.0023 ns |      - |         - |
 
-| GetHashCode     | ByteAetherUlid     |   0.0029 ns | 0.0087 ns |      - |         - |
-| GetHashCode     | NetUlid            |  10.2202 ns | 0.2350 ns |      - |         - |
-| GetHashCode     | Ulid               |   0.0028 ns | 0.0095 ns |      - |         - |
-| GetHashCode     | NUlid              |   8.2156 ns | 0.1880 ns |      - |         - |
-| GetHashCode     | Guid               |   0.0434 ns | 0.0172 ns |      - |         - |
+| GetHashCode     | ByteAetherUlid     |   0.0008 ns | 0.0018 ns |      - |         - |
+| GetHashCode     | NetUlid            |   9.8270 ns | 0.0271 ns |      - |         - |
+| GetHashCode     | Ulid               |   0.0032 ns | 0.0032 ns |      - |         - |
+| GetHashCode     | NUlid              |   5.7843 ns | 0.0235 ns |      - |         - |
+| GetHashCode     | Guid               |   0.0016 ns | 0.0028 ns |      - |         - |
 ```
 
 Existing competitive libraries exhibit various deviations from the official ULID specification or present drawbacks:
