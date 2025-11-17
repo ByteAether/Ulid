@@ -65,7 +65,7 @@ public class UlidEquatableTests
 		var ulid = Ulid.New();
 
 		// Act & Assert
-		Assert.False(ulid.Equals(null));
+		Assert.False(ulid.Equals((object?)null));
 	}
 
 	[Fact]

@@ -204,7 +204,7 @@ Converts the ULID to a canonical string representation. Format arguments are ign
 `==`, `!=`, `<`, `<=`, `>`, `>=`.
 - Implements standard comparison and equality methods:\
 `CompareTo`, `Equals`, `GetHashCode`.
-- Provides implicit operators to and from `Guid`.
+- Provides implicit operators to and from `Guid` and `string`.
 
 ### GenerationOptions
 
@@ -448,11 +448,11 @@ Job=DefaultJob
 | ToGuid          | Ulid               |   0.7462 ns | 0.0117 ns |      - |         - |
 | ToGuid          | NUlid              |   0.2691 ns | 0.0070 ns |      - |         - |
 
-| ToString        | ByteAetherUlid     |  12.2227 ns | 0.2543 ns | 0.0096 |      80 B |
-| ToString        | NetUlid            |  23.7706 ns | 0.2422 ns | 0.0095 |      80 B |
-| ToString        | Ulid               |  11.1126 ns | 0.2121 ns | 0.0096 |      80 B |
-| ToString        | NUlid              |  28.9672 ns | 0.1506 ns | 0.0095 |      80 B |
-| ToString        | Guid               |   7.2446 ns | 0.0341 ns | 0.0115 |      96 B |
+| ToString        | ByteAetherUlid     |   12.254 ns | 0.2822 ns | 0.0096 |      80 B |
+| ToString        | NetUlid            |   26.314 ns | 0.2748 ns | 0.0095 |      80 B |
+| ToString        | Ulid               |   12.373 ns | 0.1887 ns | 0.0096 |      80 B |
+| ToString        | NUlid              |   27.661 ns | 0.2090 ns | 0.0095 |      80 B |
+| ToString        | Guid               |    7.208 ns | 0.0447 ns | 0.0115 |      96 B |
 
 | CompareTo       | ByteAetherUlid     |   0.0007 ns | 0.0022 ns |      - |         - |
 | CompareTo       | NetUlid            |   3.6812 ns | 0.0298 ns |      - |         - |

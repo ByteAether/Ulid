@@ -137,7 +137,7 @@ Create from existing `Guid`.
   `==`, `!=`, `<`, `<=`, `>`, `>=`.
 - Implements standard comparison and equality methods:\
   `CompareTo`, `Equals`, `GetHashCode`.
-- Provides implicit operators to and from `Guid`.
+- Provides implicit operators to and from `Guid` and `string`.
 
 ### GenerationOptions
 

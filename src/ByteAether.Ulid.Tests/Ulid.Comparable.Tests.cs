@@ -75,7 +75,7 @@ public class UlidComparableTests
 		var ulid = Ulid.New();
 
 		// Act
-		var comparisonResult = ulid.CompareTo(null);
+		var comparisonResult = ulid.CompareTo((object?)null);
 
 		// Assert
 		Assert.True(comparisonResult > 0);

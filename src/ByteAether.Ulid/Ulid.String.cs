@@ -2,9 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
-#if !(NETSTANDARD2_1_OR_GREATER || NETCOREAPP)
-using System.Runtime.InteropServices;
-#endif
 
 namespace ByteAether.Ulid;
 
@@ -82,17 +79,28 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public readonly string ToString(string? format = null, IFormatProvider? formatProvider = null)
+	public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+
+	/// <summary>
+	/// Returns a string representation of the current instance of <see cref="Ulid"/> in its canonical Crockford's Base32 format.'
+	/// </summary>
+	/// <returns>Crockford's Base32 representation of the ULID</returns>
+#if NET5_0_OR_GREATER
+	[SkipLocalsInit]
+#endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+	public override readonly string ToString()
 	{
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
 		return string.Create(UlidStringLength, this, (span, ulid) => ulid.TryFill(span, _base32Chars));
 #else
 		Span<char> span = stackalloc char[UlidStringLength];
 		TryFill(span, _base32Chars);
-		unsafe
-		{
-			return new string((char*)Unsafe.AsPointer(ref MemoryMarshal.GetReference(span)), 0, UlidStringLength);
-		}
+		return span.ToString();
 #endif
 	}
 
@@ -385,4 +393,28 @@ public readonly partial struct Ulid
 
 		return true;
 	}
+
+	/// <summary>
+	/// Allows implicit conversion of <see cref="Ulid"/> to <see cref="string"/>.
+	/// </summary>
+	/// <param name="ulid"></param>
+	/// <returns></returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+	public static implicit operator string(Ulid ulid) => ulid.ToString();
+
+	/// <summary>
+	/// Allows implicit conversion of <see cref="string"/> to <see cref="Ulid"/>.
+	/// </summary>
+	/// <param name="str"></param>
+	/// <returns></returns>
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+	public static implicit operator Ulid(string str) => Parse(str);
 }

@@ -3,7 +3,7 @@
 namespace ByteAether.Ulid.Tests;
 public class UlidStringTests
 {
-	private static readonly string _goodUlidString = "01F8MECHZX3TBDSZG8P8X7XRMM";
+	private const string _goodUlidString = "01F8MECHZX3TBDSZG8P8X7XRMM";
 
 	[Fact]
 	public void ToString_ShouldReturnExpectedString()
@@ -221,7 +221,7 @@ public class UlidStringTests
 	[Fact]
 	public void ToString_WrongLetters_ShouldReplaceWithCorrect()
 	{
-		// Crockford's Base32 subtitution test
+		// Crockford's Base32 substitution test
 		var inputChars = new[] { 'O', 'o', 'I', 'i', 'L', 'l', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'x', 'y', 'z' };
 		var outputChars = new[] { '0', '0', '1', '1', '1', '1', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z' };
 
