@@ -61,6 +61,21 @@ public class UlidNewTests
 	}
 
 	[Fact]
+	public void New_WithTimestampAndRandom_ShouldGenerateCorrectTimestampAndRandom()
+	{
+		// Arrange
+		var timestamp = DateTimeOffset.UtcNow;
+		var random = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+		// Act
+		var ulid = Ulid.New(timestamp, random);
+
+		// Assert
+		Assert.Equal(timestamp.ToUnixTimeMilliseconds(), ulid.Time.ToUnixTimeMilliseconds());
+		Assert.Equal(random, ulid.Random.ToArray());
+	}
+
+	[Fact]
 	public void New_NonMonotonic_CanProduceSmallerUlids()
 	{
 		lock (_staticStateLock)

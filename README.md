@@ -398,28 +398,28 @@ The following benchmarks were performed:
 ```
 BenchmarkDotNet v0.15.7, Windows 10 (10.0.19044.6575/21H2/November2021Update)
 AMD Ryzen 7 3700X 3.60GHz, 1 CPU, 12 logical and 6 physical cores
-.NET SDK 10.0.100
-  [Host]     : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
-  DefaultJob : .NET 10.0.0 (10.0.0, 10.0.25.52411), X64 RyuJIT x86-64-v3
+.NET SDK 10.0.101
+  [Host]     : .NET 10.0.1 (10.0.1, 10.0.125.57005), X64 RyuJIT x86-64-v3
+  DefaultJob : .NET 10.0.1 (10.0.1, 10.0.125.57005), X64 RyuJIT x86-64-v3
 
 Job=DefaultJob
 
 | Type            | Method             | Mean        | Error     | Gen0   | Allocated |
 |---------------- |------------------- |------------:|----------:|-------:|----------:|
-| Generate        | ByteAetherUlid     |  46.1867 ns | 0.0914 ns |      - |         - |
-| Generate        | ByteAetherUlidR1Bp |  51.5996 ns | 0.1552 ns |      - |         - |
-| Generate        | ByteAetherUlidR4Bp |  56.5170 ns | 0.1043 ns |      - |         - |
-| Generate        | ByteAetherUlidR1Bc |  94.8500 ns | 0.2545 ns |      - |         - |
-| Generate        | ByteAetherUlidR4Bc | 100.9761 ns | 0.3672 ns |      - |         - |
-| Generate        | NetUlid *(1)       | 159.2965 ns | 1.3950 ns | 0.0095 |      80 B |
-| Generate        | NUlid *(2)         |  49.2036 ns | 0.1911 ns |      - |         - |
+| Generate        | ByteAetherUlid     |    44.39 ns |  0.854 ns |      - |         - |
+| Generate        | ByteAetherUlidR1Bp |    50.94 ns |  0.475 ns |      - |         - |
+| Generate        | ByteAetherUlidR4Bp |    53.19 ns |  0.393 ns |      - |         - |
+| Generate        | ByteAetherUlidR1Bc |    89.92 ns |  1.285 ns |      - |         - |
+| Generate        | ByteAetherUlidR4Bc |    98.13 ns |  1.901 ns |      - |         - |
+| Generate        | NetUlid *(1)       |   161.74 ns |  2.706 ns | 0.0095 |      80 B |
+| Generate        | NUlid *(2)         |    49.74 ns |  0.493 ns |      - |         - |
 
-| GenerateNonMono | ByteAetherUlid     |  91.3682 ns | 0.2455 ns |      - |         - |
-| GenerateNonMono | ByteAetherUlidP    |  42.5785 ns | 0.1397 ns |      - |         - |
-| GenerateNonMono | Ulid *(3,4)        |  39.1454 ns | 0.0491 ns |      - |         - |
-| GenerateNonMono | NUlid              |  91.0387 ns | 0.2620 ns |      - |         - |
-| GenerateNonMono | Guid *(5)          |  48.1872 ns | 0.1581 ns |      - |         - |
-| GenerateNonMono | GuidV7 *(3,5)      |  77.2375 ns | 0.2567 ns |      - |         - |
+| GenerateNonMono | ByteAetherUlid     |    93.01 ns |  1.014 ns |      - |         - |
+| GenerateNonMono | ByteAetherUlidP    |    42.78 ns |  0.241 ns |      - |         - |
+| GenerateNonMono | Ulid *(3,4)        |    38.30 ns |  0.294 ns |      - |         - |
+| GenerateNonMono | NUlid              |    93.16 ns |  1.849 ns |      - |         - |
+| GenerateNonMono | Guid *(5)          |    48.20 ns |  0.372 ns |      - |         - |
+| GenerateNonMono | GuidV7 *(3,5)      |    78.10 ns |  0.488 ns |      - |         - |
 
 | FromByteArray   | ByteAetherUlid     |   0.0302 ns | 0.0045 ns |      - |         - |
 | FromByteArray   | NetUlid            |   0.7515 ns | 0.0083 ns |      - |         - |
