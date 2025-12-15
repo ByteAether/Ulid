@@ -77,7 +77,7 @@ internal static class ObsoleteHelper
 	};
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	[return: NotNullIfNotNull("isMonotonic")]
+	[return: NotNullIfNotNull(nameof(isMonotonic))]
 	public static Ulid.GenerationOptions? GetByBoolean(bool? isMonotonic)
 		=> isMonotonic switch
 		{

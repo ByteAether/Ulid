@@ -246,7 +246,7 @@ public readonly partial struct Ulid
             else // Otherwise, generate a new ULID
             {
 	            // Copy timestamp from the incomplete ULID
-	            Unsafe.CopyBlockUnaligned(ref lastUlidRef, ref ulidBytesRef, _ulidSizeTime);
+	            Unsafe.CopyBlock(ref lastUlidRef, ref ulidBytesRef, _ulidSizeTime);
 
 	            // Generate a new random to the last ULID
                 options.InitialRandomSource.GetBytes(
@@ -258,7 +258,7 @@ public readonly partial struct Ulid
                 );
             }
 
-            Unsafe.CopyBlockUnaligned(ref ulidBytesRef, ref lastUlidRef, _ulidSize);
+            Unsafe.CopyBlock(ref ulidBytesRef, ref lastUlidRef, _ulidSize);
         }
         finally
         {
