@@ -34,7 +34,7 @@ jobs:
       run: dotnet pack --configuration Release /p:ContinuousIntegrationBuild=true /p:PackageVersion=${{ steps.version.outputs.version-without-v }} /p:PackageReleaseNotes="See https://github.com/ByteAether/Ulid/releases/tag/${{ github.event.release.tag_name }}" --output ./output src/ByteAether.Ulid/ByteAether.Ulid.csproj
 
     - name: Upload NuGet package as artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: nuget-package
         path: ./output/*.nupkg
