@@ -251,9 +251,9 @@ public readonly partial struct Ulid
 	            // Generate a new random to the last ULID
                 options.InitialRandomSource.GetBytes(
 #if NETCOREAPP
-	                MemoryMarshal.CreateSpan(ref lastRandomRef, _ulidSize)
+	                MemoryMarshal.CreateSpan(ref lastRandomRef, _ulidSizeRandom)
 #else
-	                Compatibility.MemoryMarshal.CreateSpan(ref lastRandomRef, _ulidSize)
+	                Compatibility.MemoryMarshal.CreateSpan(ref lastRandomRef, _ulidSizeRandom)
 #endif
                 );
             }
