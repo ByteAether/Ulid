@@ -17,9 +17,9 @@ public class UlidNewTests
 	/// <summary>
 	/// A controllable random provider for testing purposes. It returns pre-configured byte sequences.
 	/// </summary>
-	private class ControllableRandomProvider(params byte[][] ByteSequences) : IRandomProvider
+	private class ControllableRandomProvider(params byte[][] byteSequences) : IRandomProvider
 	{
-		private readonly Queue<byte[]> _byteSequences = new(ByteSequences);
+		private readonly Queue<byte[]> _byteSequences = new(byteSequences);
 
 		public void GetBytes(Span<byte> buffer)
 		{
