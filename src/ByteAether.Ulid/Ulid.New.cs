@@ -182,6 +182,30 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
+	private static void AcquireSpinLock()
+	{
+		// Hot-path
+		if (Interlocked.CompareExchange(ref _lastUlidLock, 1, 0) == 0)
+		{
+			return;
+		}
+
+		// Spin until the lock is acquired
+		var spinner = new SpinWait();
+		while (Interlocked.CompareExchange(ref _lastUlidLock, 1, 0) == 1)
+		{
+			spinner.SpinOnce();
+		}
+	}
+
+#if NET5_0_OR_GREATER
+	[SkipLocalsInit]
+#endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
 	private static void FillRandom(ref byte ulidBytesRef, long timestamp, GenerationOptions options)
 	{
 		// Calculate offset to a random part
@@ -347,29 +371,5 @@ public readonly partial struct Ulid
 		}
 
 		throw new OverflowException("Addition resulted in a value larger than the target span's capacity.");
-	}
-
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-	private static void AcquireSpinLock()
-	{
-		// Hot-path
-		if (Interlocked.CompareExchange(ref _lastUlidLock, 1, 0) == 0)
-		{
-			return;
-		}
-
-		// Spin until the lock is acquired
-		var spinner = new SpinWait();
-		while (Interlocked.CompareExchange(ref _lastUlidLock, 1, 0) == 1)
-		{
-			spinner.SpinOnce();
-		}
 	}
 }

@@ -79,7 +79,7 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+	public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
 	/// <summary>
 	/// Returns a string representation of the current instance of <see cref="Ulid"/> in its canonical Crockford's Base32 format.'
@@ -93,13 +93,13 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public override readonly string ToString()
+	public override string ToString()
 	{
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
-		return string.Create(UlidStringLength, this, (span, ulid) => ulid.TryFill(span, _base32Chars));
+		return string.Create(UlidStringLength, this, static (span, ulid) => ulid.Fill(span, _base32Chars));
 #else
 		Span<char> span = stackalloc char[UlidStringLength];
-		TryFill(span, _base32Chars);
+		Fill(span, _base32Chars);
 		return span.ToString();
 #endif
 	}
@@ -299,14 +299,15 @@ public readonly partial struct Ulid
 		IFormatProvider? provider = null
 	)
 	{
-		if (TryFill(destination, _base32Chars))
+		if (destination.Length < UlidStringLength)
 		{
-			charsWritten = UlidStringLength;
-			return true;
+			charsWritten = 0;
+			return false;
 		}
 
-		charsWritten = 0;
-		return false;
+		Fill(destination, _base32Chars);
+		charsWritten = UlidStringLength;
+		return true;
 	}
 
 	/// <summary>
@@ -331,26 +332,22 @@ public readonly partial struct Ulid
 		IFormatProvider? provider = null
 	)
 	{
-		if (TryFill(destination, _base32Bytes))
+		if (destination.Length < UlidStringLength)
 		{
-			bytesWritten = UlidStringLength;
-			return true;
+			bytesWritten = 0;
+			return false;
 		}
 
-		bytesWritten = 0;
-		return false;
+		Fill(destination, _base32Bytes);
+		bytesWritten = UlidStringLength;
+		return true;
 	}
 
 #if NETCOREAPP3_0_OR_GREATER
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
-	private bool TryFill<T>(Span<T> span, T[] map)
+	private void Fill<T>(Span<T> span, T[] map)
 	{
-		if (span.Length < UlidStringLength)
-		{
-			return false;
-		}
-
 		// Encode randomness
 		span[25] = map[_r9 & 0x1F];                      // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111|11111|]
 		span[24] = map[((_r8 & 0x3) << 3) | (_r9 >> 5)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111111|11][111|11111]
@@ -380,8 +377,6 @@ public readonly partial struct Ulid
 		span[2] = map[_t1 >> 3];                         // 00[11111111][|11111|111][11111111][11111111][11111111][11111111]
 		span[1] = map[_t0 & 0x1F];                       // 00[111|11111|][11111111][11111111][11111111][11111111][11111111]
 		span[0] = map[_t0 >> 5];                         // |00[111|11111][11111111][11111111][11111111][11111111][11111111]
-
-		return true;
 	}
 
 	/// <summary>
