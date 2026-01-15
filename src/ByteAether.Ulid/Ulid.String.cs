@@ -292,7 +292,7 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public readonly bool TryFormat(
+	public bool TryFormat(
 		Span<char> destination,
 		out int charsWritten,
 		ReadOnlySpan<char> format,
@@ -325,7 +325,7 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public readonly bool TryFormat(
+	public bool TryFormat(
 		Span<byte> destination,
 		out int bytesWritten,
 		ReadOnlySpan<char> format,

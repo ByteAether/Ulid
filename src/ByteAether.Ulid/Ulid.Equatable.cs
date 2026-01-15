@@ -18,7 +18,7 @@ public readonly partial struct Ulid : IEquatable<Ulid>
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public override readonly int GetHashCode()
+	public override int GetHashCode()
 	{
 		ref var rA = ref Unsafe.As<Ulid, int>(ref Unsafe.AsRef(in this));
 		return rA ^ Unsafe.Add(ref rA, 1) ^ Unsafe.Add(ref rA, 2) ^ Unsafe.Add(ref rA, 3);
@@ -28,7 +28,7 @@ public readonly partial struct Ulid : IEquatable<Ulid>
 #if NETCOREAPP3_0_OR_GREATER
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
-	public readonly bool Equals(Ulid other)
+	public bool Equals(Ulid other)
 		=> EqualsCore(this, other);
 
 	/// <inheritdoc/>

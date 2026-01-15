@@ -78,7 +78,7 @@ public readonly partial struct Ulid
 #if NETCOREAPP3_0_OR_GREATER
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
-	public readonly Guid ToGuid()
+	public Guid ToGuid()
 	{
 #if NETCOREAPP
 		if (BitConverter.IsLittleEndian && _isVector128Supported)

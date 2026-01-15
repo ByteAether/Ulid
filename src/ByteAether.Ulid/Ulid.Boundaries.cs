@@ -1,6 +1,6 @@
 namespace ByteAether.Ulid;
 
-public partial struct Ulid
+public readonly partial struct Ulid
 {
 	private static readonly byte[] _randomMin = Enumerable.Repeat((byte)0x00, _ulidSizeRandom).ToArray();
 	private static readonly byte[] _randomMax = Enumerable.Repeat((byte)0xFF, _ulidSizeRandom).ToArray();

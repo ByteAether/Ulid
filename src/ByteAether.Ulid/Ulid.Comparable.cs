@@ -55,7 +55,7 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 #if NETCOREAPP3_0_OR_GREATER
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
-	public readonly int CompareTo(object? obj)
+	public int CompareTo(object? obj)
 	{
 		if (obj == null)
 		{
@@ -74,7 +74,7 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 #if NETCOREAPP3_0_OR_GREATER
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
-	public readonly int CompareTo(Ulid other)
+	public int CompareTo(Ulid other)
 		=> CompareToCore(this, other);
 
 #if NETCOREAPP3_0_OR_GREATER
