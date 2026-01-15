@@ -89,6 +89,28 @@ var ulidFromString = Ulid.Parse(ulidString);
 
 Console.WriteLine($"ULID: {ulid}, GUID: {guid}, String: {ulidString}");
 ```
+
+### Filtering by Time Range (LINQ)
+
+Since ULIDs are lexicographically sortable and contain a timestamp, you can use `Ulid.MinAt()` and `Ulid.MaxAt()` to generate boundary ULIDs for a specific time range. This allows EF Core to translate these into efficient range comparisons (e.g., `WHERE Id >= @min AND Id <= @max`) in your database.
+
+```csharp
+public async Task<List<Entity>> GetEntitiesFromYesterday(MyDbContext context)
+{
+    var startOfYesterday = DateTimeOffset.UtcNow.AddDays(-1).Date;
+    var endOfYesterday = startOfYesterday.AddDays(1).AddTicks(-1);
+
+    // Create boundary ULIDs for the time range
+    var minUlid = Ulid.MinAt(startOfYesterday);
+    var maxUlid = Ulid.MaxAt(endOfYesterday);
+
+    // This query uses the primary key index for high performance
+    return await context.Entities
+        .Where(e => e.Id >= minUlid && e.Id <= maxUlid)
+        .ToListAsync();
+}
+```
+
 ### Advanced Generation
 
 You can customize ULID generation by providing `GenerationOptions`. This allows you to control monotonicity and the source of randomness.
@@ -133,6 +155,7 @@ var ulid = Ulid.New();
 
 Console.WriteLine($"ULID from pseudo-random source: {ulid}");
 ```
+
 ## API
 
 The `Ulid` implementation provides the following properties and methods:
@@ -153,6 +176,14 @@ Generates a new ULID using the specified Unix timestamp in milliseconds (`long`)
 Creates a ULID from an existing byte array.
 - `Ulid.New(Guid guid)`\
 Create from existing `Guid`.
+- `Ulid.MinAt(DateTimeOffset datetime)`\
+Creates the minimum possible ULID value for the specified `DateTimeOffset`.
+- `Ulid.MinAt(long timestamp)`\
+Creates the minimum possible ULID value for the specified Unix timestamp in milliseconds (`long`).
+- `Ulid.MaxAt(DateTimeOffset datetime)`\
+Creates the maximum possible ULID value for the specified `DateTimeOffset`.
+- `Ulid.MaxAt(long timestamp)`\
+Creates the maximum possible ULID value for the specified Unix timestamp in milliseconds (`long`).
 
 ### Checking Validity
 
@@ -177,9 +208,11 @@ Tries to parse a ULID from a string in canonical format. Returns `true` if succe
 ### Properties
 
 - `Ulid.Empty`\
-  Represents an empty ULID, equivalent to `default(Ulid)` and `Ulid.New(new byte[16])`.
+Represents an empty ULID, equivalent to `default(Ulid)` and `Ulid.New(new byte[16])`.
+- `Ulid.Max`\
+Represents the maximum possible value for a ULID (all bytes set to `0xFF`).
 - `Ulid.DefaultGenerationOptions`\
-  Default configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
+Default configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
 - `.Time`\
 Gets the timestamp component of the ULID as a `DateTimeOffset`.
 - `.TimeBytes`\

@@ -86,39 +86,49 @@ Generates a new ULID using the specified Unix timestamp in milliseconds (`long`)
 Creates a ULID from an existing byte array.
 - `Ulid.New(Guid guid)`\
 Create from existing `Guid`.
+- `Ulid.MinAt(DateTimeOffset datetime)`\
+Creates the minimum possible ULID value for the specified `DateTimeOffset`.
+- `Ulid.MinAt(long timestamp)`\
+Creates the minimum possible ULID value for the specified Unix timestamp in milliseconds (`long`).
+- `Ulid.MaxAt(DateTimeOffset datetime)`\
+Creates the maximum possible ULID value for the specified `DateTimeOffset`.
+- `Ulid.MaxAt(long timestamp)`\
+Creates the maximum possible ULID value for the specified Unix timestamp in milliseconds (`long`).
 
 ### Checking Validity
 
 - `Ulid.IsValid(string ulidString)`\
-  Validates if the given string is a valid ULID.
+Validates if the given string is a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<char> ulidString)`\
-  Validates if the given span of characters is a valid ULID.
+Validates if the given span of characters is a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<byte> ulidBytes)`\
-  Validates if the given byte array represents a valid ULID.
+Validates if the given byte array represents a valid ULID.
 
 ### Parsing
 
 - `Ulid.Parse(ReadOnlySpan<char> chars, IFormatProvider? provider = null)`\
-  Parses a ULID from a character span in canonical format. The `IFormatProvider` is ignored.
+Parses a ULID from a character span in canonical format. The `IFormatProvider` is ignored.
 - `Ulid.TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Ulid result)`\
-  Tries to parse a ULID from a character span in canonical format. Returns `true` if successful.
+Tries to parse a ULID from a character span in canonical format. Returns `true` if successful.
 - `Ulid.Parse(string s, IFormatProvider? provider = null)`\
-  Parses a ULID from a string in canonical format. The `IFormatProvider` is ignored.
+Parses a ULID from a string in canonical format. The `IFormatProvider` is ignored.
 - `Ulid.TryParse(string? s, IFormatProvider? provider, out Ulid result)`\
-  Tries to parse a ULID from a string in canonical format. Returns `true` if successful.
+Tries to parse a ULID from a string in canonical format. Returns `true` if successful.
 
 ### Properties
 
 - `Ulid.Empty`\
-  Represents an empty ULID, equivalent to `default(Ulid)` and `Ulid.New(new byte[16])`.
+Represents an empty ULID, equivalent to `default(Ulid)` and `Ulid.New(new byte[16])`.
+- `Ulid.Max`\
+Represents the maximum possible value for a ULID (all bytes set to `0xFF`).
 - `Ulid.DefaultGenerationOptions`\
-  Default configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
+Default configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
 - `.Time`\
-  Gets the timestamp component of the ULID as a `DateTimeOffset`.
+Gets the timestamp component of the ULID as a `DateTimeOffset`.
 - `.TimeBytes`\
-  Gets the time component of the ULID as a `ReadOnlySpan<byte>`.
+Gets the time component of the ULID as a `ReadOnlySpan<byte>`.
 - `.Random`\
-  Gets the random component of the ULID as a `ReadOnlySpan<byte>`.
+Gets the random component of the ULID as a `ReadOnlySpan<byte>`.
 
 ### Conversion Methods
 
