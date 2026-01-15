@@ -31,7 +31,11 @@ This implementation addresses a potential `OverflowException` that can occur whe
 
 This library uniquely addresses the predictability of monotonic ULIDs generated within the same millisecond by allowing random increments to the random component. This mitigates enumeration attack vulnerabilities, as discussed in [ULID specification issue #105](https://github.com/ulid/spec/issues/105). You can configure the random increment with a random value ranging from 1-byte (1–256) to 4-bytes (1–4,294,967,296), enhancing randomness while preserving lexicographical sortability.
 
-For most modern systems, ULIDs offer a superior alternative to both GUIDs and integer IDs. While GUIDs provide uniqueness, they lack sortability and readability, impacting indexing and querying efficiency. Integer IDs are sortable but not universally unique, leading to potential conflicts in distributed environments. ULIDs combine universal uniqueness with lexicographical sortability, making them the optimal choice for scalable and efficient identifier generation in modern applications. This library provides a robust, reliable, and compliant ULID implementation, enabling your application to leverage these benefits without compromising performance or adherence to the official specification.
+---
+
+In the evolution of distributed identifiers, ULIDs represent the definitive successor to both legacy GUIDs and auto-incrementing integers. While modern standards like UUIDv7 attempt to address sortability, the [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562#name-monotonicity-and-counters) makes monotonicity optional, allowing implementations ([such as the native .NET provider](https://github.com/dotnet/runtime/blob/571b044582ceb7fe426b7f143c703064aa9ea4db/src/libraries/System.Private.CoreLib/src/System/Guid.cs#L306)) to sacrifice strict ordering during sub-millisecond bursts. This _"lazy"_ approach reintroduces the very index fragmentation and out-of-order writes that sortable IDs were meant to solve.
+
+ULID addresses this by design, mandating strict lexicographical sortability and monotonic increments. By enforcing these requirements at the specification level rather than leaving them to the implementor's discretion, ULID ensures consistent, high-performance behavior across all environments. This library provides a robust, compliant implementation that guarantees this order, enabling your application to scale without the performance trade-offs of non-deterministic identifiers.
 
 ## Features
 
