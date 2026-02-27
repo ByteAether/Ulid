@@ -43,7 +43,7 @@ jobs:
       run: dotnet build --no-restore --configuration Release src/ByteAether.Ulid.sln
 
     - name: Upload DLLs
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: dlls-${{ steps.vars.outputs.sha_short }}
         path: ./**/ByteAether.Ulid/bin/**/*.dll
@@ -53,7 +53,7 @@ jobs:
       run: dotnet test --no-build --verbosity normal --logger "trx" --configuration Release src/ByteAether.Ulid.sln
 
     - name: Upload test results
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-${{ steps.vars.outputs.sha_short }}
         path: ./**/TestResults/**/*.trx
@@ -62,7 +62,7 @@ jobs:
       run: dotnet pack --configuration Release /p:ContinuousIntegrationBuild=true /p:PackageVersion=0.0.0-ci-${{ steps.vars.outputs.sha_short }} /p:PackageReleaseNotes="CI Build ${{ steps.vars.outputs.sha_short }}" --output ./output src/ByteAether.Ulid/ByteAether.Ulid.csproj
 
     - name: Upload NuGet package
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: nugets-${{ steps.vars.outputs.sha_short }}
         path: ./output/*.nupkg
