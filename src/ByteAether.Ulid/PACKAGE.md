@@ -13,6 +13,7 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 
 ## Features
 
+![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
@@ -24,7 +25,7 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 
 - **Universally Unique**: Ensures global uniqueness across systems.
 - **Sortable**: Lexicographically ordered for time-based sorting.
-- **Fast and Efficient**: Optimized for high performance and low memory usage.
+- **Lock-Free Synchronization**: Monotonic generation utilizes a high-performance, **lock-free compare-and-exchange (CAS)** approach.
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
 - **Ahead-of-Time (AoT) Compilation Compatible**: Fully compatible with AoT compilation for improved startup performance and smaller binary sizes.
