@@ -144,7 +144,7 @@ public readonly partial struct Ulid
 #if NET7_0_OR_GREATER
 		Vector128.IsHardwareAccelerated;
 #else
-		Sse3.IsSupported;
+		Ssse3.IsSupported;
 #endif
 
 	private static readonly Vector128<byte> _shuffleMask
