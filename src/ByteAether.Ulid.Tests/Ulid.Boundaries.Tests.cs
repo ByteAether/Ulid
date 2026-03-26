@@ -15,10 +15,22 @@ public class UlidBoundariesTests
 	}
 
 	[Fact]
-	public void MaxUlid_ShouldHaveAllBytesSetToMax()
+	public void MinValue_ShouldBeDefault()
 	{
 		// Arrange
-		var ulid = Ulid.Max;
+		var ulid = Ulid.MinValue;
+		var emptyBytes = new byte[16];
+
+		// Assert
+		Assert.Equal(default, ulid);
+		Assert.Equal(emptyBytes, ulid.AsByteSpan());
+	}
+
+	[Fact]
+	public void MaxValue_ShouldHaveAllBytesSetToMax()
+	{
+		// Arrange
+		var ulid = Ulid.MaxValue;
 		var expected = Enumerable.Repeat((byte)0xFF, 16).ToArray();
 
 		// Assert

@@ -1,7 +1,13 @@
 ﻿using System.Runtime.CompilerServices;
+#if NET7_0_OR_GREATER
+using System.Numerics;
+#endif
 
 namespace ByteAether.Ulid;
 public readonly partial struct Ulid : IComparable, IComparable<Ulid>
+#if NET7_0_OR_GREATER
+	, IComparisonOperators<Ulid, Ulid, bool>
+#endif
 {
 	/// <summary>
 	/// Determines whether the value of the left ULID is less than the value of the right ULID.

@@ -6,6 +6,16 @@ namespace ByteAether.Ulid;
 public readonly partial struct Ulid
 {
 	/// <summary>
+	/// Represents the maximum possible value for a ULID.
+	/// </summary>
+	/// <remarks>
+	/// The <see cref="Max"/> field is a ULID where all byte components are set to their highest possible value (0xFF).
+	/// It can be used as a sentinel or boundary value in comparison operations or range validations.
+	/// </remarks>
+	[Obsolete("Use MaxValue instead.")]
+	public static Ulid Max => MaxValue;
+
+	/// <summary>
 	/// Whether <see cref="Ulid"/>s should be generated in a monotonic manner by default.<br />
 	/// Initial value is set to <c>true</c>.<br/>
 	/// <b>This setting applies globally without any scoping.</b>

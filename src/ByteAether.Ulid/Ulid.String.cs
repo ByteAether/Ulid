@@ -11,9 +11,11 @@ public readonly partial struct Ulid
 #if NET6_0_OR_GREATER
 	, ISpanFormattable
 #if NET7_0_OR_GREATER
+	, IParsable<Ulid> // Keeping this here for clarity
 	, ISpanParsable<Ulid>
 #if NET8_0_OR_GREATER
 	, IUtf8SpanFormattable
+	, IUtf8SpanParsable<Ulid>
 #endif
 #endif
 #endif

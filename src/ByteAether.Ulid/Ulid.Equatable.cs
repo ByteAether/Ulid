@@ -4,11 +4,23 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 #endif
+#if NET7_0_OR_GREATER
+using System.Numerics;
+#endif
 
 namespace ByteAether.Ulid;
 
-public readonly partial struct Ulid : IEquatable<Ulid>
+public readonly partial struct Ulid : IEquatable<Ulid>, IEqualityComparer<Ulid>
+#if NET7_0_OR_GREATER
+	, IEqualityOperators<Ulid, Ulid, bool> // Keeping this here for clarity
+#endif
 {
+	/// <inheritdoc />
+	public int GetHashCode(Ulid ulid) => ulid.GetHashCode();
+
+	/// <inheritdoc />
+	public bool Equals(Ulid x, Ulid y) => EqualsCore(x, y);
+
 	/// <inheritdoc/>
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]

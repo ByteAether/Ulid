@@ -168,81 +168,85 @@ The `Ulid` implementation provides the following properties and methods:
 ### Creation
 
 - `Ulid.New(GenerationOptions? options = null)`\
-Generates a new ULID using default generation options. Accepts an optional `GenerationOptions` parameter to customize the generation behavior.
+  Generates a new ULID using default generation options. Accepts an optional `GenerationOptions` parameter to customize the generation behavior.
 - `Ulid.New(DateTimeOffset dateTimeOffset, GenerationOptions? options = null)`\
-Generates a new ULID using the specified `DateTimeOffset` and default generation options. Accepts an optional `GenerationOptions` parameter to customize the generation behavior.
+  Generates a new ULID using the specified `DateTimeOffset` and default generation options. Accepts an optional `GenerationOptions` parameter to customize the generation behavior.
 - `Ulid.New(long timestamp, GenerationOptions? options = null)`\
-Generates a new ULID using the specified Unix timestamp in milliseconds (`long`) and default generation options. Accepts an optional `GenerationOptions` parameter to customize the generation behavior.
+  Generates a new ULID using the specified Unix timestamp in milliseconds (`long`) and default generation options. Accepts an optional `GenerationOptions` parameter to customize the generation behavior.
 - `Ulid.New(DateTimeOffset dateTimeOffset, ReadOnlySpan<byte> random)`\
-Generates a new ULID using the specified `DateTimeOffset` and a pre-existing random byte array.
+  Generates a new ULID using the specified `DateTimeOffset` and a pre-existing random byte array.
 - `Ulid.New(long timestamp, ReadOnlySpan<byte> random)`\
-Generates a new ULID using the specified Unix timestamp in milliseconds (`long`) and a pre-existing random byte array.
+  Generates a new ULID using the specified Unix timestamp in milliseconds (`long`) and a pre-existing random byte array.
 - `Ulid.New(ReadOnlySpan<byte> bytes)`\
-Creates a ULID from an existing byte array.
+  Creates a ULID from an existing byte array.
 - `Ulid.New(Guid guid)`\
-Create from existing `Guid`.
+  Create from existing `Guid`.
 - `Ulid.MinAt(DateTimeOffset datetime)`\
-Creates the minimum possible ULID value for the specified `DateTimeOffset`.
+  Creates the minimum possible ULID value for the specified `DateTimeOffset`.
 - `Ulid.MinAt(long timestamp)`\
-Creates the minimum possible ULID value for the specified Unix timestamp in milliseconds (`long`).
+  Creates the minimum possible ULID value for the specified Unix timestamp in milliseconds (`long`).
 - `Ulid.MaxAt(DateTimeOffset datetime)`\
-Creates the maximum possible ULID value for the specified `DateTimeOffset`.
+  Creates the maximum possible ULID value for the specified `DateTimeOffset`.
 - `Ulid.MaxAt(long timestamp)`\
-Creates the maximum possible ULID value for the specified Unix timestamp in milliseconds (`long`).
+  Creates the maximum possible ULID value for the specified Unix timestamp in milliseconds (`long`).
 
 ### Checking Validity
 
 - `Ulid.IsValid(string ulidString)`\
-Validates if the given string is a valid ULID.
+  Validates if the given string is a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<char> ulidString)`\
-Validates if the given span of characters is a valid ULID.
+  Validates if the given span of characters is a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<byte> ulidBytes)`\
-Validates if the given byte array represents a valid ULID.
+  Validates if the given byte array represents a valid ULID.
 
 ### Parsing
 
 - `Ulid.Parse(ReadOnlySpan<char> chars, IFormatProvider? provider = null)`\
-Parses a ULID from a character span in canonical format. The `IFormatProvider` is ignored.
+  Parses a ULID from a character span in canonical format. The `IFormatProvider` is ignored.
 - `Ulid.TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Ulid result)`\
-Tries to parse a ULID from a character span in canonical format. Returns `true` if successful.
+  Tries to parse a ULID from a character span in canonical format. Returns `true` if successful.
 - `Ulid.Parse(string s, IFormatProvider? provider = null)`\
-Parses a ULID from a string in canonical format. The `IFormatProvider` is ignored.
+  Parses a ULID from a string in canonical format. The `IFormatProvider` is ignored.
 - `Ulid.TryParse(string? s, IFormatProvider? provider, out Ulid result)`\
-Tries to parse a ULID from a string in canonical format. Returns `true` if successful.
+  Tries to parse a ULID from a string in canonical format. Returns `true` if successful.
 
 ### Properties
 
+- `Ulid.MinValue`\
+  Represents an empty ULID, equivalent to `default(Ulid)` and `Ulid.New(new byte[16])`.
+- `Ulid.MaxValue`\
+  Represents the maximum possible value for a ULID (all bytes set to `0xFF`).
 - `Ulid.Empty`\
-Represents an empty ULID, equivalent to `default(Ulid)` and `Ulid.New(new byte[16])`.
-- `Ulid.Max`\
-Represents the maximum possible value for a ULID (all bytes set to `0xFF`).
+  Alias for `Ulid.MinValue`.
 - `Ulid.DefaultGenerationOptions`\
-Default configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
+  Default configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
 - `.Time`\
-Gets the timestamp component of the ULID as a `DateTimeOffset`.
+  Gets the timestamp component of the ULID as a `DateTimeOffset`.
 - `.TimeBytes`\
-Gets the time component of the ULID as a `ReadOnlySpan<byte>`.
+  Gets the time component of the ULID as a `ReadOnlySpan<byte>`.
 - `.Random`\
-Gets the random component of the ULID as a `ReadOnlySpan<byte>`.
+  Gets the random component of the ULID as a `ReadOnlySpan<byte>`.
 
-### Conversion Methods
+### Conversions & Interoperability
 
 - `.AsByteSpan()`\
-Provides a `ReadOnlySpan<byte>` representing the contents of the ULID.
+  Provides a `ReadOnlySpan<byte>` representing the contents of the ULID.
 - `.ToByteArray()`\
-Converts the ULID to a byte array.
+  Converts the ULID to a byte array.
 - `.ToGuid()`\
-Converts the ULID to a `Guid`.
+  Converts the ULID to a `Guid`.
 - `.ToString(string? format = null, IFormatProvider? formatProvider = null)`\
-Converts the ULID to a canonical string representation. Format arguments are ignored.
+  Converts the ULID to a canonical string representation. Format arguments are ignored.
+- Provides implicit operators to and from `Guid` and `string`.
 
-### Comparison Operators
+### Comparison Operators & .NET Interfaces
 
 - Supports all comparison operators:\
-`==`, `!=`, `<`, `<=`, `>`, `>=`.
+  `==`, `!=`, `<`, `<=`, `>`, `>=`.
 - Implements standard comparison and equality methods:\
-`CompareTo`, `Equals`, `GetHashCode`.
-- Provides implicit operators to and from `Guid` and `string`.
+  `CompareTo`, `Equals`, `GetHashCode`.
+- Implements the following .NET standard interfaces:\
+  `IMinMaxValue<Ulid>`, `IEquatable<Ulid>`, `IIEqualityComparer<Ulid>`, `IComparable`, `IComparable<Ulid>`, `IComparisonOperators<Ulid, Ulid, bool>`, `IFormattable`, `IParsable<Ulid>`, `ISpanFormattable`, `ISpanParsable<Ulid>`, `IUtf8SpanFormattable`, `IUtf8SpanParsable<Ulid>`.
 
 ### GenerationOptions
 
@@ -252,17 +256,17 @@ The `GenerationOptions` class provides detailed configuration for ULID generatio
   Controls the behavior of ULID generation when multiple identifiers are created within the same millisecond. It determines whether ULIDs are strictly increasing or allow for random ordering within that millisecond. Available options include: `NonMonotonic`, `MonotonicIncrement` (default), `MonotonicRandom1Byte`, `MonotonicRandom2Byte`, `MonotonicRandom3Byte`, `MonotonicRandom4Byte`.
 
 - `InitialRandomSource`\
-An `IRandomProvider` for generating the random bytes of a ULID. The default `CryptographicallySecureRandomProvider` ensures robust, unpredictable ULIDs using a cryptographically secure generator.
+  An `IRandomProvider` for generating the random bytes of a ULID. The default `CryptographicallySecureRandomProvider` ensures robust, unpredictable ULIDs using a cryptographically secure generator.
 
 - `IncrementRandomSource`\
-An `IRandomProvider` that provides randomness for monotonic random increments. The default `PseudoRandomProvider` is a faster, non-cryptographically secure source optimized for this specific purpose.
+  An `IRandomProvider` that provides randomness for monotonic random increments. The default `PseudoRandomProvider` is a faster, non-cryptographically secure source optimized for this specific purpose.
 
 This library comes with two default `IRandomProvider` implementations:
 
 - **`CryptographicallySecureRandomProvider`**\
-Utilizes `System.Security.Cryptography.RandomNumberGenerator` for high-quality, cryptographically secure random data.
+  Utilizes `System.Security.Cryptography.RandomNumberGenerator` for high-quality, cryptographically secure random data.
 - **`PseudoRandomProvider`**\
-A faster, non-cryptographically secure option based on `System.Random`, ideal for performance-critical scenarios where cryptographic security is not required for random increments.
+  A faster, non-cryptographically secure option based on `System.Random`, ideal for performance-critical scenarios where cryptographic security is not required for random increments.
 
 Custom `IRandomProvider` implementations can also be created.
 
