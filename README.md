@@ -284,7 +284,7 @@ To use ULIDs as primary keys or properties in Entity Framework Core, you can cre
 ```csharp
 public class UlidToBytesConverter : ValueConverter<Ulid, byte[]>
 {
-	private static readonly ConverterMappingHints DefaultHints = new(size: 16);
+	private static readonly ConverterMappingHints defaultHints = new(size: 16);
 
 	public UlidToBytesConverter() : this(defaultHints) { }
 
