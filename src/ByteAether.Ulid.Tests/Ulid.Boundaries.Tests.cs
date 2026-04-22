@@ -11,7 +11,7 @@ public class UlidBoundariesTests
 
 		// Assert
 		Assert.Equal(default, ulid);
-		Assert.Equal(emptyBytes, ulid.AsByteSpan());
+		Assert.Equal(emptyBytes, ulid.ToByteArray());
 	}
 
 	[Fact]
@@ -22,7 +22,7 @@ public class UlidBoundariesTests
 		var expected = Enumerable.Repeat((byte)0xFF, 16).ToArray();
 
 		// Assert
-		Assert.Equal(expected, ulid.AsByteSpan());
+		Assert.Equal(expected, ulid.ToByteArray());
 	}
 
 	[Fact]
@@ -36,7 +36,7 @@ public class UlidBoundariesTests
 
 		// Assert
 		// Last 10 bytes (random part) should be 0
-		Assert.All(ulid.AsByteSpan()[^10..].ToArray(), x => Assert.Equal(0, x));
+		Assert.All(ulid.AsByteSpan().Slice(6, 10).ToArray(), x => Assert.Equal(0, x));
 		Assert.Equal(timestamp, ulid.Time.ToUnixTimeMilliseconds());
 	}
 
@@ -51,7 +51,7 @@ public class UlidBoundariesTests
 
 		// Assert
 		// Last 10 bytes (random part) should be 0
-		Assert.All(ulid.AsByteSpan()[^10..].ToArray(), x => Assert.Equal(0, x));
+		Assert.All(ulid.AsByteSpan().Slice(6, 10).ToArray(), x => Assert.Equal(0, x));
 		Assert.Equal(dto.ToUnixTimeMilliseconds(), ulid.Time.ToUnixTimeMilliseconds());
 	}
 
@@ -66,7 +66,7 @@ public class UlidBoundariesTests
 
 		// Assert
 		// Last 10 bytes (random part) should be 0xFF
-		Assert.All(ulid.AsByteSpan()[^10..].ToArray(), x => Assert.Equal(0xFF, x));
+		Assert.All(ulid.AsByteSpan().Slice(6, 10).ToArray(), x => Assert.Equal(0xFF, x));
 		Assert.Equal(timestamp, ulid.Time.ToUnixTimeMilliseconds());
 	}
 
@@ -81,7 +81,7 @@ public class UlidBoundariesTests
 
 		// Assert
 		// Last 10 bytes (random part) should be 0xFF
-		Assert.All(ulid.AsByteSpan()[^10..].ToArray(), x => Assert.Equal(0xFF, x));
+		Assert.All(ulid.AsByteSpan().Slice(6, 10).ToArray(), x => Assert.Equal(0xFF, x));
 		Assert.Equal(dto.ToUnixTimeMilliseconds(), ulid.Time.ToUnixTimeMilliseconds());
 	}
 }
