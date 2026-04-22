@@ -20,52 +20,22 @@ public readonly partial struct Ulid
 	/// Creates a new ULID using the specified GUID.
 	/// </summary>
 	/// <param name="guid">The GUID to initialize the ULID with.</param>
-	// HACK: We assume the layout of a Guid is the following:
-	// Int32, Int16, Int16, Int8, Int8, Int8, Int8, Int8, Int8, Int8, Int8
-	// source: https://github.com/dotnet/runtime/blob/5c4686f831d34c2c127e943d0f0d144793eeb0ad/src/libraries/System.Private.CoreLib/src/System/Guid.cs
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public static Ulid New(Guid guid)
 	{
-#if NET6_0_OR_GREATER
-		if (BitConverter.IsLittleEndian && _isVector128Supported)
-		{
-			var vector = Unsafe.As<Guid, Vector128<byte>>(ref guid);
-			var shuffled = Shuffle(vector);
-
-			return Unsafe.As<Vector128<byte>, Ulid>(ref shuffled);
-		}
-#endif
-		Span<byte> ulidBytes = stackalloc byte[_ulidSize];
-
 		if (BitConverter.IsLittleEndian)
 		{
-			// |A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|
-			// |D|C|B|A|...
-			//      ...|F|E|H|G|...
-			//              ...|I|J|K|L|M|N|O|P|
-			ref var ptr = ref Unsafe.As<Guid, uint>(ref guid);
-			var lower = BinaryPrimitives.ReverseEndianness(ptr);
-			MemoryMarshal.Write(ulidBytes, ref lower);
-
-
-			ptr = ref Unsafe.Add(ref ptr, 1);
-			var upper = ((ptr & 0x00_FF_00_FF) << 8) | ((ptr & 0xFF_00_FF_00) >> 8);
-			MemoryMarshal.Write(ulidBytes[4..], ref upper);
-
-			ref var upperBytes = ref Unsafe.As<uint, ulong>(ref Unsafe.Add(ref ptr, 1));
-			MemoryMarshal.Write(ulidBytes[8..], ref upperBytes);
-		}
-		else
-		{
-			MemoryMarshal.Write(ulidBytes, ref guid);
+			return Shuffle<Guid, Ulid>(ref guid);
 		}
 
-		return MemoryMarshal.Read<Ulid>(ulidBytes);
+		return Unsafe.As<Guid, Ulid>(ref guid);
 	}
 
 	/// <summary>
@@ -76,43 +46,18 @@ public readonly partial struct Ulid
 	[SkipLocalsInit]
 #endif
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public Guid ToGuid()
 	{
-#if NETCOREAPP
-		if (BitConverter.IsLittleEndian && _isVector128Supported)
-		{
-			var vector = Unsafe.As<Ulid, Vector128<byte>>(ref Unsafe.AsRef(in this));
-			var shuffled = Shuffle(vector);
-
-			return Unsafe.As<Vector128<byte>, Guid>(ref shuffled);
-		}
-#endif
-		Span<byte> guidBytes = stackalloc byte[_ulidSize];
 		if (BitConverter.IsLittleEndian)
 		{
-			// |A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|
-			// |D|C|B|A|...
-			//      ...|F|E|H|G|...
-			//              ...|I|J|K|L|M|N|O|P|
-			ref var ptr = ref Unsafe.As<Ulid, uint>(ref Unsafe.AsRef(in this));
-			var lower = BinaryPrimitives.ReverseEndianness(ptr);
-			MemoryMarshal.Write(guidBytes, ref lower);
-
-			ptr = ref Unsafe.Add(ref ptr, 1);
-			var upper = ((ptr & 0x00_FF_00_FF) << 8) | ((ptr & 0xFF_00_FF_00) >> 8);
-			MemoryMarshal.Write(guidBytes[4..], ref upper);
-
-			ref var upperBytes = ref Unsafe.As<uint, ulong>(ref Unsafe.Add(ref ptr, 1));
-			MemoryMarshal.Write(guidBytes[8..], ref upperBytes);
-		}
-		else
-		{
-			MemoryMarshal.Write(guidBytes, ref Unsafe.AsRef(in this));
+			return Shuffle<Ulid, Guid>(ref Unsafe.AsRef(in this));
 		}
 
-		return MemoryMarshal.Read<Guid>(guidBytes);
+		return Unsafe.As<Ulid, Guid>(ref Unsafe.AsRef(in this));
 	}
 
 	/// <summary>
@@ -140,29 +85,66 @@ public readonly partial struct Ulid
 	public static implicit operator Ulid(Guid guid) => New(guid);
 
 #if NETCOREAPP
-	private static readonly bool _isVector128Supported =
-#if NET7_0_OR_GREATER
-		Vector128.IsHardwareAccelerated;
-#else
-		Ssse3.IsSupported;
-#endif
-
 	private static readonly Vector128<byte> _shuffleMask
 		= Vector128.Create((byte)3, 2, 1, 0, 5, 4, 7, 6, 8, 9, 10, 11, 12, 13, 14, 15);
 
+	private static readonly bool _isAccelerated =
+#if NET7_0_OR_GREATER
+		Vector128.IsHardwareAccelerated ||
+#endif
+		Ssse3.IsSupported;
+#endif
+
+	// HACK: We assume the layout of a Guid is the following:
+	// Int32, Int16, Int16, Int8, Int8, Int8, Int8, Int8, Int8, Int8, Int8
+	// Source: https://github.com/dotnet/runtime/blob/5c4686f831d34c2c127e943d0f0d144793eeb0ad/src/libraries/System.Private.CoreLib/src/System/Guid.cs
+	// More info: https://stackoverflow.com/questions/10190817/guid-byte-order-in-net/10191075#10191075
+#if NET5_0_OR_GREATER
+	[SkipLocalsInit]
+#endif
 #if NETCOREAPP3_0_OR_GREATER
 	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	private static Vector128<byte> Shuffle(Vector128<byte> value)
+	private static TOut Shuffle<TIn, TOut>(ref TIn bytes)
 	{
-		return
+#if NETCOREAPP
+		if (_isAccelerated)
+		{
+			var vector = Unsafe.As<TIn, Vector128<byte>>(ref bytes);
+
 #if NET7_0_OR_GREATER
-			Vector128.IsHardwareAccelerated ? Vector128.Shuffle(value, _shuffleMask) :
+			if (Vector128.IsHardwareAccelerated)
+			{
+				vector = Vector128.Shuffle(vector, _shuffleMask);
+				return Unsafe.As<Vector128<byte>, TOut>(ref vector);
+			}
 #endif
-			Ssse3.IsSupported ? Ssse3.Shuffle(value, _shuffleMask) :
-			throw new NotImplementedException();
+
+			vector = Ssse3.Shuffle(vector, _shuffleMask);
+			return Unsafe.As<Vector128<byte>, TOut>(ref vector);
+		}
+#endif
+
+		// |A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|
+		// |D|C|B|A|...
+		//      ...|F|E|H|G|...
+		//              ...|I|J|K|L|M|N|O|P|
+		Span<byte> result = new byte[_ulidSize];
+
+		ref var ptr = ref Unsafe.As<TIn, uint>(ref bytes);
+		var lower = BinaryPrimitives.ReverseEndianness(ptr);
+
+		ptr = ref Unsafe.Add(ref ptr, 1);
+		var upper = ((ptr & 0x00_FF_00_FF) << 8) | ((ptr & 0xFF_00_FF_00) >> 8);
+
+		ref var upperBytes = ref Unsafe.As<uint, ulong>(ref Unsafe.Add(ref ptr, 1));
+
+		MemoryMarshal.Write(result, ref lower);
+		MemoryMarshal.Write(result[4..], ref upper);
+		MemoryMarshal.Write(result[8..], ref upperBytes);
+
+		return Unsafe.As<byte, TOut>(ref result.GetPinnableReference());
 	}
-#endif
 }
