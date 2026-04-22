@@ -465,10 +465,10 @@ Job=DefaultJob
 | FromByteArray   | NUlid              |   0.0325 ns | 0.0028 ns |      - |         - |
 | FromByteArray   | Guid               |   0.0232 ns | 0.0036 ns |      - |         - |
 
-| FromGuid        | ByteAetherUlid     |  0.0000 ns |  0.0000 ns |      - |         - |
-| FromGuid        | NetUlid            |  1.2034 ns |  0.0798 ns |      - |         - |
-| FromGuid        | Ulid               |  1.4057 ns |  0.0437 ns |      - |         - |
-| FromGuid        | NUlid              |  0.1920 ns |  0.0089 ns |      - |         - |
+| FromGuid        | ByteAetherUlid     |   0.0000 ns | 0.0000 ns |      - |         - |
+| FromGuid        | NetUlid            |   1.2034 ns | 0.0798 ns |      - |         - |
+| FromGuid        | Ulid               |   1.4057 ns | 0.0437 ns |      - |         - |
+| FromGuid        | NUlid              |   0.1920 ns | 0.0089 ns |      - |         - |
 
 | FromString      | ByteAetherUlid     |  13.6761 ns | 0.0780 ns |      - |         - |
 | FromString      | NetUlid            |  27.1021 ns | 0.2000 ns |      - |         - |
@@ -482,10 +482,10 @@ Job=DefaultJob
 | ToByteArray     | Ulid               |   4.1402 ns | 0.1311 ns | 0.0048 |      40 B |
 | ToByteArray     | NUlid              |   4.5557 ns | 0.1312 ns | 0.0048 |      40 B |
 
-| ToGuid          | ByteAetherUlid     |  0.0151 ns |  0.0031 ns |      - |         - |
-| ToGuid          | NetUlid            |  9.9122 ns |  0.0858 ns |      - |         - |
-| ToGuid          | Ulid               |  0.5244 ns |  0.0163 ns |      - |         - |
-| ToGuid          | NUlid              |  0.1479 ns |  0.0042 ns |      - |         - |
+| ToGuid          | ByteAetherUlid     |   0.0151 ns | 0.0031 ns |      - |         - |
+| ToGuid          | NetUlid            |   9.9122 ns | 0.0858 ns |      - |         - |
+| ToGuid          | Ulid               |   0.5244 ns | 0.0163 ns |      - |         - |
+| ToGuid          | NUlid              |   0.1479 ns | 0.0042 ns |      - |         - |
 
 | ToString        | ByteAetherUlid     |  12.4213 ns | 0.2890 ns | 0.0096 |      80 B |
 | ToString        | NetUlid            |  24.3216 ns | 0.5226 ns | 0.0095 |      80 B |
