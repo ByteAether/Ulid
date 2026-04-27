@@ -19,17 +19,22 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
     <Title>Ulid</Title>
+    <Description>High-performance, spec-compliant ULIDs engineered to prevent index fragmentation and random-part overflow errors.
+
+Ideal for database primary keys and distributed systems, this library ensures lexicographical sortability and human-readable Base32 encoding. It features configurable protection against enumeration attacks, is fully Native AOT-ready, and offers zero-allocation interoperability with GUIDs, databases, and JSON. Optimized for efficient database writes and robust, timestamped identification in modern .NET.</Description>
     <Authors>Joonatan Uusväli</Authors>
     <Company>ByteAether</Company>
-    <Description>A lightweight, high-performance, AoT-compatible .NET library for generating and working with ULIDs (Universally Unique Lexicographically Sortable Identifiers). Supports monotonic ULID generation, Base32 encoding, and cross-platform compatibility. Ideal for databases, distributed systems, and scenarios requiring unique, sortable, timestamped identifiers.</Description>
-    <PackageProjectUrl>https://github.com/ByteAether/Ulid</PackageProjectUrl>
-    <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
+    <Copyright>© $(Authors), $(Company). All rights reserved.</Copyright>
+
+    <RepositoryUrl>https://github.com/ByteAether/Ulid</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
     <PackageId>ByteAether.Ulid</PackageId>
-    <PackageTags>ulid;identifier;unique-identifier;universal-identifier;lexicographically-sortable;id-generator;globally-unique;globally-unique-identifier;distributed-systems;database;guid;uuid;sortable;human-readable;monotonic;primary-key;base32;cross-platform</PackageTags>
+    <PackageTags>ulid;identifier;unique-id;unique-identifier;universal-identifier;lexicographically-sortable;lexicographical;id-generator;globally-unique;globally-unique-identifier;distributed-systems;database;performance;guid;uuid;sortable;human-readable;monotonic;primary-key;base32;cross-platform;aot-ready</PackageTags>
+    <PackageProjectUrl>$(RepositoryUrl)/tree/v$(PackageVersion)</PackageProjectUrl>
+    <PackageReleaseNotes>See $(RepositoryUrl)/releases/tag/v$(PackageVersion)</PackageReleaseNotes>
     <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 

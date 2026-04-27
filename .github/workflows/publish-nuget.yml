@@ -31,7 +31,7 @@ jobs:
       run: echo "version-without-v=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
     - name: Pack
-      run: dotnet pack --configuration Release /p:ContinuousIntegrationBuild=true /p:PackageVersion=${{ steps.version.outputs.version-without-v }} /p:PackageReleaseNotes="See https://github.com/ByteAether/Ulid/releases/tag/${{ github.event.release.tag_name }}" --output ./output src/ByteAether.Ulid/ByteAether.Ulid.csproj
+      run: dotnet pack --configuration Release /p:ContinuousIntegrationBuild=true /p:PackageVersion=${{ steps.version.outputs.version-without-v }} --output ./output src/ByteAether.Ulid/ByteAether.Ulid.csproj
 
     - name: Upload NuGet package as artifact
       uses: actions/upload-artifact@v7
