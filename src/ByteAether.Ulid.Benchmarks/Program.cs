@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿using System.Runtime.CompilerServices;
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Order;
@@ -106,183 +107,303 @@ public class GenerateNonMono
 public class ToByteArray : BenchmarkBase
 {
 	[Benchmark]
-	public byte[] ByteAetherUlid() => _byteAetherUlid1.ToByteArray();
+	public byte[] ByteAetherUlid() => _byteAether0[GetNextIndex()].ToByteArray();
 
 	[Benchmark]
-	public byte[] NetUlid() => _netUlid1.ToByteArray();
+	public System.ReadOnlySpan<byte> AsByteSpan() => _byteAether0[GetNextIndex()].AsByteSpan();
 
 	[Benchmark]
-	public byte[] Ulid() => _ulid1.ToByteArray();
+	public byte[] NetUlid() => _netUlid0[GetNextIndex()].ToByteArray();
 
 	[Benchmark]
-	public byte[] NUlid() => _nulid1.ToByteArray();
+	public byte[] Ulid() => _cysharp0[GetNextIndex()].ToByteArray();
+
+	[Benchmark]
+	public byte[] NUlid() => _nulid0[GetNextIndex()].ToByteArray();
 }
 
 [MemoryDiagnoser]
-public class FromByteArray
+public class FromByteArray : BenchmarkBase
 {
-	private static readonly byte[] _baseUlidBytes = ByteAether.Ulid.Ulid.New().ToByteArray();
+	[Benchmark]
+	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.New(_bytes[GetNextIndex()]);
 
 	[Benchmark]
-	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.New(_baseUlidBytes);
+	public NetUlid.Ulid NetUlid() => new(_bytes[GetNextIndex()]);
 
 	[Benchmark]
-	public NetUlid.Ulid NetUlid() => new(_baseUlidBytes);
+	public System.Ulid Ulid() => new(_bytes[GetNextIndex()]);
 
 	[Benchmark]
-	public System.Ulid Ulid() => new(_baseUlidBytes);
+	public NUlid.Ulid NUlid() => new(_bytes[GetNextIndex()]);
 
 	[Benchmark]
-	public NUlid.Ulid NUlid() => new(_baseUlidBytes);
-
-	[Benchmark]
-	public System.Guid Guid() => new(_baseUlidBytes);
+	public System.Guid Guid() => new(_bytes[GetNextIndex()]);
 }
 
 [MemoryDiagnoser]
 public class ToString : BenchmarkBase
 {
 	[Benchmark]
-	public string ByteAetherUlid() => _byteAetherUlid1.ToString();
+	public string ByteAetherUlid() => _byteAether0[GetNextIndex()].ToString();
 
 	[Benchmark]
-	public string NetUlid() => _netUlid1.ToString();
+	public string NetUlid() => _netUlid0[GetNextIndex()].ToString();
 
 	[Benchmark]
-	public string Ulid() => _ulid1.ToString();
+	public string Ulid() => _cysharp0[GetNextIndex()].ToString();
 
 	[Benchmark]
-	public string NUlid() => _nulid1.ToString();
+	public string NUlid() => _nulid0[GetNextIndex()].ToString();
 
 	[Benchmark]
-	public string Guid() => _guid1.ToString();
+	public string Guid() => _guid0[GetNextIndex()].ToString();
 }
 
 [MemoryDiagnoser]
-public class FromString
+public class FromString : BenchmarkBase
 {
-	private static readonly ByteAether.Ulid.Ulid _ulid = ByteAether.Ulid.Ulid.New();
-	private static readonly string _ulidString = _ulid.ToString();
-	private static readonly string _guidString = new System.Guid(_ulid.ToByteArray()).ToString();
+	[Benchmark]
+	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.Parse(_base32[GetNextIndex()]);
 
 	[Benchmark]
-	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.Parse(_ulidString);
+	public NetUlid.Ulid NetUlid() => global::NetUlid.Ulid.Parse(_base32[GetNextIndex()]);
 
 	[Benchmark]
-	public NetUlid.Ulid NetUlid() => global::NetUlid.Ulid.Parse(_ulidString);
+	public System.Ulid Ulid() => System.Ulid.Parse(_base32[GetNextIndex()]);
 
 	[Benchmark]
-	public System.Ulid Ulid() => System.Ulid.Parse(_ulidString);
+	public NUlid.Ulid NUlid() => global::NUlid.Ulid.Parse(_base32[GetNextIndex()]);
 
 	[Benchmark]
-	public NUlid.Ulid NUlid() => global::NUlid.Ulid.Parse(_ulidString);
-
-	[Benchmark]
-	public System.Guid Guid() => System.Guid.Parse(_guidString);
+	public System.Guid Guid() => System.Guid.Parse(_guidHex[GetNextIndex()]);
 }
 
 [MemoryDiagnoser]
 public class ToGuid : BenchmarkBase
 {
 	[Benchmark]
-	public System.Guid ByteAetherUlid() => _byteAetherUlid1.ToGuid();
+	public System.Guid ByteAetherUlid() => _byteAether0[GetNextIndex()].ToGuid();
 
 	[Benchmark]
-	public System.Guid NetUlid() => new(_netUlid1.ToByteArray());
+	public System.Guid NetUlid() => new(_netUlid0[GetNextIndex()].ToByteArray());
 
 	[Benchmark]
-	public System.Guid Ulid() => _ulid1.ToGuid();
+	public System.Guid Ulid() => _cysharp0[GetNextIndex()].ToGuid();
 
 	[Benchmark]
-	public System.Guid NUlid() => _nulid1.ToGuid();
+	public System.Guid NUlid() => _nulid0[GetNextIndex()].ToGuid();
 }
 
 [MemoryDiagnoser]
-public class FromGuid
+public class FromGuid : BenchmarkBase
 {
-	private static readonly System.Guid _ulidGuid = ByteAether.Ulid.Ulid.New().ToGuid();
+	[Benchmark]
+	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.New(_guid0[GetNextIndex()]);
 
 	[Benchmark]
-	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.New(_ulidGuid);
+	public NetUlid.Ulid NetUlid() => new(_guid0[GetNextIndex()].ToByteArray());
 
 	[Benchmark]
-	public NetUlid.Ulid NetUlid() => new(_ulidGuid.ToByteArray());
+	public System.Ulid Ulid() => new(_guid0[GetNextIndex()]);
 
 	[Benchmark]
-	public System.Ulid Ulid() => new(_ulidGuid);
-
-	[Benchmark]
-	public NUlid.Ulid NUlid() => new(_ulidGuid);
+	public NUlid.Ulid NUlid() => new(_guid0[GetNextIndex()]);
 }
 
 [MemoryDiagnoser]
 public class Equals : BenchmarkBase
 {
 	[Benchmark]
-	public bool ByteAetherUlid() => _byteAetherUlid1.Equals(_byteAetherUlid2);
+	public bool ByteAetherUlid()
+	{
+		var idx = GetNextIndex();
+		return _byteAether0[idx].Equals(_byteAether1[idx]);
+	}
 
 	[Benchmark]
-	public bool NetUlid() => _netUlid1.Equals(_netUlid2);
+	public bool NetUlid()
+	{
+		var idx = GetNextIndex();
+		return _netUlid0[idx].Equals(_netUlid1[idx]);
+	}
 
 	[Benchmark]
-	public bool Ulid() => _ulid1.Equals(_ulid2);
+	public bool Ulid()
+	{
+		var idx = GetNextIndex();
+		return _cysharp0[idx].Equals(_cysharp1[idx]);
+	}
 
 	[Benchmark]
-	public bool NUlid() => _nulid1.Equals(_nulid2);
+	public bool NUlid()
+	{
+		var idx = GetNextIndex();
+		return _nulid0[idx].Equals(_nulid1[idx]);
+	}
 
 	[Benchmark]
-	public bool Guid() => _guid1.Equals(_guid2);
+	public bool Guid()
+	{
+		var idx = GetNextIndex();
+		return _guid0[idx].Equals(_guid1[idx]);
+	}
 }
 
 [MemoryDiagnoser]
 public class CompareTo : BenchmarkBase
 {
 	[Benchmark]
-	public int ByteAetherUlid() => _byteAetherUlid1.CompareTo(_byteAetherUlid2);
+	public int ByteAetherUlid()
+	{
+		var idx = GetNextIndex();
+		return _byteAether0[idx].CompareTo(_byteAether1[idx]);
+	}
 
 	[Benchmark]
-	public int NetUlid() => _netUlid1.CompareTo(_netUlid2);
+	public int NetUlid()
+	{
+		var idx = GetNextIndex();
+		return _netUlid0[idx].CompareTo(_netUlid1[idx]);
+	}
 
 	[Benchmark]
-	public int Ulid() => _ulid1.CompareTo(_ulid2);
+	public int Ulid()
+	{
+		var idx = GetNextIndex();
+		return _cysharp0[idx].CompareTo(_cysharp1[idx]);
+	}
 
 	[Benchmark]
-	public int NUlid() => _nulid1.CompareTo(_nulid2);
+	public int NUlid()
+	{
+		var idx = GetNextIndex();
+		return _nulid0[idx].CompareTo(_nulid1[idx]);
+	}
+
+	[Benchmark]
+	public int Guid()
+	{
+		var idx = GetNextIndex();
+		return _guid0[idx].CompareTo(_guid1[idx]);
+	}
 }
 
 [MemoryDiagnoser]
 public class GetHashCode : BenchmarkBase
 {
 	[Benchmark]
-	public int ByteAetherUlid() => _byteAetherUlid1.GetHashCode();
+	public int ByteAetherUlid() => _byteAether0[GetNextIndex()].GetHashCode();
 
 	[Benchmark]
-	public int NetUlid() => _netUlid1.GetHashCode();
+	public int NetUlid() => _netUlid0[GetNextIndex()].GetHashCode();
 
 	[Benchmark]
-	public int Ulid() => _ulid1.GetHashCode();
+	public int Ulid() => _cysharp0[GetNextIndex()].GetHashCode();
 
 	[Benchmark]
-	public int NUlid() => _nulid1.GetHashCode();
+	public int NUlid() => _nulid0[GetNextIndex()].GetHashCode();
 
 	[Benchmark]
-	public int Guid() => _guid1.GetHashCode();
+	public int Guid() => _guid0[GetNextIndex()].GetHashCode();
 }
 
 public abstract class BenchmarkBase
 {
-	protected static readonly ByteAether.Ulid.Ulid _byteAetherUlid1 = ByteAether.Ulid.Ulid.New();
-	protected static readonly ByteAether.Ulid.Ulid _byteAetherUlid2 = ByteAether.Ulid.Ulid.New();
+	protected const int _iterationSize = 1024;
+    private int _idx;
 
-	protected static readonly NetUlid.Ulid _netUlid1 = new(_byteAetherUlid1.ToByteArray());
-	protected static readonly NetUlid.Ulid _netUlid2 = new(_byteAetherUlid2.ToByteArray());
+    protected ByteAether.Ulid.Ulid[] _byteAether0 = null!;
+    protected ByteAether.Ulid.Ulid[] _byteAether1 = null!;
 
-	protected static readonly System.Ulid _ulid1 = new(_byteAetherUlid1.ToByteArray());
-	protected static readonly System.Ulid _ulid2 = new(_byteAetherUlid2.ToByteArray());
+    protected NetUlid.Ulid[] _netUlid0 = null!;
+    protected NetUlid.Ulid[] _netUlid1 = null!;
 
-	protected static readonly NUlid.Ulid _nulid1 = new(_byteAetherUlid1.ToByteArray());
-	protected static readonly NUlid.Ulid _nulid2 = new(_byteAetherUlid2.ToByteArray());
+    protected System.Ulid[] _cysharp0 = null!;
+    protected System.Ulid[] _cysharp1 = null!;
 
-	protected static readonly System.Guid _guid1 = new(_byteAetherUlid1.ToByteArray());
-	protected static readonly System.Guid _guid2 = new(_byteAetherUlid2.ToByteArray());
+    protected NUlid.Ulid[] _nulid0 = null!;
+    protected NUlid.Ulid[] _nulid1 = null!;
+
+    protected System.Guid[] _guid0 = null!;
+    protected System.Guid[] _guid1 = null!;
+
+    protected string[] _base32 = null!;
+    protected string[] _guidHex = null!;
+    protected byte[][] _bytes = null!;
+
+    /// <summary>
+    /// Fetches the current index and increments/wraps it without branching.
+    /// Inlining guarantees zero benchmark method call overhead.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected int GetNextIndex()
+    {
+	    var current = _idx;
+	    _idx = (current + 1) & (_idx - 1);
+	    return current;
+    }
+
+    [GlobalSetup]
+    public void GlobalSetup()
+    {
+	    _idx = 0;
+
+        _byteAether0 = new ByteAether.Ulid.Ulid[_iterationSize];
+        _byteAether1 = new ByteAether.Ulid.Ulid[_iterationSize];
+
+        _netUlid0 = new NetUlid.Ulid[_iterationSize];
+        _netUlid1 = new NetUlid.Ulid[_iterationSize];
+
+        _cysharp0 = new System.Ulid[_iterationSize];
+        _cysharp1 = new System.Ulid[_iterationSize];
+
+        _nulid0 = new NUlid.Ulid[_iterationSize];
+        _nulid1 = new NUlid.Ulid[_iterationSize];
+
+        _guid0 = new System.Guid[_iterationSize];
+        _guid1 = new System.Guid[_iterationSize];
+
+        _base32 = new string[_iterationSize];
+        _guidHex = new string[_iterationSize];
+        _bytes = new byte[_iterationSize][];
+
+        var rand = new System.Random(42);
+        var leftBuffer = new byte[16];
+        var rightBuffer = new byte[16];
+
+        for (var i = 0; i < _iterationSize; i++)
+        {
+            rand.NextBytes(leftBuffer);
+            rand.NextBytes(rightBuffer);
+
+            // Scenarios
+            switch (i % 4)
+            {
+	            case 0: break; // Left and Right are completely random
+	            case 1: rightBuffer = leftBuffer; break; // Same values
+	            case 2: System.Array.Copy(leftBuffer, 0, rightBuffer, 0, 6); break; // The first 6 bytes are the same (same timestamp)
+	            case 3: System.Array.Copy(leftBuffer, 0, rightBuffer, 0, 15); break; // The first 15 bytes are the same (+1 increment)
+            }
+
+            _byteAether0[i] = ByteAether.Ulid.Ulid.New(leftBuffer);
+            _byteAether1[i] = ByteAether.Ulid.Ulid.New(rightBuffer);
+
+            _netUlid0[i] = new(leftBuffer);
+            _netUlid1[i] = new(rightBuffer);
+
+            _cysharp0[i] = new(leftBuffer);
+            _cysharp1[i] = new(rightBuffer);
+
+            _nulid0[i] = new(leftBuffer);
+            _nulid1[i] = new(rightBuffer);
+
+            _guid0[i] = new(leftBuffer);
+            _guid1[i] = new(rightBuffer);
+
+            _base32[i] = _byteAether0[i].ToString();
+            _guidHex[i] = _guid0[i].ToString();
+            _bytes[i] = leftBuffer;
+        }
+    }
 }
