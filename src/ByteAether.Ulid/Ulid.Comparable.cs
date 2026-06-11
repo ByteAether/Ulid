@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
 #if NET7_0_OR_GREATER
 using System.Numerics;
 #endif
@@ -89,28 +90,26 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	private static int CompareToCore(in Ulid left, in Ulid right)
-		=> left._t0 != right._t0 ? GetResult(left._t0, right._t0)
-			: left._t1 != right._t1 ? GetResult(left._t1, right._t1)
-			: left._t2 != right._t2 ? GetResult(left._t2, right._t2)
-			: left._t3 != right._t3 ? GetResult(left._t3, right._t3)
-			: left._t4 != right._t4 ? GetResult(left._t4, right._t4)
-			: left._t5 != right._t5 ? GetResult(left._t5, right._t5)
-			: left._r0 != right._r0 ? GetResult(left._r0, right._r0)
-			: left._r1 != right._r1 ? GetResult(left._r1, right._r1)
-			: left._r2 != right._r2 ? GetResult(left._r2, right._r2)
-			: left._r3 != right._r3 ? GetResult(left._r3, right._r3)
-			: left._r4 != right._r4 ? GetResult(left._r4, right._r4)
-			: left._r5 != right._r5 ? GetResult(left._r5, right._r5)
-			: left._r6 != right._r6 ? GetResult(left._r6, right._r6)
-			: left._r7 != right._r7 ? GetResult(left._r7, right._r7)
-			: left._r8 != right._r8 ? GetResult(left._r8, right._r8)
-			: left._r9 != right._r9 ? GetResult(left._r9, right._r9)
-			: 0;
+	{
+		ref var rA = ref Unsafe.As<Ulid, ulong>(ref Unsafe.AsRef(in left));
+		ref var rB = ref Unsafe.As<Ulid, ulong>(ref Unsafe.AsRef(in right));
 
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-	private static int GetResult(byte left, byte right) => left < right ? -1 : 1;
+		var a = BinaryPrimitives.ReverseEndianness(rA);
+		var b = BinaryPrimitives.ReverseEndianness(rB);
+
+		if (a != b)
+		{
+			return a < b ? -1 : 1;
+		}
+
+		a = BinaryPrimitives.ReverseEndianness(Unsafe.Add(ref rA, 1));
+		b = BinaryPrimitives.ReverseEndianness(Unsafe.Add(ref rB, 1));
+
+		if (a != b)
+		{
+			return a < b ? -1 : 1;
+		}
+
+		return 0;
+	}
 }

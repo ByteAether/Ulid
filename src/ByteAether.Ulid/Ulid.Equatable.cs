@@ -84,16 +84,15 @@ public readonly partial struct Ulid : IEquatable<Ulid>, IEqualityComparer<Ulid>
 #if NET7_0_OR_GREATER
 		if (Vector128.IsHardwareAccelerated)
 		{
-			var vA = Unsafe.As<Ulid, Vector128<byte>>(ref Unsafe.AsRef(in left));
-			var vB = Unsafe.As<Ulid, Vector128<byte>>(ref Unsafe.AsRef(in right));
+			var vA = Vector128.LoadUnsafe(ref Unsafe.As<Ulid, byte>(ref Unsafe.AsRef(in left)));
+			var vB = Vector128.LoadUnsafe(ref Unsafe.As<Ulid, byte>(ref Unsafe.AsRef(in right)));
 			return vA == vB;
 		}
-#endif
-#if NETCOREAPP
+#elif NETCOREAPP3_0_OR_GREATER
 		if (Sse2.IsSupported)
 		{
-			var vA = Unsafe.As<Ulid, Vector128<byte>>(ref Unsafe.AsRef(in left));
-			var vB = Unsafe.As<Ulid, Vector128<byte>>(ref Unsafe.AsRef(in right));
+			var vA = Unsafe.ReadUnaligned<Vector128<byte>>(ref Unsafe.As<Ulid, byte>(ref Unsafe.AsRef(in left)));
+			var vB = Unsafe.ReadUnaligned<Vector128<byte>>(ref Unsafe.As<Ulid, byte>(ref Unsafe.AsRef(in right)));
 			return Sse2.MoveMask(Sse2.CompareEqual(vA, vB)) == 0xFFFF;
 		}
 #endif
@@ -102,7 +101,7 @@ public readonly partial struct Ulid : IEquatable<Ulid>, IEqualityComparer<Ulid>
 		ref var rB = ref Unsafe.As<Ulid, long>(ref Unsafe.AsRef(in right));
 
 		// XOR-compare instead of 2x 64bit long compare with AND
-		// Branchless XOR-compare is faster (1-3ns vs. 20-25ns)
+		// Branchless XOR-compare is faster (0.1787ns vs. 0.2463ns)
 		var xor0 = rA ^ rB;
 		var xor1 = Unsafe.Add(ref rA, 1) ^ Unsafe.Add(ref rB, 1);
 
