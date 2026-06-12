@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System.Buffers.Binary;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ByteAether.Ulid;
@@ -70,6 +72,16 @@ public readonly partial struct Ulid
 		22, 23, 24, 25, 26, // p-t
 		255, // u
 		27, 28, 29, 30, 31, // v-z
+		// Pad with value 255 so the array size is 256
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+		255, 255, 255, 255, 255
 	];
 
 	/// <inheritdoc />
@@ -120,37 +132,7 @@ public readonly partial struct Ulid
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
 	public static Ulid Parse(ReadOnlySpan<char> chars, IFormatProvider? provider = null)
-	{
-		// Sanity check.
-		if (chars.Length != UlidStringLength)
-		{
-			throw new FormatException("The input char sequence is not a valid ULID string representation.");
-		}
-
-		// Decode.
-		Ulid ulid = default;
-
-		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
-
-		Unsafe.Add(ref ulidRef, 15) = (byte)(_inverseBase32[chars[25]] | (_inverseBase32[chars[24]] << 5));
-		Unsafe.Add(ref ulidRef, 14) = (byte)((_inverseBase32[chars[24]] >> 3) | (_inverseBase32[chars[23]] << 2) | (_inverseBase32[chars[22]] << 7));
-		Unsafe.Add(ref ulidRef, 13) = (byte)((_inverseBase32[chars[22]] >> 1) | (_inverseBase32[chars[21]] << 4));
-		Unsafe.Add(ref ulidRef, 12) = (byte)((_inverseBase32[chars[21]] >> 4) | (_inverseBase32[chars[20]] << 1) | (_inverseBase32[chars[19]] << 6));
-		Unsafe.Add(ref ulidRef, 11) = (byte)((_inverseBase32[chars[19]] >> 2) | (_inverseBase32[chars[18]] << 3));
-		Unsafe.Add(ref ulidRef, 10) = (byte)(_inverseBase32[chars[17]] | (_inverseBase32[chars[16]] << 5));
-		Unsafe.Add(ref ulidRef, 09) = (byte)((_inverseBase32[chars[16]] >> 3) | (_inverseBase32[chars[15]] << 2) | (_inverseBase32[chars[14]] << 7));
-		Unsafe.Add(ref ulidRef, 08) = (byte)((_inverseBase32[chars[14]] >> 1) | (_inverseBase32[chars[13]] << 4));
-		Unsafe.Add(ref ulidRef, 07) = (byte)((_inverseBase32[chars[13]] >> 4) | (_inverseBase32[chars[12]] << 1) | (_inverseBase32[chars[11]] << 6));
-		Unsafe.Add(ref ulidRef, 06) = (byte)((_inverseBase32[chars[11]] >> 2) | (_inverseBase32[chars[10]] << 3));
-		Unsafe.Add(ref ulidRef, 05) = (byte)(_inverseBase32[chars[9]] | (_inverseBase32[chars[8]] << 5));
-		Unsafe.Add(ref ulidRef, 04) = (byte)((_inverseBase32[chars[8]] >> 3) | (_inverseBase32[chars[7]] << 2) | (_inverseBase32[chars[6]] << 7));
-		Unsafe.Add(ref ulidRef, 03) = (byte)((_inverseBase32[chars[6]] >> 1) | (_inverseBase32[chars[5]] << 4));
-		Unsafe.Add(ref ulidRef, 02) = (byte)((_inverseBase32[chars[5]] >> 4) | (_inverseBase32[chars[4]] << 1) | (_inverseBase32[chars[3]] << 6));
-		Unsafe.Add(ref ulidRef, 01) = (byte)((_inverseBase32[chars[3]] >> 2) | (_inverseBase32[chars[2]] << 3));
-		Unsafe.Add(ref ulidRef, 00) = (byte)(_inverseBase32[chars[1]] | (_inverseBase32[chars[0]] << 5));
-
-		return ulid;
-	}
+		=> ParseCore(chars);
 
 	/// <summary>
 	/// Parses a ULID from a read-only span of bytes and returns the corresponding ULID value.
@@ -166,36 +148,103 @@ public readonly partial struct Ulid
 	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
 	public static Ulid Parse(ReadOnlySpan<byte> bytes, IFormatProvider? provider = null)
+		=> ParseCore(bytes);
+
+#if NET5_0_OR_GREATER
+    [SkipLocalsInit]
+#endif
+#if NETCOREAPP3_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+    private static unsafe Ulid ParseCore<T>(ReadOnlySpan<T> input)
+	    where T : unmanaged
 	{
-		// Sanity check.
-		if (bytes.Length != UlidStringLength)
-		{
-			throw new FormatException("The input byte sequence is not a valid ULID string representation.");
-		}
+		// Every T element is read as a byte. Other bits are ignored.
+		// We create 2 blocks of big-endian ulong values then reverse the endianness
+		// Creating a big-endian ulong and then reversing it is faster than creating directly a little-endian ulong
 
-		// Decode.
-		Ulid ulid = default;
+	    if (input.Length != UlidStringLength)
+	    {
+	        throw new FormatException("The input sequence is not a valid ULID string representation.");
+	    }
 
-		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
+	    var stepSize = sizeof(T); // We read the span as bytes and iterate by the size of an element
+	    Ulid result = default;
 
-		Unsafe.Add(ref ulidRef, 15) = (byte)(_inverseBase32[bytes[25]] | (_inverseBase32[bytes[24]] << 5));
-		Unsafe.Add(ref ulidRef, 14) = (byte)((_inverseBase32[bytes[24]] >> 3) | (_inverseBase32[bytes[23]] << 2) | (_inverseBase32[bytes[22]] << 7));
-		Unsafe.Add(ref ulidRef, 13) = (byte)((_inverseBase32[bytes[22]] >> 1) | (_inverseBase32[bytes[21]] << 4));
-		Unsafe.Add(ref ulidRef, 12) = (byte)((_inverseBase32[bytes[21]] >> 4) | (_inverseBase32[bytes[20]] << 1) | (_inverseBase32[bytes[19]] << 6));
-		Unsafe.Add(ref ulidRef, 11) = (byte)((_inverseBase32[bytes[19]] >> 2) | (_inverseBase32[bytes[18]] << 3));
-		Unsafe.Add(ref ulidRef, 10) = (byte)(_inverseBase32[bytes[17]] | (_inverseBase32[bytes[16]] << 5));
-		Unsafe.Add(ref ulidRef, 09) = (byte)((_inverseBase32[bytes[16]] >> 3) | (_inverseBase32[bytes[15]] << 2) | (_inverseBase32[bytes[14]] << 7));
-		Unsafe.Add(ref ulidRef, 08) = (byte)((_inverseBase32[bytes[14]] >> 1) | (_inverseBase32[bytes[13]] << 4));
-		Unsafe.Add(ref ulidRef, 07) = (byte)((_inverseBase32[bytes[13]] >> 4) | (_inverseBase32[bytes[12]] << 1) | (_inverseBase32[bytes[11]] << 6));
-		Unsafe.Add(ref ulidRef, 06) = (byte)((_inverseBase32[bytes[11]] >> 2) | (_inverseBase32[bytes[10]] << 3));
-		Unsafe.Add(ref ulidRef, 05) = (byte)(_inverseBase32[bytes[9]] | (_inverseBase32[bytes[8]] << 5));
-		Unsafe.Add(ref ulidRef, 04) = (byte)((_inverseBase32[bytes[8]] >> 3) | (_inverseBase32[bytes[7]] << 2) | (_inverseBase32[bytes[6]] << 7));
-		Unsafe.Add(ref ulidRef, 03) = (byte)((_inverseBase32[bytes[6]] >> 1) | (_inverseBase32[bytes[5]] << 4));
-		Unsafe.Add(ref ulidRef, 02) = (byte)((_inverseBase32[bytes[5]] >> 4) | (_inverseBase32[bytes[4]] << 1) | (_inverseBase32[bytes[3]] << 6));
-		Unsafe.Add(ref ulidRef, 01) = (byte)((_inverseBase32[bytes[3]] >> 2) | (_inverseBase32[bytes[2]] << 3));
-		Unsafe.Add(ref ulidRef, 00) = (byte)(_inverseBase32[bytes[1]] | (_inverseBase32[bytes[0]] << 5));
+	    fixed (T* pSrc = &MemoryMarshal.GetReference(input))
+	    {
+	        var pBytes = (byte*)pSrc;
+	        ref var tableRef = ref _inverseBase32[0];
+	        ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref result);
 
-		return ulid;
+	        ulong t00 = Unsafe.Add(ref tableRef, pBytes[00 * stepSize]);
+	        ulong t01 = Unsafe.Add(ref tableRef, pBytes[01 * stepSize]);
+	        ulong t02 = Unsafe.Add(ref tableRef, pBytes[02 * stepSize]);
+	        ulong t03 = Unsafe.Add(ref tableRef, pBytes[03 * stepSize]);
+	        ulong t04 = Unsafe.Add(ref tableRef, pBytes[04 * stepSize]);
+	        ulong t05 = Unsafe.Add(ref tableRef, pBytes[05 * stepSize]);
+	        ulong t06 = Unsafe.Add(ref tableRef, pBytes[06 * stepSize]);
+	        ulong t07 = Unsafe.Add(ref tableRef, pBytes[07 * stepSize]);
+	        ulong t08 = Unsafe.Add(ref tableRef, pBytes[08 * stepSize]);
+	        ulong t09 = Unsafe.Add(ref tableRef, pBytes[09 * stepSize]);
+	        ulong r00 = Unsafe.Add(ref tableRef, pBytes[10 * stepSize]);
+	        ulong r01 = Unsafe.Add(ref tableRef, pBytes[11 * stepSize]);
+	        ulong r02 = Unsafe.Add(ref tableRef, pBytes[12 * stepSize]);
+	        ulong r03 = Unsafe.Add(ref tableRef, pBytes[13 * stepSize]);
+
+	        var block1 =
+		        (t00 << 61)
+		        | (t01 << 56)
+		        | (t02 << 51)
+		        | (t03 << 46)
+		        | (t04 << 41)
+		        | (t05 << 36)
+		        | (t06 << 31)
+		        | (t07 << 26)
+		        | (t08 << 21)
+		        | (t09 << 16)
+		        | (r00 << 11)
+		        | (r01 << 6)
+		        | (r02 << 1)
+		        | (r03 >> 4);
+
+	        Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, 0), BinaryPrimitives.ReverseEndianness(block1));
+
+	        // Second block - ulong 64 bits
+	        ulong r04 = Unsafe.Add(ref tableRef, pBytes[14 * stepSize]);
+	        ulong r05 = Unsafe.Add(ref tableRef, pBytes[15 * stepSize]);
+	        ulong r06 = Unsafe.Add(ref tableRef, pBytes[16 * stepSize]);
+	        ulong r07 = Unsafe.Add(ref tableRef, pBytes[17 * stepSize]);
+	        ulong r08 = Unsafe.Add(ref tableRef, pBytes[18 * stepSize]);
+	        ulong r09 = Unsafe.Add(ref tableRef, pBytes[19 * stepSize]);
+	        ulong r10 = Unsafe.Add(ref tableRef, pBytes[20 * stepSize]);
+	        ulong r11 = Unsafe.Add(ref tableRef, pBytes[21 * stepSize]);
+	        ulong r12 = Unsafe.Add(ref tableRef, pBytes[22 * stepSize]);
+	        ulong r13 = Unsafe.Add(ref tableRef, pBytes[23 * stepSize]);
+	        ulong r14 = Unsafe.Add(ref tableRef, pBytes[24 * stepSize]);
+	        ulong r15 = Unsafe.Add(ref tableRef, pBytes[25 * stepSize]);
+
+	        var block2 =
+		        (r03 << 60)
+		        | (r04 << 55)
+		        | (r05 << 50)
+		        | (r06 << 45)
+		        | (r07 << 40)
+		        | (r08 << 35)
+		        | (r09 << 30)
+		        | (r10 << 25)
+		        | (r11 << 20)
+		        | (r12 << 15)
+		        | (r13 << 10)
+		        | (r14 << 5)
+		        | r15;
+
+	        Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, 8), BinaryPrimitives.ReverseEndianness(block2));
+	    }
+
+	    return result;
 	}
 
 	/// <summary>
