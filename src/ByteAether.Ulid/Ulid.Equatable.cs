@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-#if NETCOREAPP
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-#endif
 #if NET7_0_OR_GREATER
 using System.Numerics;
+using System.Runtime.Intrinsics;
+#elif NETCOREAPP3_0_OR_GREATER
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 #endif
 
 namespace ByteAether.Ulid;

@@ -95,7 +95,7 @@ public readonly partial struct Ulid
 		/// - MonotonicIncrement: Guarantees monotonic ordering by incrementing
 		/// the previous random by one if the same timestamp is generated consecutively.<br/>
 		/// - MonotonicRandom1Byte to MonotonicRandom4Byte: Ensures monotonicity by introducing a
-		/// randomized 1 to 4 bytes value as increment to previous Random part when timestamps are identical.
+		/// randomized 1 to 4 bytes value as an increment to the previous Random part when timestamps are identical.
 		/// </remarks>
 		/// <value>
 		/// A value of the <see cref="MonotonicityOptions"/> enum that specifies the monotonicity behavior.
@@ -130,7 +130,7 @@ public readonly partial struct Ulid
 		/// <remarks>
 		/// Specifies the random provider used to supply entropy for the Random component
 		/// during monotonic increments when consecutive ULIDs share the same timestamp.<br/>
-		/// It is utilized in maintaining monotonicity while ensuring random variation in ULID values.
+		/// It is used in maintaining monotonicity while ensuring random variation in ULID values.
 		/// </remarks>
 		/// <value>
 		/// An implementation of the <see cref="IRandomProvider"/> interface that provides
