@@ -129,7 +129,9 @@ public readonly partial struct Ulid
 	[SkipLocalsInit]
 #endif
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public static Ulid Parse(ReadOnlySpan<char> chars, IFormatProvider? provider = null)
 		=> ParseCore(chars);
@@ -145,7 +147,9 @@ public readonly partial struct Ulid
 	[SkipLocalsInit]
 #endif
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public static Ulid Parse(ReadOnlySpan<byte> bytes, IFormatProvider? provider = null)
 		=> ParseCore(bytes);
@@ -154,9 +158,7 @@ public readonly partial struct Ulid
     [SkipLocalsInit]
 #endif
 #if NETCOREAPP3_0_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
     private static unsafe Ulid ParseCore<T>(ReadOnlySpan<T> input)
 	    where T : unmanaged

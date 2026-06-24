@@ -202,9 +202,7 @@ public readonly partial struct Ulid
 	[SkipLocalsInit]
 #endif
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
 	private static void FillRandom(ref byte ulidBytesRef, long timestamp, GenerationOptions options)
 	{

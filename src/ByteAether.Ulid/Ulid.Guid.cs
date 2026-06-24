@@ -10,7 +10,7 @@ namespace ByteAether.Ulid;
 
 #if NET8_0_OR_GREATER
 // We need to target netstandard2.1, so keep using ref for MemoryMarshal.Write
-// CS9191: The 'ref' modifier for argument 2 corresponding to 'in' parameter is equivalent to 'in'. Consider using 'in' instead.
+// CS9191: The 'ref' modifier for argument 2 corresponding to the 'in' parameter is equivalent to 'in'. Consider using 'in' instead.
 #pragma warning disable CS9191
 #endif
 
@@ -29,14 +29,9 @@ public readonly partial struct Ulid
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public static Ulid New(Guid guid)
-	{
-		if (BitConverter.IsLittleEndian)
-		{
-			return Shuffle<Guid, Ulid>(ref guid);
-		}
-
-		return Unsafe.As<Guid, Ulid>(ref guid);
-	}
+		=> BitConverter.IsLittleEndian
+			? Shuffle<Guid, Ulid>(ref guid)
+			: Unsafe.As<Guid, Ulid>(ref guid);
 
 	/// <summary>
 	/// Converts the ULID to a GUID.
@@ -51,14 +46,9 @@ public readonly partial struct Ulid
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public Guid ToGuid()
-	{
-		if (BitConverter.IsLittleEndian)
-		{
-			return Shuffle<Ulid, Guid>(ref Unsafe.AsRef(in this));
-		}
-
-		return Unsafe.As<Ulid, Guid>(ref Unsafe.AsRef(in this));
-	}
+		=> BitConverter.IsLittleEndian
+			? Shuffle<Ulid, Guid>(ref Unsafe.AsRef(in this))
+			: Unsafe.As<Ulid, Guid>(ref Unsafe.AsRef(in this));
 
 	/// <summary>
 	/// Implicitly converts a ULID to a GUID.
@@ -87,12 +77,6 @@ public readonly partial struct Ulid
 #if NETCOREAPP
 	private static readonly Vector128<byte> _shuffleMask
 		= Vector128.Create((byte)3, 2, 1, 0, 5, 4, 7, 6, 8, 9, 10, 11, 12, 13, 14, 15);
-
-	private static readonly bool _isAccelerated =
-#if NET7_0_OR_GREATER
-		Vector128.IsHardwareAccelerated ||
-#endif
-		Ssse3.IsSupported;
 #endif
 
 	// HACK: We assume the layout of a Guid is the following:
@@ -109,19 +93,17 @@ public readonly partial struct Ulid
 #endif
 	private static TOut Shuffle<TIn, TOut>(ref TIn bytes)
 	{
-#if NETCOREAPP
-		if (_isAccelerated)
+#if NET7_0_OR_GREATER
+		if (Vector128.IsHardwareAccelerated)
 		{
 			var vector = Unsafe.As<TIn, Vector128<byte>>(ref bytes);
-
-#if NET7_0_OR_GREATER
-			if (Vector128.IsHardwareAccelerated)
-			{
-				vector = Vector128.Shuffle(vector, _shuffleMask);
-				return Unsafe.As<Vector128<byte>, TOut>(ref vector);
-			}
-#endif
-
+			vector = Vector128.Shuffle(vector, _shuffleMask);
+			return Unsafe.As<Vector128<byte>, TOut>(ref vector);
+		}
+#elif NETCOREAPP3_0_OR_GREATER
+		if (Ssse3.IsSupported)
+		{
+			var vector = Unsafe.As<TIn, Vector128<byte>>(ref bytes);
 			vector = Ssse3.Shuffle(vector, _shuffleMask);
 			return Unsafe.As<Vector128<byte>, TOut>(ref vector);
 		}

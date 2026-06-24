@@ -17,7 +17,9 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 	/// <param name="right">The second ULID to compare.</param>
 	/// <returns>True if the value of the left ULID is less than the value of the right ULID; otherwise, false.</returns>
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public static bool operator <(Ulid left, Ulid right)
 		=> left.CompareTo(right) < 0;
@@ -29,7 +31,9 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 	/// <param name="right">The second ULID to compare.</param>
 	/// <returns>True if the value of the left ULID is less than or equal to the value of the right ULID; otherwise, false.</returns>
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public static bool operator <=(Ulid left, Ulid right)
 		=> left.CompareTo(right) <= 0;
@@ -41,7 +45,9 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 	/// <param name="right">The second ULID to compare.</param>
 	/// <returns>True if the value of the left ULID is greater than the value of the right ULID; otherwise, false.</returns>
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public static bool operator >(Ulid left, Ulid right)
 		=> left.CompareTo(right) > 0;
@@ -53,14 +59,18 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 	/// <param name="right">The second ULID to compare.</param>
 	/// <returns>True if the value of the left ULID is greater than or equal to the value of the right ULID; otherwise, false.</returns>
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public static bool operator >=(Ulid left, Ulid right)
 		=> left.CompareTo(right) >= 0;
 
 	/// <inheritdoc/>
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public int CompareTo(object? obj)
 	{
@@ -79,15 +89,15 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 
 	/// <inheritdoc/>
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
 	public int CompareTo(Ulid other)
 		=> CompareToCore(this, other);
 
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
 	private static int CompareToCore(in Ulid left, in Ulid right)
 	{
