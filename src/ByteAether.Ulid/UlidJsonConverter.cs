@@ -30,28 +30,17 @@ public class UlidJsonConverter : JsonConverter<Ulid>
 
 				Span<byte> byteSpan = stackalloc byte[Ulid.UlidStringLength];
 				byteSequence.CopyTo(byteSpan);
-				Ulid.TryParse(byteSpan, null, out var ulid);
-				return ulid;
+				return Ulid.Parse(byteSpan);
 			}
 			else
 			{
 				var byteSpan = reader.ValueSpan;
-				if (byteSpan.Length != Ulid.UlidStringLength)
-				{
-					throw new JsonException($"Ulid invalid: length must be {Ulid.UlidStringLength}");
-				}
-
-				Ulid.TryParse(byteSpan, null, out var ulid);
-				return ulid;
+				return Ulid.Parse(byteSpan);
 			}
 		}
-		catch (IndexOutOfRangeException ex)
+		catch (FormatException ex)
 		{
 			throw new JsonException($"Ulid invalid: length must be {Ulid.UlidStringLength}", ex);
-		}
-		catch (OverflowException ex)
-		{
-			throw new JsonException("Ulid invalid: invalid character", ex);
 		}
 	}
 
@@ -59,7 +48,7 @@ public class UlidJsonConverter : JsonConverter<Ulid>
 	public override void Write(Utf8JsonWriter writer, Ulid ulid, JsonSerializerOptions options)
 	{
 		Span<byte> ulidString = stackalloc byte[Ulid.UlidStringLength];
-		ulid.TryFormat(ulidString, out var _, []);
+		ulid.TryFormat(ulidString, out _, []);
 		writer.WriteStringValue(ulidString);
 	}
 
@@ -68,7 +57,7 @@ public class UlidJsonConverter : JsonConverter<Ulid>
 	public override void WriteAsPropertyName(Utf8JsonWriter writer, Ulid ulid, JsonSerializerOptions options)
 	{
 		Span<byte> ulidString = stackalloc byte[Ulid.UlidStringLength];
-		ulid.TryFormat(ulidString, out var _, []);
+		ulid.TryFormat(ulidString, out _, []);
 		writer.WritePropertyName(ulidString);
 	}
 
