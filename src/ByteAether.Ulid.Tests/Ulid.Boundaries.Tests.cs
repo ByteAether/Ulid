@@ -23,7 +23,7 @@ public class UlidBoundariesTests
 
 		// Assert
 		Assert.Equal(default, ulid);
-		Assert.Equal(emptyBytes, ulid.AsByteSpan());
+		Assert.Equal(emptyBytes, ulid.ToByteArray());
 	}
 
 	[Fact]
