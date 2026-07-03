@@ -8,7 +8,7 @@ using System.Runtime.Intrinsics.X86;
 #endif
 #endif
 
-namespace ByteAether.Ulid;
+namespace ByteAether.Ulid2;
 
 #if NET8_0_OR_GREATER
 // We need to target netstandard2.1, so keep using ref for MemoryMarshal.Write
