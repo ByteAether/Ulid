@@ -109,14 +109,12 @@ public readonly partial struct Ulid
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
 
 		// Fill timestamp
-		BinaryPrimitives.WriteUInt64BigEndian(
-#if NETCOREAPP
-			MemoryMarshal.CreateSpan(ref ulidRef, 8),
-#else
-			Compatibility.MemoryMarshal.CreateSpan(ref ulidRef, 8),
-#endif
-			(ulong)timestamp << 16
-		);
+		var ts = (ulong)timestamp << 16;
+		if (BitConverter.IsLittleEndian)
+		{
+			ts = BinaryPrimitives.ReverseEndianness(ts);
+		}
+		Unsafe.WriteUnaligned(ref ulidRef, ts);
 
 		FillRandom(ref ulidRef, timestamp, options ?? DefaultGenerationOptions);
 
@@ -152,15 +150,14 @@ public readonly partial struct Ulid
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
 
 		// Fill timestamp
-		BinaryPrimitives.WriteUInt64BigEndian(
-#if NETCOREAPP
-			MemoryMarshal.CreateSpan(ref ulidRef, 8),
-#else
-			Compatibility.MemoryMarshal.CreateSpan(ref ulidRef, 8),
-#endif
-			(ulong)timestamp << 16
-		);
+		var ts = (ulong)timestamp << 16;
+		if (BitConverter.IsLittleEndian)
+		{
+			ts = BinaryPrimitives.ReverseEndianness(ts);
+		}
+		Unsafe.WriteUnaligned(ref ulidRef, ts);
 
+		// Fill random
 		Unsafe.CopyBlockUnaligned(
 			ref Unsafe.Add(ref ulidRef, _ulidSizeTime),
 			ref random.GetPinnableReference(),
@@ -245,19 +242,27 @@ public readonly partial struct Ulid
 
 	            if (monotonicity == GenerationOptions.MonotonicityOptions.MonotonicIncrement)
 	            {
-		            IncrementByOne(ref lastUlidRef);
+		            LastUlidIncrement(0);
 	            }
 	            else
 	            {
 		            // We can use the random bytes of incomplete ULID for the random increment span
 		            var tempSpan =
 #if NETCOREAPP
-			            MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, (int)monotonicity);
+			            MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, sizeof(uint));
 #else
-			            Compatibility.MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, (int)monotonicity);
+			            Compatibility.MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, sizeof(uint));
 #endif
-		            options.IncrementRandomSource.GetBytes(tempSpan);
-		            IncrementByByteSpan(ref lastUlidRef, tempSpan);
+		            options.IncrementRandomSource.GetBytes(tempSpan[..(int)monotonicity]);
+		            var increment = BinaryPrimitives.ReadUInt32LittleEndian(tempSpan);
+
+		            var totalBitsToKeep = (int)monotonicity * sizeof(byte);
+
+					// Shift 1UL left by the total bits, then subtract 1 to create the bitmask
+		            var mask = (uint)((1UL << totalBitsToKeep) - 1);
+		            increment &= mask;
+
+		            LastUlidIncrement(increment);
 	            }
 
 	            // Copy full last ULID back to generated ULID
@@ -274,77 +279,24 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	private static void IncrementByOne(ref byte buffer)
+	private static void LastUlidIncrement(uint addition)
 	{
-		const int lastIdx = _ulidSize - 1;
+		var increment = (ulong)addition + 1; // carry = 1 is built-in
+		var part1 = BinaryPrimitives.ReverseEndianness(_state.LastUlidPart1);
+		var newPart1 = part1 + increment;
+		_state.LastUlidPart1 = BinaryPrimitives.ReverseEndianness(newPart1);
 
-		ushort carry = 1;
-		ref var currentRef = ref Unsafe.Add(ref buffer, lastIdx);
-
-		for (var i = lastIdx; i >= 0; i--)
+		if (newPart1 >= part1) // Overflow carried over to part0
 		{
-			var val = (ushort)(currentRef + carry);
-			currentRef = (byte)val; // Implicit & 0xFF
-			carry = (ushort)(val >> 8);
-
-			if (carry == 0)
-			{
-				return;
-			}
-
-			currentRef = ref Unsafe.Subtract(ref currentRef, 1);
+			return;
 		}
 
-		throw new OverflowException("Addition resulted in a value larger than the target span's capacity.");
-	}
-
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-	private static void IncrementByByteSpan(ref byte targetRef, ReadOnlySpan<byte> source)
-	{
-		ushort carry = 1;
-		ushort sum;
-		var lengthDifference = _ulidSize - source.Length;
-
-		if (source.Length != 0)
+		var part0 = BinaryPrimitives.ReverseEndianness(_state.LastUlidPart0);
+		part0++;
+		_state.LastUlidPart0 = BinaryPrimitives.ReverseEndianness(part0);
+		if (part0 == 0)
 		{
-			for (var i = _ulidSize - 1; i >= lengthDifference; --i)
-			{
-				var sourceIdx = i - lengthDifference;
-
-				ref var targetByteRef = ref Unsafe.Add(ref targetRef, i);
-				var byteFromSource = source[sourceIdx];
-
-				sum = (ushort)(targetByteRef + byteFromSource + carry);
-				targetByteRef = (byte)sum; // Implicit & 0xFF
-				carry = (byte)(sum >> 8);
-			}
-
-			if (carry == 0)
-			{
-				return;
-			}
+			throw new OverflowException("Addition resulted in a ULID value larger than the absolute maximum ULID value.");
 		}
-
-		for (var i = lengthDifference - 1; i >= 0; --i)
-		{
-			ref var targetByteRef = ref Unsafe.Add(ref targetRef, i);
-			sum = (ushort)(targetByteRef + carry);
-			targetByteRef = (byte)sum; // Implicit & 0xFF
-			carry = (ushort)(sum >> 8);
-
-			if (carry == 0)
-			{
-				return;
-			}
-		}
-
-		throw new OverflowException("Addition resulted in a value larger than the target span's capacity.");
 	}
 }
