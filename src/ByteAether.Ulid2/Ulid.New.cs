@@ -110,10 +110,7 @@ public readonly partial struct Ulid
 
 		// Fill timestamp
 		var ts = (ulong)timestamp << 16;
-		if (BitConverter.IsLittleEndian)
-		{
-			ts = BinaryPrimitives.ReverseEndianness(ts);
-		}
+		ts = ReverseOnLittleEndian(ts);
 		Unsafe.WriteUnaligned(ref ulidRef, ts);
 
 		FillRandom(ref ulidRef, timestamp, options ?? DefaultGenerationOptions);
@@ -151,10 +148,7 @@ public readonly partial struct Ulid
 
 		// Fill timestamp
 		var ts = (ulong)timestamp << 16;
-		if (BitConverter.IsLittleEndian)
-		{
-			ts = BinaryPrimitives.ReverseEndianness(ts);
-		}
+		ts = ReverseOnLittleEndian(ts);
 		Unsafe.WriteUnaligned(ref ulidRef, ts);
 
 		// Fill random
@@ -214,9 +208,7 @@ public readonly partial struct Ulid
         {
 	        // Read the last timestamp (from bytes 0-7 of "last ULID")
             // Shift it to get 48 bits.
-            var lastTime = BitConverter.IsLittleEndian
-	            ? BinaryPrimitives.ReverseEndianness(_state.LastUlidPart0)
-	            : _state.LastUlidPart0;
+            var lastTime = ReverseOnLittleEndian(_state.LastUlidPart0);
             lastTime >>= 16;
 
             // If the timestamp is bigger than the last one, generate a new ULID
@@ -256,9 +248,8 @@ public readonly partial struct Ulid
 		            options.IncrementRandomSource.GetBytes(tempSpan[..(int)monotonicity]);
 		            var increment = BinaryPrimitives.ReadUInt32LittleEndian(tempSpan);
 
+		            // The tempSpan may contain garbage, so mask that out
 		            var totalBitsToKeep = (int)monotonicity * sizeof(byte);
-
-					// Shift 1UL left by the total bits, then subtract 1 to create the bitmask
 		            var mask = (uint)((1UL << totalBitsToKeep) - 1);
 		            increment &= mask;
 
@@ -282,18 +273,18 @@ public readonly partial struct Ulid
 	private static void LastUlidIncrement(uint addition)
 	{
 		var increment = (ulong)addition + 1; // carry = 1 is built-in
-		var part1 = BinaryPrimitives.ReverseEndianness(_state.LastUlidPart1);
+		var part1 = ReverseOnLittleEndian(_state.LastUlidPart1);
 		var newPart1 = part1 + increment;
-		_state.LastUlidPart1 = BinaryPrimitives.ReverseEndianness(newPart1);
+		_state.LastUlidPart1 = ReverseOnLittleEndian(newPart1);
 
 		if (newPart1 >= part1) // Overflow carried over to part0
 		{
 			return;
 		}
 
-		var part0 = BinaryPrimitives.ReverseEndianness(_state.LastUlidPart0);
+		var part0 = ReverseOnLittleEndian(_state.LastUlidPart0);
 		part0++;
-		_state.LastUlidPart0 = BinaryPrimitives.ReverseEndianness(part0);
+		_state.LastUlidPart0 = ReverseOnLittleEndian(part0);
 		if (part0 == 0)
 		{
 			throw new OverflowException("Addition resulted in a ULID value larger than the absolute maximum ULID value.");

@@ -212,7 +212,7 @@ public readonly partial struct Ulid
 		        | (r02 << 1)
 		        | (r03 >> 4);
 
-	        Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, 0), BinaryPrimitives.ReverseEndianness(block1));
+	        Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, 0), ReverseOnLittleEndian(block1));
 
 	        // Second block - ulong 64 bits
 	        ulong r04 = Unsafe.Add(ref tableRef, pBytes[14 * stepSize]);
@@ -243,7 +243,7 @@ public readonly partial struct Ulid
 		        | (r14 << 5)
 		        | r15;
 
-	        Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, 8), BinaryPrimitives.ReverseEndianness(block2));
+	        Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, 8), ReverseOnLittleEndian(block2));
 	    }
 
 	    return result;
@@ -429,7 +429,7 @@ public readonly partial struct Ulid
 		span[3] = map[((_t1 & 0x7) << 2) | (_t2 >> 6)];  // 00[11111111][11111|111][11|111111][11111111][11111111][11111111]
 		span[2] = map[_t1 >> 3];                         // 00[11111111][|11111|111][11111111][11111111][11111111][11111111]
 		span[1] = map[_t0 & 0x1F];                       // 00[111|11111|][11111111][11111111][11111111][11111111][11111111]
-		span[0] = map[_t0 >> 5];                         // |00[111|11111][11111111][11111111][11111111][11111111][11111111]	
+		span[0] = map[_t0 >> 5];                         // |00[111|11111][11111111][11111111][11111111][11111111][11111111]
 	}
 
 	/// <summary>
