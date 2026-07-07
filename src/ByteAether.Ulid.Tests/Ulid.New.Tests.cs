@@ -175,7 +175,7 @@ public class UlidNewTests
 			initialRandom[9] = 0xA; // 10
 
 			var increment = new byte[incrementSize];
-			increment[incrementSize - 1] = 4; // 10 + 4
+			increment[0] = 4; // 10 + 4
 
 			var incrementedRandom = new byte[10];
 			incrementedRandom[9] = 15; // 10 + 4 + 1 : +1 comes from base implementation of Ulid
@@ -221,7 +221,7 @@ public class UlidNewTests
 			initialRandom[9] = 0xFE; // Max - 2
 
 			var increment = new byte[incrementSize];
-			increment[incrementSize - 1] = 0x01; // 1 as the other +1 comes from base implementation
+			increment[0] = 0x01; // 1 as the other +1 comes from base implementation
 
 			var initialRandomProvider = new ControllableRandomProvider(initialRandom);
 			var incrementRandomProvider = new ControllableRandomProvider(increment);

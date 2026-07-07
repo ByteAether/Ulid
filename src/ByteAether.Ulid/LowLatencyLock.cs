@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 #endif
 
-namespace ByteAether.Ulid2;
+namespace ByteAether.Ulid;
 
 internal struct LowLatencyLock
 {

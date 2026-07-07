@@ -17,8 +17,6 @@ public readonly partial struct Ulid
 	/// </remarks>
 	public static GenerationOptions DefaultGenerationOptions { get; set; } = new();
 
-	private static readonly byte[] _lastUlid = new byte[_ulidSize];
-
 	// Constant for Unix Epoch (1970-01-01 UTC) in Ticks
 	private const long _unixEpochTicks = 621355968000000000;
 
@@ -111,14 +109,9 @@ public readonly partial struct Ulid
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
 
 		// Fill timestamp
-		BinaryPrimitives.WriteUInt64BigEndian(
-#if NETCOREAPP
-			MemoryMarshal.CreateSpan(ref ulidRef, 8),
-#else
-			Compatibility.MemoryMarshal.CreateSpan(ref ulidRef, 8),
-#endif
-			(ulong)timestamp << 16
-		);
+		var ts = (ulong)timestamp << 16;
+		ts = ReverseOnLittleEndian(ts);
+		Unsafe.WriteUnaligned(ref ulidRef, ts);
 
 		FillRandom(ref ulidRef, timestamp, options ?? DefaultGenerationOptions);
 
@@ -154,15 +147,11 @@ public readonly partial struct Ulid
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
 
 		// Fill timestamp
-		BinaryPrimitives.WriteUInt64BigEndian(
-#if NETCOREAPP
-			MemoryMarshal.CreateSpan(ref ulidRef, 8),
-#else
-			Compatibility.MemoryMarshal.CreateSpan(ref ulidRef, 8),
-#endif
-			(ulong)timestamp << 16
-		);
+		var ts = (ulong)timestamp << 16;
+		ts = ReverseOnLittleEndian(ts);
+		Unsafe.WriteUnaligned(ref ulidRef, ts);
 
+		// Fill random
 		Unsafe.CopyBlockUnaligned(
 			ref Unsafe.Add(ref ulidRef, _ulidSizeTime),
 			ref random.GetPinnableReference(),
@@ -172,31 +161,22 @@ public readonly partial struct Ulid
 		return ulid;
 	}
 
-	private static int _lastUlidLock;
-
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-	private static void AcquireSpinLock()
+	// Separates Lock and LastUlid into different cache lines to prevent "false sharing"
+	// x64 has 64-byte cache lines; ARM64 (e.g., Apple Silicon) has 128-byte cache lines
+	[StructLayout(LayoutKind.Explicit)]
+	private class State
 	{
-		// Hot-path
-		if (Interlocked.CompareExchange(ref _lastUlidLock, 1, 0) == 0)
-		{
-			return;
-		}
+		// Cache Line 1
+		[FieldOffset(16)] public LowLatencyLock Lock;
 
-		// Spin until the lock is acquired
-		var spinner = new SpinWait();
-		while (Interlocked.CompareExchange(ref _lastUlidLock, 1, 0) == 1)
-		{
-			spinner.SpinOnce();
-		}
+		// Cache Line 2(ARM64)/3(x64)
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
+		[FieldOffset(16+128)] public ulong LastUlidPart0;
+		[FieldOffset(16+128+8)] public ulong LastUlidPart1;
+#pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
 	}
+
+	private static readonly State _state = new();
 
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
@@ -207,85 +187,78 @@ public readonly partial struct Ulid
 	private static void FillRandom(ref byte ulidBytesRef, long timestamp, GenerationOptions options)
 	{
 		// Calculate offset to a random part
-        ref var randomPartRef = ref Unsafe.Add(ref ulidBytesRef, _ulidSizeTime);
+        ref var ulidBytesRandomRef = ref Unsafe.Add(ref ulidBytesRef, _ulidSizeTime);
+        var monotonicity = options.Monotonicity;
 
-        if (options.Monotonicity == GenerationOptions.MonotonicityOptions.NonMonotonic)
+        if (monotonicity == GenerationOptions.MonotonicityOptions.NonMonotonic)
         {
             options.InitialRandomSource.GetBytes(
 #if NETCOREAPP
-	            MemoryMarshal.CreateSpan(ref randomPartRef, _ulidSizeRandom)
+	            MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom)
 #else
-	            Compatibility.MemoryMarshal.CreateSpan(ref randomPartRef, _ulidSizeRandom)
+	            Compatibility.MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom)
 #endif
             );
             return;
         }
 
-        ref var lastUlidRef =
-#if NETCOREAPP
-			ref MemoryMarshal.GetArrayDataReference(_lastUlid);
-#else
-			ref Compatibility.MemoryMarshal.GetArrayDataReference(_lastUlid);
-#endif
+        ref var lastUlidRef = ref Unsafe.As<ulong, byte>(ref _state.LastUlidPart0);
 
-        ref var lastRandomRef = ref Unsafe.Add(ref lastUlidRef, _ulidSizeTime);
-
-        AcquireSpinLock();
-        try
+        using(_state.Lock.Enter())
         {
-            // Read the last timestamp raw (from bytes 0-7 of lastUlid)
+	        // Read the last timestamp (from bytes 0-7 of "last ULID")
             // Shift it to get 48 bits.
-            var lastTime = (long)(
-	            BinaryPrimitives.ReadUInt64BigEndian(
-#if NETCOREAPP
-		            MemoryMarshal.CreateReadOnlySpan(ref lastUlidRef, sizeof(ulong))
-#else
-		            Compatibility.MemoryMarshal.CreateReadOnlySpan(ref lastUlidRef, sizeof(ulong))
-#endif
-				) >> 16
-	        );
+            var lastTime = ReverseOnLittleEndian(_state.LastUlidPart0);
+            lastTime >>= 16;
 
-            // If the timestamp is the same or lesser than the last one, increment the last ULID by one
-            if (timestamp <= lastTime)
+            // If the timestamp is bigger than the last one, generate a new ULID
+            if (timestamp > (long)lastTime)
             {
-	            if (options.Monotonicity == GenerationOptions.MonotonicityOptions.MonotonicIncrement)
+	            // We work on "generated ULID", then copy it into "last ULID"
+
+	            // Generate a new random to the generated ULID
+	            options.InitialRandomSource.GetBytes(
+#if NETCOREAPP
+		            MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom)
+#else
+	                Compatibility.MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom)
+#endif
+	            );
+
+	            // Copy full generated ULID back to last ULID
+	            Unsafe.CopyBlock(ref lastUlidRef, ref ulidBytesRef, _ulidSize);
+            }
+            else // Otherwise, increment the last ULID
+            {
+	            // We work on "last ULID", then copy it into "generated ULID"
+
+	            if (monotonicity == GenerationOptions.MonotonicityOptions.MonotonicIncrement)
 	            {
-		            IncrementByOne(ref lastUlidRef);
+		            LastUlidIncrement(0);
 	            }
 	            else
 	            {
 		            // We can use the random bytes of incomplete ULID for the random increment span
 		            var tempSpan =
 #if NETCOREAPP
-			            MemoryMarshal.CreateSpan(ref randomPartRef, (int)options.Monotonicity);
+			            MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, sizeof(uint));
 #else
-			            Compatibility.MemoryMarshal.CreateSpan(ref randomPartRef, (int)options.Monotonicity);
+			            Compatibility.MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, sizeof(uint));
 #endif
-		            options.IncrementRandomSource.GetBytes(tempSpan);
-		            IncrementByByteSpan(ref lastUlidRef, tempSpan);
+		            options.IncrementRandomSource.GetBytes(tempSpan[..(int)monotonicity]);
+		            var increment = BinaryPrimitives.ReadUInt32LittleEndian(tempSpan);
+
+		            // The tempSpan may contain garbage, so mask that out
+		            var totalBitsToKeep = (int)monotonicity * 8;
+		            var mask = (uint)((1UL << totalBitsToKeep) - 1);
+		            increment &= mask;
+
+		            LastUlidIncrement(increment);
 	            }
-            }
-            else // Otherwise, generate a new ULID
-            {
-	            // Copy timestamp from the incomplete ULID
-	            Unsafe.CopyBlock(ref lastUlidRef, ref ulidBytesRef, _ulidSizeTime);
 
-	            // Generate a new random to the last ULID
-                options.InitialRandomSource.GetBytes(
-#if NETCOREAPP
-	                MemoryMarshal.CreateSpan(ref lastRandomRef, _ulidSizeRandom)
-#else
-	                Compatibility.MemoryMarshal.CreateSpan(ref lastRandomRef, _ulidSizeRandom)
-#endif
-                );
+	            // Copy full last ULID back to generated ULID
+	            Unsafe.CopyBlock(ref ulidBytesRef, ref lastUlidRef, _ulidSize);
             }
-
-            Unsafe.CopyBlock(ref ulidBytesRef, ref lastUlidRef, _ulidSize);
-        }
-        finally
-        {
-	        // Release the spinlock
-            Volatile.Write(ref _lastUlidLock, 0);
         }
 	}
 
@@ -297,77 +270,24 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	private static void IncrementByOne(ref byte buffer)
+	private static void LastUlidIncrement(uint addition)
 	{
-		const int lastIdx = _ulidSize - 1;
+		var increment = (ulong)addition + 1; // carry = 1 is built-in
+		var part1 = ReverseOnLittleEndian(_state.LastUlidPart1);
+		var newPart1 = part1 + increment;
+		_state.LastUlidPart1 = ReverseOnLittleEndian(newPart1);
 
-		ushort carry = 1;
-		ref var currentRef = ref Unsafe.Add(ref buffer, lastIdx);
-
-		for (var i = lastIdx; i >= 0; i--)
+		if (newPart1 >= part1)
 		{
-			var val = (ushort)(currentRef + carry);
-			currentRef = (byte)val; // Implicit & 0xFF
-			carry = (ushort)(val >> 8);
-
-			if (carry == 0)
-			{
-				return;
-			}
-
-			currentRef = ref Unsafe.Subtract(ref currentRef, 1);
+			return;
 		}
 
-		throw new OverflowException("Addition resulted in a value larger than the target span's capacity.");
-	}
-
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-	private static void IncrementByByteSpan(ref byte targetRef, ReadOnlySpan<byte> source)
-	{
-		ushort carry = 1;
-		ushort sum;
-		var lengthDifference = _ulidSize - source.Length;
-
-		if (source.Length != 0)
+		var part0 = ReverseOnLittleEndian(_state.LastUlidPart0);
+		part0++;
+		_state.LastUlidPart0 = ReverseOnLittleEndian(part0);
+		if (part0 == 0)
 		{
-			for (var i = _ulidSize - 1; i >= lengthDifference; --i)
-			{
-				var sourceIdx = i - lengthDifference;
-
-				ref var targetByteRef = ref Unsafe.Add(ref targetRef, i);
-				var byteFromSource = source[sourceIdx];
-
-				sum = (ushort)(targetByteRef + byteFromSource + carry);
-				targetByteRef = (byte)sum; // Implicit & 0xFF
-				carry = (byte)(sum >> 8);
-			}
-
-			if (carry == 0)
-			{
-				return;
-			}
+			throw new OverflowException("Addition resulted in a ULID value larger than the absolute maximum ULID value.");
 		}
-
-		for (var i = lengthDifference - 1; i >= 0; --i)
-		{
-			ref var targetByteRef = ref Unsafe.Add(ref targetRef, i);
-			sum = (ushort)(targetByteRef + carry);
-			targetByteRef = (byte)sum; // Implicit & 0xFF
-			carry = (ushort)(sum >> 8);
-
-			if (carry == 0)
-			{
-				return;
-			}
-		}
-
-		throw new OverflowException("Addition resulted in a value larger than the target span's capacity.");
 	}
 }

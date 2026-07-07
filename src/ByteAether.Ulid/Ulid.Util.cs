@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 
-namespace ByteAether.Ulid2;
+namespace ByteAether.Ulid;
 
 public readonly partial struct Ulid
 {

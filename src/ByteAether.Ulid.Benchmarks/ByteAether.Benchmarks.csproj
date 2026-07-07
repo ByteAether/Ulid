@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ByteAether.Ulid2\ByteAether.Ulid2.csproj" />
     <ProjectReference Include="..\ByteAether.Ulid\ByteAether.Ulid.csproj" />
   </ItemGroup>
 

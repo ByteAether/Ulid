@@ -13,8 +13,8 @@ var benchmarkConfig = ManualConfig
 	.HideColumns(Column.Job, Column.StdDev, Column.Median)
 ;
 
-BenchmarkRunner.Run<Generate>(
-	//typeof(Program).Assembly,
+BenchmarkRunner.Run(
+	typeof(Program).Assembly,
 	benchmarkConfig
 );
 
@@ -52,9 +52,6 @@ public class Generate
 	public ByteAether.Ulid.Ulid ByteAetherUlid() => ByteAether.Ulid.Ulid.New();
 
 	[Benchmark]
-	public ByteAether.Ulid2.Ulid ByteAetherUlid2() => ByteAether.Ulid2.Ulid.New();
-
-	/*[Benchmark]
 	public ByteAether.Ulid.Ulid ByteAetherUlidR1Bp() => ByteAether.Ulid.Ulid.New(_byteAetherUlidOptionsR1Bp);
 
 	[Benchmark]
@@ -70,7 +67,7 @@ public class Generate
 	public NetUlid.Ulid NetUlid() => global::NetUlid.Ulid.Generate();
 
 	[Benchmark]
-	public NUlid.Ulid NUlid() => global::NUlid.Ulid.NewUlid(_nUlidRandomProvider);*/
+	public NUlid.Ulid NUlid() => global::NUlid.Ulid.NewUlid(_nUlidRandomProvider);
 }
 
 [MemoryDiagnoser]

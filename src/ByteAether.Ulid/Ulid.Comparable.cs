@@ -1,5 +1,4 @@
-﻿using System.Buffers.Binary;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 #if NET7_0_OR_GREATER
 using System.Numerics;
 #endif
@@ -104,16 +103,16 @@ public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 		ref var rA = ref Unsafe.As<Ulid, ulong>(ref Unsafe.AsRef(in left));
 		ref var rB = ref Unsafe.As<Ulid, ulong>(ref Unsafe.AsRef(in right));
 
-		var a = BinaryPrimitives.ReverseEndianness(rA);
-		var b = BinaryPrimitives.ReverseEndianness(rB);
+		var a = ReverseOnLittleEndian(rA);
+		var b = ReverseOnLittleEndian(rB);
 
 		if (a != b)
 		{
 			return a < b ? -1 : 1;
 		}
 
-		a = BinaryPrimitives.ReverseEndianness(Unsafe.Add(ref rA, 1));
-		b = BinaryPrimitives.ReverseEndianness(Unsafe.Add(ref rB, 1));
+		a = ReverseOnLittleEndian(Unsafe.Add(ref rA, 1));
+		b = ReverseOnLittleEndian(Unsafe.Add(ref rB, 1));
 
 		if (a != b)
 		{
