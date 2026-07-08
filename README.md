@@ -58,7 +58,7 @@ ULID addresses this by design, mandating strict lexicographical sortability and 
 - **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
 
 ### Extension Packages
-* **ByteAether.Ulid.EntityFrameworkCore**: Dedicated Entity Framework Core integration providing specialized storage formats (String, Binary, Guid, and SqlServerGuid).
+* **[ByteAether.Ulid.EntityFrameworkCore](#ef-core-integration--byteaetherulidentityframeworkcore)**: Dedicated Entity Framework Core integration providing specialized storage formats (`String`, `Binary`, `Guid`, and `SqlServerGuid`).
 
 These features collectively make **ByteAether.Ulid** a robust and efficient choice for managing unique identifiers in your .NET applications.
 
@@ -304,7 +304,7 @@ To seamlessly use ULIDs with Entity Framework Core, install the specialized exte
 ```sh
 dotnet add package ByteAether.Ulid.EntityFrameworkCore
 ```
-Register the ULID conventions within your DbContext via the ConfigureConventions method. You can choose from various underlying storage strategies (String, Binary, Guid, or SqlServerGuid):
+Register the ULID conventions within your `DbContext` via the `ConfigureConventions` method. You can choose from various underlying storage strategies (`String`, `Binary`, `Guid`, or `SqlServerGuid`):
 
 ```csharp
 using ByteAether.Ulid.EntityFrameworkCore;
@@ -317,7 +317,7 @@ protected override void ConfigureConventions(ModelConfigurationBuilder configura
 }
 ```
 #### Per-Property Mapping (Fine-Grained Control)
-If you need different storage formats for different tables or columns, bypass global conventions and configure specific ValueConverter classes directly on individual properties via OnModelCreating:
+If you need different storage formats for different tables or columns, bypass global conventions and configure specific `ValueConverter` classes directly on individual properties via `OnModelCreating`:
 
 ```csharp
 using ByteAether.Ulid.EntityFrameworkCore;
