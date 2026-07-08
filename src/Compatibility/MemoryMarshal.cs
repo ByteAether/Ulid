@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace Compatibility;
 
-public static class MemoryMarshal
+internal static class MemoryMarshal
 {
     /// <summary>
     /// Creates a new span over a portion of a regular managed object. This can be useful

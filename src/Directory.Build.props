@@ -2,6 +2,7 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
 
     <!-- NuGet Packaging -->
     <IsPackable>false</IsPackable>

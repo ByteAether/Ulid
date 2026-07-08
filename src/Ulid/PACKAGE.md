@@ -4,8 +4,6 @@
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid/)
-[![GitHub Build Status](https://img.shields.io/github/actions/workflow/status/ByteAether/Ulid/build-and-test.yml?logo=github&label=Build%20%26%20Test)](https://github.com/ByteAether/Ulid/actions/workflows/build-and-test.yml)
-[![GitHub Security](https://img.shields.io/github/actions/workflow/status/ByteAether/Ulid/codeql.yml?logo=github&label=Security%20Validation)](https://github.com/ByteAether/Ulid/actions/workflows/codeql.yml)
 
 A high-performance, fully compliant .NET implementation of ULIDs (Universally Unique Lexicographically Sortable Identifiers), adhering to the [official ULID specification](https://github.com/ulid/spec).
 
@@ -152,7 +150,7 @@ The `Ulid` implementation provides the following properties and methods:
 - Implements standard comparison and equality methods:\
   `CompareTo`, `Equals`, `GetHashCode`.
 - Implements the following .NET standard interfaces:\
-  `IMinMaxValue<Ulid>`, `IEquatable<Ulid>`, `IIEqualityComparer<Ulid>`, `IComparable`, `IComparable<Ulid>`, `IComparisonOperators<Ulid, Ulid, bool>`, `IFormattable`, `IParsable<Ulid>`, `ISpanFormattable`, `ISpanParsable<Ulid>`, `IUtf8SpanFormattable`, `IUtf8SpanParsable<Ulid>`.
+  `IMinMaxValue<Ulid>`, `IEquatable<Ulid>`, `IEqualityComparer<Ulid>`, `IComparable`, `IComparable<Ulid>`, `IComparisonOperators<Ulid, Ulid, bool>`, `IFormattable`, `IParsable<Ulid>`, `ISpanFormattable`, `ISpanParsable<Ulid>`, `IUtf8SpanFormattable`, `IUtf8SpanParsable<Ulid>`.
 
 ### GenerationOptions
 
@@ -202,4 +200,4 @@ Much of this implementation is either based on or inspired by existing works. Th
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/ByteAether/Ulid/blob/main/LICENSE) file for details.
