@@ -10,11 +10,19 @@ public class TestEntity
 	public Ulid? NullableUlid { get; set; }
 }
 
+public class RelatedChildEntity
+{
+	public int Id { get; set; }
+	public Ulid ParentSystemUlid { get; set; } // Foreign Key mapped to the ULID
+	public string Description { get; set; } = string.Empty;
+}
+
 public class TestDbContext(DbContextOptions<TestDbContext> Options, UlidStorageFormat StorageFormat) : DbContext(Options)
 {
 	public UlidStorageFormat StorageFormat { get; } = StorageFormat;
 
 	public DbSet<TestEntity> TestEntities => Set<TestEntity>();
+	public DbSet<RelatedChildEntity> RelatedChildren => Set<RelatedChildEntity>();
 
 	protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
 	{

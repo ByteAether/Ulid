@@ -121,7 +121,7 @@ public async Task<List<Entity>> GetEntitiesFromYesterday(MyDbContext context)
 }
 ```
 
-> If your application targets Microsoft SQL Server and uses the `SqlServerGuid` format, this optimization will yield incorrect results. SQL Server's internal `uniqueidentifier` sorting rules evaluate bytes from right to left, meaning the shuffled timestamp components will not resolve chronological range queries (`>=` or `<=`) correctly across millisecond boundaries.
+> If your application targets Microsoft SQL Server and uses the `SqlServerGuid` format, database-side range operations (`>=`, `<=`) and database `ORDER BY` sorting will execute accurately because SQL Server evaluates the shuffled trailing bytes first. However, be aware that the raw string representation (e.g., in SSMS or CSV exports) and client-side in-memory .NET `Guid` comparisons will appear out of order due to differing byte-priority evaluation rules on the client.
 
 ### Advanced Generation
 

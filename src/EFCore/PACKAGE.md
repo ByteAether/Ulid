@@ -19,7 +19,7 @@ For the core library and full details, visit our [GitHub repository](https://git
 
 - **Automated Configuration**: Register mappings globally for both nullable and non-nullable `Ulid` types using a single extension method.
 - **Flexible Storage Strategies**: Choose how your identifiers are persisted based on your database engine constraints:
-	- `String`: 26-character Crockford Base32 string (e.g., `CHAR(26)`). **(Default)**
+	- `String`: 26-character [Crockford's Base32](https://www.crockford.com/base32.html) string (e.g., `CHAR(26)`). **(Default)**
 	- `Binary`: 16-byte binary payload (e.g., `BINARY(16)`).
 	- `Guid`: Native UUID format (ideal for PostgreSQL `uuid`).
 	- `SqlServerGuid`: Shuffled SQL Server sequential `uniqueidentifier` to maintain native index sorting properties.
@@ -44,7 +44,7 @@ public class MyDbContext : DbContext
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         // Configures mappings globally using your chosen database storage format
-        // Valid options are String (default, if left empty), Binary, Guid, and SqlServerGuid
+        // Supports: UlidStorageFormat.String (Default), Binary, Guid, and SqlServerGuid
         configurationBuilder.RegisterUlid(UlidStorageFormat.Binary);
     }
 }
@@ -76,7 +76,7 @@ Because ULIDs contain an embedded timestamp component, you can perform high-perf
 
 This technique is fully supported across `String`, `Binary`, and standard native `Guid` storage strategies (such as PostgreSQL's `uuid` type, which evaluates bytes sequentially from left to right).
 
-> Do not use this pattern if you are using the `SqlServerGuid` format tailored for Microsoft SQL Server. Because `SqlServerGuid` intentionally pushes the timestamp bytes to the end of the structure to optimize physical index insertion, SQL Server's internal right-to-left sorting logic will cause chronological range comparisons to break.
+> When using the `SqlServerGuid` format tailored for Microsoft SQL Server, these index-backed database range queries work perfectly because SQL Server prioritizes trailing bytes when evaluating `uniqueidentifier` columns. However, do not attempt to sort or filter these specific records client-side (in-memory) using standard .NET `Guid` comparisons, as .NET's native GUID rules evaluate bytes from left-to-right and will result in scrambled chronological order.
 
 ```csharp
 using Microsoft.EntityFrameworkCore;
