@@ -34,8 +34,8 @@ jobs:
       run: dotnet restore src/ByteAether.Ulid.sln --use-current-runtime -p:SelfContained=true
 
     - name: Build and Publish AOT Console Application (${{ matrix.os }})
-      run: dotnet publish src/ByteAether.Ulid.Tests.AotConsole/ByteAether.Ulid.Tests.AotConsole.csproj --no-restore -c Release --use-current-runtime --self-contained true -o ./publish
+      run: dotnet publish src/Ulid.Tests.AotConsole/Tests.AotConsole.csproj --no-restore -c Release --use-current-runtime --self-contained true -o ./publish
 
     - name: Run AOT Compiled Application (${{ matrix.os }})
       shell: bash # Ensure bash is used on Windows as well for consistent pathing syntax (./)
-      run: ./publish/ByteAether.Ulid.Tests.AotConsole
+      run: ./publish/Tests.AotConsole
