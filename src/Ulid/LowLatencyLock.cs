@@ -47,7 +47,6 @@ internal struct LowLatencyLock
 #else
 				Compatibility.MemoryMarshal.CreateSpan(ref @lock.LockState, 1);
 #endif
-	        ;
         }
 
 #if NET5_0_OR_GREATER

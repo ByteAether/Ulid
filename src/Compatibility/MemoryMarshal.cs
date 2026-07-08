@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 // https://github.com/dotnet/runtime/blob/8d796d8e60a5236cbd5f113ead1d3831064cdba1/src/libraries/System.Private.CoreLib/src/System/Runtime/InteropServices/MemoryMarshal.cs#L226
 
-namespace ByteAether.Ulid.Compatibility;
+namespace Compatibility;
 
 public static class MemoryMarshal
 {

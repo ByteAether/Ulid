@@ -10,10 +10,12 @@
     <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsAotCompatible>true</IsAotCompatible>
+
+    <RootNamespace>ByteAether.Ulid.Tests.AotConsole</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ByteAether.Ulid\ByteAether.Ulid.csproj"/>
+    <ProjectReference Include="..\Ulid\Impl.csproj" />
   </ItemGroup>
 
 </Project>

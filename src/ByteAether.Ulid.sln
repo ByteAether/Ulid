@@ -3,12 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35027.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ByteAether.Ulid", "ByteAether.Ulid\ByteAether.Ulid.csproj", "{6357EDBF-4251-4213-A361-F94A5617F4B2}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ByteAether.Ulid.Tests", "ByteAether.Ulid.Tests\ByteAether.Ulid.Tests.csproj", "{60A12748-D540-4B64-9562-6E17DC8CA2AB}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ByteAether.Benchmarks", "ByteAether.Ulid.Benchmarks\ByteAether.Benchmarks.csproj", "{F860FB62-7F8A-42FF-8F6B-59888D5EBCD7}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8F4D7238-B5E0-4EB6-88B0-55F7363E07D2}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
@@ -16,7 +10,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByteAether.Ulid.Tests.AotConsole", "ByteAether.Ulid.Tests.AotConsole\ByteAether.Ulid.Tests.AotConsole.csproj", "{A16BAD2D-8F7F-49E5-880A-349E31F6E70E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Impl", "Ulid\Impl.csproj", "{6357EDBF-4251-4213-A361-F94A5617F4B2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Ulid.Tests\Tests.csproj", "{60A12748-D540-4B64-9562-6E17DC8CA2AB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmarks", "Ulid.Benchmarks\Benchmarks.csproj", "{F860FB62-7F8A-42FF-8F6B-59888D5EBCD7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.AotConsole", "Ulid.Tests.AotConsole\Tests.AotConsole.csproj", "{A16BAD2D-8F7F-49E5-880A-349E31F6E70E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ulid", "Ulid", "{5521EBCE-44BD-467E-8E5E-4F5010BE7202}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,5 +48,11 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EC7A8CA0-E8A5-4946-B2E1-81C3D807A387}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F860FB62-7F8A-42FF-8F6B-59888D5EBCD7} = {5521EBCE-44BD-467E-8E5E-4F5010BE7202}
+		{6357EDBF-4251-4213-A361-F94A5617F4B2} = {5521EBCE-44BD-467E-8E5E-4F5010BE7202}
+		{60A12748-D540-4B64-9562-6E17DC8CA2AB} = {5521EBCE-44BD-467E-8E5E-4F5010BE7202}
+		{A16BAD2D-8F7F-49E5-880A-349E31F6E70E} = {5521EBCE-44BD-467E-8E5E-4F5010BE7202}
 	EndGlobalSection
 EndGlobal

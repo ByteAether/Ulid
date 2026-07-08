@@ -10,6 +10,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <UseDataCollector/>
+
+    <RootNamespace>ByteAether.Ulid.Tests</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
@@ -43,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ByteAether.Ulid\ByteAether.Ulid.csproj"/>
+    <ProjectReference Include="..\Ulid\Impl.csproj" />
   </ItemGroup>
 
   <ItemGroup>

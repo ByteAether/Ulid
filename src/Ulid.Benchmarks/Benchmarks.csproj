@@ -5,6 +5,8 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <RootNamespace>ByteAether.Ulid.Benchmarks</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ByteAether.Ulid\ByteAether.Ulid.csproj" />
+    <ProjectReference Include="..\Ulid\Impl.csproj" />
   </ItemGroup>
 
 </Project>
