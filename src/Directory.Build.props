@@ -1,0 +1,33 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+
+    <!-- NuGet Packaging -->
+    <IsPackable>false</IsPackable>
+    <Deterministic>true</Deterministic>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <Authors>Joonatan Uusväli</Authors>
+    <Company>ByteAether</Company>
+    <Copyright>© $(Authors), $(Company). All rights reserved.</Copyright>
+
+    <RepositoryUrl>https://github.com/ByteAether/Ulid</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <PackageProjectUrl>$(RepositoryUrl)/tree/v$(PackageVersion)</PackageProjectUrl>
+    <PackageReleaseNotes>See $(RepositoryUrl)/releases/tag/v$(PackageVersion)</PackageReleaseNotes>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>logo.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\assets\logo.png" Pack="true" PackagePath="\" Visible="false" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\LICENSE" />
+  </ItemGroup>
+</Project>
