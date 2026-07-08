@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EFCore.Impl\EFCore.Impl.csproj" />
+    <ProjectReference Include="..\EFCore\EFCore.Impl.csproj" />
   </ItemGroup>
 
 </Project>
