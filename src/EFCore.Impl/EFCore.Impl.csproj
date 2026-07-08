@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <Deterministic>true</Deterministic>
+    <IsAotCompatible>true</IsAotCompatible>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <Title>ByteAether.Ulid for Entity Framework Core - High-Performance ULID for .NET</Title>
+    <Description>A fast, spec-compliant ULID (Universally Unique Lexicographically Sortable Identifier) implementation for modern .NET. Optimized for database primary keys, Native AOT, zero-allocation, GUID interoperability, and high-performance serialization.</Description>
+    <Authors>Joonatan Uusväli</Authors>
+    <Company>ByteAether</Company>
+    <Copyright>© $(Authors), $(Company). All rights reserved.</Copyright>
+
+    <RepositoryUrl>https://github.com/ByteAether/Ulid</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+
+    <PackageId>ByteAether.Ulid.EntityFrameworkCore</PackageId>
+    <PackageTags>ulid;id;uuid;guid;id-generator;unique-id;primary-key;efcore;dotnet;csharp</PackageTags>
+    <PackageProjectUrl>$(RepositoryUrl)/tree/v$(PackageVersion)</PackageProjectUrl>
+    <PackageReleaseNotes>See $(RepositoryUrl)/releases/tag/v$(PackageVersion)</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>logo.png</PackageIcon>
+
+    <NoWarn>NU1903</NoWarn>
+
+    <RootNamespace>ByteAether.Ulid.EntityFrameworkCore</RootNamespace>
+    <AssemblyName>ByteAether.Ulid.EntityFrameworkCore</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ulid\Impl.csproj" PrivateAssets="None" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\assets\logo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="EFCore.Tests" />
+  </ItemGroup>
+
+</Project>
