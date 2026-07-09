@@ -41,45 +41,62 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
     public async Task EFCore_ShouldSuccessfullyRoundTrip_BothNonNullAndNullableUlids(UlidStorageFormat format)
     {
         // Arrange
-        var originalUlid = Ulid.New();
-        var entity = new TestEntity
-        {
-            SystemUlid = originalUlid,
-            NullableUlid = null
-        };
+	    var originalUlid = Ulid.New();
+	    var entity = new TestEntity
+	    {
+	        SystemUlid = originalUlid,
+	        NullableUlid = null
+	    };
 
-        // Act - Step 1: Write to the database
-        await using (var writeContext = CreateContext(format))
-        {
-            writeContext.TestEntities.Add(entity);
-            await writeContext.SaveChangesAsync();
-        }
+	    // Act - Step 1: Write to the database
+	    await using (var writeContext = CreateContext(format))
+	    {
+	        writeContext.TestEntities.Add(entity);
+	        await writeContext.SaveChangesAsync();
+	    }
 
-        // Act - Step 2: Read back from an isolated context instance
-        await using (var readContext = CreateContext(format))
-        {
-            var dbEntity = await readContext.TestEntities.FirstOrDefaultAsync(e => e.SystemUlid == originalUlid);
+	    // Act - Step 2: Read back from an isolated context instance & Query via Null comparison
+	    await using (var readContext = CreateContext(format))
+	    {
+	        var dbEntity = await readContext.TestEntities.FirstOrDefaultAsync(e => e.SystemUlid == originalUlid);
 
-            // Assert
-            Assert.NotNull(dbEntity);
-            Assert.Equal(originalUlid, dbEntity.SystemUlid);
-            Assert.Null(dbEntity.NullableUlid);
+	        // Verify querying directly by matching a null column works flawlessly
+	        var nullQueryEntity = await readContext.TestEntities.FirstOrDefaultAsync(e => e.NullableUlid == null);
 
-            // Step 3: Test update behavior on Nullable property
-            var updatedUlid = Ulid.New();
-            dbEntity.NullableUlid = updatedUlid;
-            readContext.TestEntities.Update(dbEntity);
-            await readContext.SaveChangesAsync();
-        }
+	        // Assert
+	        Assert.NotNull(dbEntity);
+	        Assert.NotNull(nullQueryEntity);
+	        Assert.Equal(originalUlid, dbEntity.SystemUlid);
+	        Assert.Null(dbEntity.NullableUlid);
 
-        // Act - Step 4: Validate update retrieval
-        await using (var verifyContext = CreateContext(format))
-        {
-            var dbEntity = await verifyContext.TestEntities.FirstOrDefaultAsync();
-            Assert.NotNull(dbEntity);
-            Assert.Equal(originalUlid, dbEntity.SystemUlid);
-            Assert.NotNull(dbEntity.NullableUlid);
-        }
+	        // Step 3: Test update behavior on Nullable property
+	        var updatedUlid = Ulid.New();
+	        dbEntity.NullableUlid = updatedUlid;
+	        readContext.TestEntities.Update(dbEntity);
+	        await readContext.SaveChangesAsync();
+	    }
+
+	    // Act - Step 4: Validate update retrieval
+	    await using (var verifyContext = CreateContext(format))
+	    {
+	        var dbEntity = await verifyContext.TestEntities.FirstOrDefaultAsync();
+	        Assert.NotNull(dbEntity);
+	        Assert.Equal(originalUlid, dbEntity.SystemUlid);
+	        Assert.NotNull(dbEntity.NullableUlid);
+
+	        // Step 5: Test reversing a value back to null (Null-to-Null round trip)
+	        dbEntity.NullableUlid = null;
+	        verifyContext.TestEntities.Update(dbEntity);
+	        await verifyContext.SaveChangesAsync();
+	    }
+
+	    // Act - Step 6: Final check that reverting to null persisted properly
+	    await using (var finalVerifyContext = CreateContext(format))
+	    {
+	        var dbEntity = await finalVerifyContext.TestEntities.FirstOrDefaultAsync();
+	        Assert.NotNull(dbEntity);
+	        Assert.Null(dbEntity.NullableUlid);
+	    }
     }
 
     [Theory]
@@ -150,31 +167,27 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    // Arrange
 	    await using var context = CreateContext(format);
 
-	    var ulid1 = Ulid.New();
-	    var ulid2 = Ulid.New();
-	    var ulid3 = Ulid.New(); // We won't look for this one
+	    var targetUlid = Ulid.New();
 
 	    context.TestEntities.AddRange(
-		    new TestEntity { SystemUlid = ulid1 },
-		    new TestEntity { SystemUlid = ulid2 },
-		    new TestEntity { SystemUlid = ulid3 }
+		    new TestEntity { SystemUlid = Ulid.New(), NullableUlid = targetUlid },
+		    new TestEntity { SystemUlid = Ulid.New(), NullableUlid = null }
 	    );
 	    await context.SaveChangesAsync();
 	    context.ChangeTracker.Clear();
 
-	    // Creating the search filter collection
-	    var searchCriteria = new[] { ulid1, ulid2 }.AsEnumerable();
+	    // Strategy: Include null directly inside the searchable target criteria collection
+	    var searchCriteria = new Ulid?[] { targetUlid, null };
 
 	    // Act
 	    var results = await context.TestEntities
-		    .Where(e => searchCriteria.Contains(e.SystemUlid))
+		    .Where(e => searchCriteria.Contains(e.NullableUlid))
 		    .ToListAsync();
 
 	    // Assert
 	    Assert.Equal(2, results.Count);
-	    Assert.Contains(results, e => e.SystemUlid == ulid1);
-	    Assert.Contains(results, e => e.SystemUlid == ulid2);
-	    Assert.DoesNotContain(results, e => e.SystemUlid == ulid3);
+	    Assert.Contains(results, e => e.NullableUlid == targetUlid);
+	    Assert.Contains(results, e => e.NullableUlid == null);
     }
 
     [Theory]
@@ -310,6 +323,37 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    Assert.NotNull(joinResult);
 	    Assert.Equal(parentUlid, joinResult.SystemUlid);
 	    Assert.Equal("Child linked via ULID", joinResult.Description);
+    }
+
+    [Theory]
+    [InlineData(UlidStorageFormat.Binary)]
+    [InlineData(UlidStorageFormat.String)]
+    [InlineData(UlidStorageFormat.Guid)]
+    [InlineData(UlidStorageFormat.SqlServerGuid)]
+    public async Task EFCore_ShouldNotDetectFalseChanges_WhenEntityIsLoadedButUnmodified(UlidStorageFormat format)
+    {
+	    // Arrange
+	    var originalUlid = Ulid.New();
+	    await using (var setupContext = CreateContext(format))
+	    {
+		    setupContext.TestEntities.Add(new() { SystemUlid = originalUlid, NullableUlid = Ulid.New() });
+		    await setupContext.SaveChangesAsync();
+	    }
+
+	    // Act & Assert
+	    await using (var trackingContext = CreateContext(format))
+	    {
+		    // Load the entity completely into memory state tracking
+		    var dbEntity = await trackingContext.TestEntities.FirstOrDefaultAsync(e => e.SystemUlid == originalUlid);
+		    Assert.NotNull(dbEntity);
+
+		    // Attempt a Save without modifying any structural data properties
+		    var affectedRows = await trackingContext.SaveChangesAsync();
+
+		    // Verify that EF Core understands the model is completely clean
+		    // (Returns 0 updates executed to the underlying data provider)
+		    Assert.Equal(0, affectedRows);
+	    }
     }
 
     public void Dispose()
