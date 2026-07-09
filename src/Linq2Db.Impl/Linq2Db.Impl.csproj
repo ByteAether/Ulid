@@ -1,7 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
+    <OutputType>library</OutputType>
+    <IsAotCompatible>true</IsAotCompatible>
+
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Title>ByteAether.Ulid.EntityFrameworkCore - High-Performance ULID Mappings for EF Core</Title>
+    <Description>Official Entity Framework Core extension for ByteAether.Ulid. Provides seamless mapping of Ulid and nullable Ulid properties to database columns using flexible storage strategies (String, Binary, Guid, and SqlServerGuid). Optimized for index-backed time range queries and Native AOT compatibility.</Description>
 
     <PackageId>ByteAether.Ulid.Linq2Db</PackageId>
     <PackageTags>ulid;efcore;entity-framework-core;database;primary-key;value-converter;sqlserver;postgres;guid;csharp</PackageTags>
@@ -12,11 +19,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ulid\Impl.csproj" />
+    <ProjectReference Include="..\Ulid\Impl.csproj" PrivateAssets="None" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="linq2db" Version="6.3.0" />
+    <PackageReference Include="linq2db" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

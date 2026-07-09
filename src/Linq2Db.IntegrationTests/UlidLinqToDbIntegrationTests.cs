@@ -48,14 +48,10 @@ public class UlidLinqToDbIntegrationTests : IDisposable
 
     private DataConnection CreateConnection(UlidStorageFormat format)
     {
-        // Isolate configurations to prevent cross-contamination of MappingSchema global state
-        var mappingSchema = new MappingSchema();
-        mappingSchema.RegisterUlid(format);
-
         var options = new DataOptions()
 	        .UseSQLite()
 	        .UseConnection(_connection)
-            .UseMappingSchema(mappingSchema);
+	        .RegisterUlid(format);
 
         var connection = new DataConnection(options);
 
@@ -117,23 +113,27 @@ public class UlidLinqToDbIntegrationTests : IDisposable
     [Theory]
     [InlineData(UlidStorageFormat.Binary)]
     [InlineData(UlidStorageFormat.String)]
-    //[InlineData(UlidStorageFormat.Guid)] // Not supported?
+    //[InlineData(UlidStorageFormat.Guid)] // Not correct on SQLite
     //[InlineData(UlidStorageFormat.SqlServerGuid)] // Not supported on SQLite - should work on MSSQL
     public async Task LinqToDB_ShouldTranslateLINQRangeQueries_ProperlyWithParameters(UlidStorageFormat format)
     {
         // Arrange
         await using var context = CreateConnection(format);
+        context.InlineParameters = true;
 
         var minUlid = Ulid.MinAt(DateTimeOffset.UtcNow.AddDays(-1));
         var targetUlid = Ulid.New();
         var maxUlid = Ulid.MaxAt(DateTimeOffset.UtcNow.AddDays(1));
 
         await context.InsertAsync(new TestEntity { SystemUlid = targetUlid });
+        _testOutputHelper.WriteLine(context.LastQuery);
 
         // Act - Validate that LinqToDB command tree translates logical bounds matching type conversions
         var results = await context.GetTable<TestEntity>()
             .Where(e => e.SystemUlid >= minUlid && e.SystemUlid <= maxUlid)
             .ToListAsync();
+
+        _testOutputHelper.WriteLine(context.LastQuery);
 
         // Assert
         Assert.Single(results);
@@ -206,7 +206,8 @@ public class UlidLinqToDbIntegrationTests : IDisposable
     [Theory]
     [InlineData(UlidStorageFormat.Binary)]
     [InlineData(UlidStorageFormat.String)]
-    [InlineData(UlidStorageFormat.Guid)]
+    //[InlineData(UlidStorageFormat.Guid)] // Not correct on SQLite
+    //[InlineData(UlidStorageFormat.SqlServerGuid)] // Not correct on SQLite - should work on MSSQL
     public async Task LinqToDB_ShouldMaintainChronologicalOrder_WhenOrderingByUlid(UlidStorageFormat format)
     {
         // Arrange
@@ -266,21 +267,21 @@ public class UlidLinqToDbIntegrationTests : IDisposable
     }
 
     [Theory]
-    [InlineData(UlidStorageFormat.String, "(ByteAether.Ulid.Ulid, Char)")]
-    [InlineData(UlidStorageFormat.Binary, "(ByteAether.Ulid.Ulid, Binary)")]
-    [InlineData(UlidStorageFormat.Guid, "(ByteAether.Ulid.Ulid, Guid)")]
-    [InlineData(UlidStorageFormat.SqlServerGuid, "(ByteAether.Ulid.Ulid, Guid)")]
-    public void SchemaMetadata_ShouldRegisterCorrectDataTypeHints(UlidStorageFormat format, string expectedDataTypeDescriptor)
+    [InlineData(UlidStorageFormat.String, DataType.Char)]
+    [InlineData(UlidStorageFormat.Binary, DataType.Binary)]
+    [InlineData(UlidStorageFormat.Guid, DataType.Guid)]
+    [InlineData(UlidStorageFormat.SqlServerGuid, DataType.Guid)]
+    public async Task SchemaMetadata_ShouldRegisterCorrectDataTypeHints(UlidStorageFormat format, DataType expectedDataType)
     {
         // Arrange
-        var schema = new MappingSchema();
+        await using var context = CreateConnection(format);
+        var schema = context.MappingSchema;
 
         // Act
-        schema.RegisterUlid(format);
         var columnInformation = schema.GetDataType(typeof(Ulid));
 
         // Assert - Ensures that LinqToDB maps to proper native column variants instead of fallback configurations
-        Assert.Equal(expectedDataTypeDescriptor, columnInformation.Type.ToString(), ignoreCase: true);
+        Assert.Equal(expectedDataType, columnInformation.Type.DataType);
     }
 
     public void Dispose()

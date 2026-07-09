@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -7,11 +6,16 @@ namespace ByteAether.Ulid.Linq2Db;
 
 public static class MappingSchemaExtensions
 {
-    public static MappingSchema RegisterUlid(
-        this MappingSchema mappingSchema,
-        UlidStorageFormat storageFormat = UlidStorageFormat.String)
+	private static readonly UlidGuardInterceptor _guardInterceptor = new();
+
+    public static DataOptions RegisterUlid(
+        this DataOptions options,
+        UlidStorageFormat storageFormat = UlidStorageFormat.String,
+        bool forceAllowComparisonOperators = false
+
+    )
     {
-        ArgumentNullException.ThrowIfNull(mappingSchema);
+	    var mappingSchema = new MappingSchema();
 
         switch (storageFormat)
         {
@@ -31,7 +35,7 @@ public static class MappingSchemaExtensions
             case UlidStorageFormat.Guid:
 	            mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, ulid.ToGuid(), DataType.Guid));
 
-	            mappingSchema.SetConvertExpression<Guid, Ulid>(bytes => Ulid.New(bytes));
+	            mappingSchema.SetConvertExpression<Guid, Ulid>(guid => Ulid.New(guid));
 	            mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(new Guid(bytes)));
 
 	            mappingSchema.SetDataType(typeof(Ulid), DataType.Guid);
@@ -40,7 +44,7 @@ public static class MappingSchemaExtensions
             case UlidStorageFormat.SqlServerGuid:
                 mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, UlidShuffler.ToSqlServerGuid(ulid), DataType.Guid));
 
-                mappingSchema.SetConvertExpression<Guid, Ulid>(bytes => UlidShuffler.FromSqlServerGuid(bytes));
+                mappingSchema.SetConvertExpression<Guid, Ulid>(guid => UlidShuffler.FromSqlServerGuid(guid));
                 mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(UlidShuffler.FromSqlServerGuid(new(bytes))));
 
                 mappingSchema.SetDataType(typeof(Ulid), DataType.Guid);
@@ -56,6 +60,17 @@ public static class MappingSchemaExtensions
         mappingSchema.SetScalarType(typeof(Ulid));
         mappingSchema.SetCanBeNull(typeof(Ulid), true);
 
-        return mappingSchema;
+        var mustGuard =
+	        storageFormat == UlidStorageFormat.Guid
+	        || (storageFormat == UlidStorageFormat.SqlServerGuid && options.ConnectionOptions.ProviderName != ProviderName.SqlServer);
+
+        var opts = options;
+	    opts = opts.UseAdditionalMappingSchema(mappingSchema);
+	    /*if (mustGuard && !forceAllowComparisonOperators)
+	    {
+		    opts = opts.UseInterceptor(_guardInterceptor);
+	    }*/
+
+	    return opts;
     }
 }

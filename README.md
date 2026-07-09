@@ -59,6 +59,7 @@ ULID addresses this by design, mandating strict lexicographical sortability and 
 
 ### Extension Packages
 * **[ByteAether.Ulid.EntityFrameworkCore](#ef-core-integration--byteaetherulidentityframeworkcore)**: Dedicated Entity Framework Core integration providing specialized storage formats (`String`, `Binary`, `Guid`, and `SqlServerGuid`).
+* **[ByteAether.Ulid.Linq2Db](#linqtodb-integration--byteaetherulidlinq2db)**: Official LinqToDB integration supporting global type mappings and optimized storage schemes (`String`, `Binary`, `Guid`, and `SqlServerGuid`).
 
 These features collectively make **ByteAether.Ulid** a robust and efficient choice for managing unique identifiers in your .NET applications.
 
@@ -350,6 +351,43 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         .HasConversion<UlidToSqlServerGuidConverter>();
 }
 ```
+### LinqToDB Integration – ByteAether.Ulid.Linq2Db
+
+[![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
+[![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.Linq2Db?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.Linq2Db/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.Linq2Db?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.Linq2Db/)
+
+![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
+![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
+![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
+![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
+![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
+![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
+
+To integrate with LinqToDB, install the specialized extension package:
+
+```sh
+dotnet add package ByteAether.Ulid.Linq2Db
+```
+
+Register the ULID conventions within your `MappingSchema` instance using your preferred storage backend format (`String`, `Binary`, `Guid`, or `SqlServerGuid`):
+
+```csharp
+using LinqToDB;
+using LinqToDB.Mapping;
+using ByteAether.Ulid.Linq2Db;
+
+// Isolate or extend mapping rules
+var mappingSchema = new MappingSchema();
+mappingSchema.RegisterUlid(UlidStorageFormat.Binary);
+
+var options = new DataOptions()
+    .UseSQLite()
+    .UseConnectionString(connectionString)
+    .UseMappingSchema(mappingSchema);
+```
+
+> ⚠️ **Important Limitation on Range Queries (`>=`, `<=`, `OrderBy`)**: High-performance index-backed database range queries are supported globally across all engines **only** when using `UlidStorageFormat.String` or `UlidStorageFormat.Binary`. If you choose `UlidStorageFormat.SqlServerGuid`, native range queries are supported **only** when running on a true Microsoft SQL Server instance due to its customized trailing-byte index sorting mechanics. Range comparisons using `Guid` or `SqlServerGuid` on engines like SQLite or PostgreSQL will result in broken chronological data evaluation because those engines inspect shuffled GUID bytes sequentially from left-to-right.
 ### Dapper Integration
 To use ULIDs with Dapper, you can create a custom **TypeHandler** to convert between `Ulid` and `byte[]`. Here's how to set it up:
 
