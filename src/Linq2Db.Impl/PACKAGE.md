@@ -19,7 +19,7 @@ For the core library and full details, visit our [GitHub repository](https://git
 - **Flexible Storage Strategies**: Choose how your identifiers are persisted based on your database engine constraints:
 	- `String`: 26-character [Crockford's Base32](https://www.crockford.com/base32.html) string (mapped to `DataType.Char`). **(Default)**
 	- `Binary`: 16-byte binary payload (mapped to `DataType.Binary`).
-	- `Guid`: Native UUID format (mapped to `DataType.Guid`). _(Limited compatibility)_
+	- `Guid`: Native UUID format (mapped to `DataType.Guid`).
 	- `SqlServerGuid`: Shuffled sequential `uniqueidentifier` optimized to maintain index sorting properties inside Microsoft SQL Server.
 
 ## Installation
@@ -32,34 +32,31 @@ dotnet add package ByteAether.Ulid.Linq2Db
 
 ## Usage
 
-Call the `RegisterUlid` extension method on your `MappingSchema` instance to register the type mappings across your LinqToDB queries:
+Call the `RegisterUlid` extension method on your `DataOptions` instance to register the type mappings across your LinqToDB queries:
 
 ```csharp
-using LinqToDB.Mapping;
+using LinqToDB;
 using ByteAether.Ulid.Linq2Db;
-
-var mappingSchema = new MappingSchema();
-// Configures mappings using your chosen database storage format
-// Supports: UlidStorageFormat.String (Default), Binary, Guid, and SqlServerGuid
-mappingSchema.RegisterUlid(UlidStorageFormat.Binary);
 
 var options = new DataOptions()
     .UseSQLite()
     .UseConnectionString(connectionString)
-    .UseMappingSchema(mappingSchema); // Use the configured schema
+    .RegisterUlid(UlidStorageFormat.Binary); // Optional, defaults to String
 ```
 
 ## ⚠️ Important Limitations and Configuration Warnings
 
 ### Range Queries & Sorting Compatibility (`>=`, `<=`, `OrderBy`)
 
-Because ULIDs contain an embedded big-endian timestamp component, native database sorting and range filters depend entirely on the underlying byte alignment of the storage format:
+All storage formats are technically supported, but their ability to maintain chronological sorting and support range queries depends entirely on how the underlying database provider handles GUID byte layouts. Because ULIDs rely on a big-endian timestamp for sorting, your choice of database provider determines which formats remain index-friendly:
 
-* **Supported Globally (`String` and `Binary`)**: These formats preserve the sequential left-to-right chronological order of ULIDs. Database indexes on these types can perform efficient range scans across all major providers (SQLite, PostgreSQL, SQL Server, etc.).
-* **Supported Only on SQL Server (`SqlServerGuid`)**: This format reshuffles the chronological timestamp bytes into the trailing positions prioritized by SQL Server's unique sorting rules. It will execute correctly **only** on a real Microsoft SQL Server instance.
-* **NOT SUPPORTED FOR RANGES (`Guid`)**: Standard .NET GUID structures use a mixed-endian layout that scrambles the left-to-right chronological sorting of ULID bytes.
+* **Globally Safe (`String` and `Binary`)**: These formats preserve the raw left-to-right chronological order of ULIDs natively across all database engines (SQLite, PostgreSQL, SQL Server, etc.).
+* **Provider Dependent (`Guid`)**: Standard `.NET Guid` structures use a mixed-endian layout.
+	* **PostgreSQL**: Supported. The connection driver automatically corrects the endianness when mapping to native `uuid` columns, preserving chronological sorting.
+	* **SQLite / Others**: Incompatible for range queries. These engines store GUIDs as raw byte streams, meaning the mixed-endian layout will scramble chronological comparison (though **equality operations remain fully functional**).
+* **SQL Server Specific (`SqlServerGuid`)**: This format explicitly optimizes byte shuffling for Microsoft SQL Server's unique sequential indexing rules. It should **only** be paired with SQL Server if range operations are required.
 
-> **CRITICAL**: Do not attempt to run index-backed database range queries (`>=`, `<=`) or chronological `OrderBy` clauses against `UlidStorageFormat.Guid` or `UlidStorageFormat.SqlServerGuid` on engines like SQLite or PostgreSQL. These database engines treat GUID configurations as raw byte streams compared left-to-right, resulting in mathematically broken data retrieval and missing records due to the scrambled layout.
+> **CRITICAL**: Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's sorting behavior will result in broken data retrieval and missed records.
 
 ## Native AOT & Trimming Compatibility
 
