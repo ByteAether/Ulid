@@ -54,7 +54,7 @@ ULID addresses this by design, mandating strict lexicographical sortability and 
 - **Lock-Free Synchronization**: Monotonic generation utilizes a high-performance, **lock-free compare-and-exchange (CAS)** approach.
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
-- **Ahead-of-Time (AoT) Compilation Compatible**: Fully compatible with AoT compilation for improved startup performance and smaller binary sizes.
+- **Ahead-of-Time (AOT) Compilation Compatible**: Fully compatible with AOT compilation for improved startup performance and smaller binary sizes.
 - **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
 
 ### Extension Packages
@@ -98,30 +98,35 @@ var ulidFromString = Ulid.Parse(ulidString);
 Console.WriteLine($"ULID: {ulid}, GUID: {guid}, String: {ulidString}");
 ```
 
-### Filtering by Time Range (LINQ)
+### Time-Range Filtering
 
-Since ULIDs are lexicographically sortable and contain a timestamp, you can use `Ulid.MinAt()` and `Ulid.MaxAt()` to generate boundary ULIDs for a specific time range. This allows EF Core to translate these into efficient range comparisons (e.g., `WHERE Id >= @min AND Id <= @max`) in your database.
-
-This optimization works seamlessly across storage formats like `String`, `Binary`, and native `Guid` (on engines like PostgreSQL that sort UUIDs left-to-right).
+Because ULIDs embed a millisecond-precision timestamp and maintain lexicographical order, you can use `Ulid.MinAt()` and `Ulid.MaxAt()` to generate boundary instances for specific time windows. This approach provides a uniform mechanism for range filtering across both in-memory collections and abstract data layers:
 
 ```csharp
-public async Task<List<Entity>> GetEntitiesFromYesterday(MyDbContext context)
-{
-    var startOfYesterday = DateTimeOffset.UtcNow.AddDays(-1).Date;
-    var endOfYesterday = startOfYesterday.AddDays(1).AddTicks(-1);
+// Define the temporal boundaries of your window
+DateTimeOffset startTime = DateTimeOffset.UtcNow.AddDays(-7);
+DateTimeOffset endTime = DateTimeOffset.UtcNow;
 
-    // Create boundary ULIDs for the time range
-    var minUlid = Ulid.MinAt(startOfYesterday);
-    var maxUlid = Ulid.MaxAt(endOfYesterday);
+// Generate the minimum and maximum possible ULIDs for those precise timestamps
+Ulid minBoundary = Ulid.MinAt(startTime);
+Ulid maxBoundary = Ulid.MaxAt(endTime);
 
-    // This query uses the primary key index for high performance
-    return await context.Entities
-        .Where(e => e.Id >= minUlid && e.Id <= maxUlid)
-        .ToListAsync();
-}
+// Example 1: In-Memory Evaluation
+var filteredItems = localItems
+    .Where(item => item.Id >= minBoundary && item.Id <= maxBoundary);
+
+// Example 2: Parameterized Data Store Constraint
+var query = "SELECT * FROM Records WHERE Id >= @Min AND Id <= @Max";
 ```
 
-> If your application targets Microsoft SQL Server and uses the `SqlServerGuid` format, database-side range operations (`>=`, `<=`) and database `ORDER BY` sorting will execute accurately because SQL Server evaluates the shuffled trailing bytes first. However, be aware that the raw string representation (e.g., in SSMS or CSV exports) and client-side in-memory .NET `Guid` comparisons will appear out of order due to differing byte-priority evaluation rules on the client.
+#### ⚠️ Database Persistence Considerations
+
+While range evaluations remain consistent for in-memory object graphs, executing these queries against a relational database introduces critical persistence dependencies:
+
+* **Storage Format & Byte Order**: Certain database engines and native UUID data types utilize mixed-endian byte layouts. If a ULID is persisted using a strategy that reorders its raw big-endian bytes, chronological sorting behavior will diverge between the application and the database server.
+* **Index & Query Integrity**: Mismatches between the database engine's native sorting rules and the chosen storage format can result in broken data retrieval, bypassed indexes, or incorrect query results during database-side range operations (`>=`, `<=`) and `ORDER BY` execution.
+
+> **Recommendation**: Before implementing database-side time-range queries, ensure your chosen storage format (e.g., String, Binary, or provider-specific Guid) aligns with your target database engine's native indexing and evaluation mechanics.
 
 ### Advanced Generation
 

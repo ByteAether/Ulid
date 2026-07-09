@@ -19,10 +19,10 @@ For the core library and full details, visit our [GitHub repository](https://git
 
 - **Automated Configuration**: Register mappings globally for both nullable and non-nullable `Ulid` types using a single extension method.
 - **Flexible Storage Strategies**: Choose how your identifiers are persisted based on your database engine constraints:
-	- `String`: 26-character [Crockford's Base32](https://www.crockford.com/base32.html) string (e.g., `CHAR(26)`). **(Default)**
-	- `Binary`: 16-byte binary payload (e.g., `BINARY(16)`).
-	- `Guid`: Native UUID format (ideal for PostgreSQL `uuid`).
-	- `SqlServerGuid`: Shuffled SQL Server sequential `uniqueidentifier` to maintain native index sorting properties.
+    - `String`: 26-character [Crockford's Base32](https://www.crockford.com/base32.html) string (e.g., `CHAR(26)`). **(Default)**
+    - `Binary`: 16-byte binary payload (e.g., `BINARY(16)`).
+    - `Guid`: Native UUID format (ideal for PostgreSQL `uuid`).
+    - `SqlServerGuid`: Shuffled SQL Server sequential `uniqueidentifier` to maintain native index sorting properties.
 
 ## Installation
 
@@ -54,52 +54,48 @@ public class MyDbContext : DbContext
 For mixed-database strategies or fine-grained column mapping, apply the dedicated ValueConverter classes individually by overriding `OnModelCreating` in your `DbContext`:
 
 ```csharp
+using Microsoft.EntityFrameworkCore;
+using ByteAether.Ulid.EntityFrameworkCore;
+
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     // Persist as CHAR(26) string
     modelBuilder.Entity<User>().Property(u => u.Id).HasConversion<UlidToStringConverter>();
 
-    // Persist as BINARY(16) array
+    // Persist as a flat BINARY(16) column
     modelBuilder.Entity<Order>().Property(o => o.Id).HasConversion<UlidToBytesConverter>();
 
     // Persist as native UUID/Guid
     modelBuilder.Entity<Product>().Property(p => p.Id).HasConversion<UlidToGuidConverter>();
 
-    // Persist as an optimized, ordered SQL Server sequential uniqueidentifier
-    modelBuilder.Entity<LogEntry>().Property(l => l.Id).HasConversion<UlidToSqlServerGuidConverter>();
+    // Persist as an optimized, ordered SQL Server sequential uniqueidentifier 
+    modelBuilder.Entity<LogEntry>().Property(l => l.Id) 
+        .HasConversion<UlidToSqlServerGuidConverter>()
+        .HasColumnType("uniqueidentifier"); // Crucial for correct index sorting
 }
 ```
 
-### Time Range Queries (LINQ Translation)
+## ⚠️ Important Limitations and Configuration Warnings
 
-Because ULIDs contain an embedded timestamp component, you can perform high-performance index-backed range queries natively inside EF Core without storing a separate `CreatedAt` column.
+### Range Queries & Sorting Compatibility (`>=`, `<=`, `OrderBy`)
 
-This technique is fully supported across `String`, `Binary`, and standard native `Guid` storage strategies (such as PostgreSQL's `uuid` type, which evaluates bytes sequentially from left to right).
+All storage formats are technically supported, but their ability to maintain chronological sorting and support range queries depends entirely on how the underlying database provider handles GUID byte layouts. Because ULIDs rely on a big-endian timestamp for sorting, your choice of database provider determines which formats remain index-friendly:
 
-> When using the `SqlServerGuid` format tailored for Microsoft SQL Server, these index-backed database range queries work perfectly because SQL Server prioritizes trailing bytes when evaluating `uniqueidentifier` columns. However, do not attempt to sort or filter these specific records client-side (in-memory) using standard .NET `Guid` comparisons, as .NET's native GUID rules evaluate bytes from left-to-right and will result in scrambled chronological order.
+* **Globally Safe (`String` and `Binary`)**: These formats preserve the raw left-to-right chronological order of ULIDs natively across all database engines (SQLite, PostgreSQL, SQL Server, etc.).
+* **Provider Dependent (`Guid`)**: Standard `.NET Guid` structures use a mixed-endian layout.
+  * **PostgreSQL**: Supported. The connection driver automatically corrects the endianness when mapping to native `uuid` columns, preserving chronological sorting.
+  * **SQLite / Others**: Incompatible for range queries. These engines store GUIDs as raw byte streams, meaning the mixed-endian layout will scramble chronological comparison (though **equality operations remain fully functional**).
+* **SQL Server Specific (`SqlServerGuid`)**: This format explicitly optimizes byte shuffling for Microsoft SQL Server's unique sequential indexing rules.
+  * **Constraint**: This format **only** works as intended if the underlying column is typed as `uniqueidentifier`. Storing it as `BINARY(16)` or `VARCHAR` will break sorting.
+  * **Trade-off**: This internal byte reordering sacrifices cross-database compatibility (e.g., migrating data to PostgreSQL or SQLite) in exchange for raw SQL Server index performance.
 
-```csharp
-using Microsoft.EntityFrameworkCore;
-
-public async Task<List<User>> GetUsersFromPastDay(MyDbContext context)
-{
-    var cutoffTime = DateTimeOffset.UtcNow.AddDays(-1);
-    
-    // Generate boundary constraint
-    var minUlid = Ulid.MinAt(cutoffTime);
-
-    // Translates directly to: WHERE Id >= @minUlid
-    return await context.Users
-        .Where(u => u.Id >= minUlid)
-        .ToListAsync();
-}
-```
+> **CRITICAL**: Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's sorting behavior will result in broken data retrieval and missed records.
 
 ## Native AOT & Trimming Compatibility
 
 `ByteAether.Ulid.EntityFrameworkCore` is fully trimmed and annotated for **Native AOT** compilation. It introduces zero reflection or dynamic code generation.
 
-> While this extension package is entirely AOT-safe, your underlying application must still conform to Entity Framework Core's native AOT constraints (such as using EF Core Precompiled Models via `dotnet ef dbcontext optimize`).
+> While this extension package is entirely AOT-safe, your underlying application must still conform to [Entity Framework Core's native AOT constraints](https://learn.microsoft.com/en-us/ef/core/performance/nativeaot-and-precompiled-queries) (such as using EF Core Precompiled Models via `dotnet ef dbcontext optimize`).
 
 ## License
 
