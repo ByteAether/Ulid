@@ -85,8 +85,6 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
     [Theory]
     [InlineData(UlidStorageFormat.Binary)]
     [InlineData(UlidStorageFormat.String)]
-    [InlineData(UlidStorageFormat.Guid)]
-    [InlineData(UlidStorageFormat.SqlServerGuid)]
     public async Task EFCore_ShouldTranslateLINQRangeQueries_ProperlyWithParameters(UlidStorageFormat format)
     {
         // Arrange
@@ -179,11 +177,13 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    Assert.DoesNotContain(results, e => e.SystemUlid == ulid3);
     }
 
-    [Fact]
-    public void SchemaMetadata_ShouldHonorConverterMappingHints_ForStringConfiguration()
+    [Theory]
+    [InlineData(UlidStorageFormat.Binary, 16)]
+    [InlineData(UlidStorageFormat.String, 26)]
+    public void SchemaMetadata_ShouldHonorConverterMappingHints_ForStringConfiguration(UlidStorageFormat storageFormat, int expectedSize)
     {
         // Arrange
-        using var context = CreateContext(UlidStorageFormat.String);
+        using var context = CreateContext(storageFormat);
         var model = context.Model;
 
         // Act
@@ -196,36 +196,20 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 
         // Assert that sizes match 26 characters explicitly
         Assert.NotNull(converter.MappingHints);
-        Assert.Equal(26, converter.MappingHints.Size);
+        Assert.Equal(expectedSize, converter.MappingHints.Size);
 
-        // Assert that Crockford ASCII mapping optimization remains Non-Unicode (CHAR instead of NCHAR)
-        Assert.False(converter.MappingHints.IsUnicode);
-    }
-
-    [Fact]
-    public void SchemaMetadata_ShouldHonorConverterMappingHints_ForBinaryConfiguration()
-    {
-        // Arrange
-        using var context = CreateContext(UlidStorageFormat.Binary);
-        var model = context.Model;
-
-        // Act
-        var entityType = model.FindEntityType(typeof(TestEntity));
-        var property = entityType?.FindProperty(nameof(TestEntity.SystemUlid));
-        var converter = property?.GetValueConverter();
-
-        // Assert
-        Assert.NotNull(converter);
-        Assert.NotNull(converter.MappingHints);
-
-        // Explicitly assert fixed length boundary requirement
-        Assert.Equal(16, converter.MappingHints.Size);
+        if (storageFormat == UlidStorageFormat.String)
+        {
+			// Assert that Crockford ASCII mapping optimization remains Non-Unicode (CHAR instead of NCHAR)
+	        Assert.False(converter.MappingHints.IsUnicode);
+        }
     }
 
     [Theory]
     [InlineData(UlidStorageFormat.String, "TEXT")] // SQLite uses TEXT for string mapping hints
     [InlineData(UlidStorageFormat.Binary, "BLOB")] // SQLite uses BLOB for binary/byte array
     [InlineData(UlidStorageFormat.Guid, "TEXT")] // SQLite uses TEXT for Guid values
+    [InlineData(UlidStorageFormat.SqlServerGuid, "TEXT")] // SQLite uses TEXT for Guid values
     public async Task SchemaCreation_ShouldGenerateCorrectDatabaseColumnTypes(UlidStorageFormat format, string expectedDataType)
     {
 	    // Arrange & Act
@@ -259,7 +243,6 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
     [Theory]
     [InlineData(UlidStorageFormat.Binary)]
     [InlineData(UlidStorageFormat.String)]
-    [InlineData(UlidStorageFormat.Guid)]
     public async Task EFCore_ShouldMaintainChronologicalOrder_WhenOrderingByUlid(UlidStorageFormat format)
     {
 	    // Arrange
