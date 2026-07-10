@@ -1,7 +1,7 @@
-﻿namespace ByteAether.Ulid.Linq2Db;
+﻿namespace ByteAether.Ulid.LinqToDB;
 
 /// <summary>
-/// Database storage formats for saving <see cref="Ulid"/> properties via Linq2Db.
+/// Database storage formats for saving <see cref="Ulid"/> properties via LinqToDB.
 /// </summary>
 public enum UlidStorageFormat
 {

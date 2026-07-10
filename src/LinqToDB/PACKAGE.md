@@ -2,8 +2,8 @@
 *from ByteAether*
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
-[![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.Linq2Db?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.Linq2Db/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.Linq2Db?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.Linq2Db/)
+[![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.linq2db?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.linq2db?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
 
 An official extension package for `ByteAether.Ulid`, providing seamless integration with LinqToDB. It enables effortless mapping of `Ulid` and `Ulid?` properties to database columns using customizable persistence strategies.
 
@@ -27,7 +27,7 @@ For the core library and full details, visit our [GitHub repository](https://git
 Install the stable package via NuGet:
 
 ```sh
-dotnet add package ByteAether.Ulid.Linq2Db
+dotnet add package ByteAether.Ulid.linq2db
 ```
 
 ## Usage
@@ -36,12 +36,14 @@ Call the `RegisterUlid` extension method on your `DataOptions` instance to regis
 
 ```csharp
 using LinqToDB;
-using ByteAether.Ulid.Linq2Db;
+using ByteAether.Ulid.LinqToDB;
 
 var options = new DataOptions()
     .UseSQLite()
     .UseConnectionString(connectionString)
-    .RegisterUlid(UlidStorageFormat.Binary); // Optional, defaults to String
+    // Registers mapping for both Ulid and Ulid? types.
+    // Supports: UlidStorageFormat.String (Default), Binary, Guid, and SqlServerGuid
+    .RegisterUlid(UlidStorageFormat.Binary);
 ```
 
 ## ⚠️ Important Limitations and Configuration Warnings
@@ -60,7 +62,7 @@ All storage formats are technically supported, but their ability to maintain chr
 
 ## Native AOT & Trimming Compatibility
 
-`ByteAether.Ulid.Linq2Db` is fully trimmed and annotated for **Native AOT** compilation. It introduces zero reflection or dynamic code generation.
+`ByteAether.Ulid.linq2db` is fully trimmed and annotated for **Native AOT** compilation. It introduces zero reflection or dynamic code generation.
 
 ## License
 

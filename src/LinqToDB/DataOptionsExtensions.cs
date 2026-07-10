@@ -2,7 +2,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
-namespace ByteAether.Ulid.Linq2Db;
+namespace ByteAether.Ulid.LinqToDB;
 
 /// <summary>
 /// Provides extension methods for <see cref="DataOptions"/> to configure and register ULID support within LinqToDB.

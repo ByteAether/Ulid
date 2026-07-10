@@ -10,12 +10,12 @@
     <Title>ByteAether.Ulid.EntityFrameworkCore - High-Performance ULID Mappings for EF Core</Title>
     <Description>Official Entity Framework Core extension for ByteAether.Ulid. Provides seamless mapping of Ulid and nullable Ulid properties to database columns using flexible storage strategies (String, Binary, Guid, and SqlServerGuid). Optimized for index-backed time range queries and Native AOT compatibility.</Description>
 
-    <PackageId>ByteAether.Ulid.Linq2Db</PackageId>
+    <PackageId>ByteAether.Ulid.linq2db</PackageId>
     <PackageTags>ulid;efcore;entity-framework-core;database;primary-key;value-converter;sqlserver;postgres;guid;csharp</PackageTags>
     <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
 
-    <RootNamespace>ByteAether.Ulid.Linq2Db</RootNamespace>
-    <AssemblyName>ByteAether.Ulid.Linq2Db</AssemblyName>
+    <RootNamespace>ByteAether.Ulid.LinqToDB</RootNamespace>
+    <AssemblyName>ByteAether.Ulid.LinqToDB</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

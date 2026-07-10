@@ -4,7 +4,7 @@
     <TargetFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
     <NoWarn>NU1903</NoWarn>
 
-    <RootNamespace>ByteAether.Ulid.Linq2Db.IntegrationTests</RootNamespace>
+    <RootNamespace>ByteAether.Ulid.LinqToDB.IntegrationTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linq2Db\Linq2Db.Impl.csproj" />
+    <ProjectReference Include="..\LinqToDB\LinqToDB.Impl.csproj" />
   </ItemGroup>
 
 </Project>

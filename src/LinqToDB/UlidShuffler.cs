@@ -1,4 +1,4 @@
-namespace ByteAether.Ulid.Linq2Db;
+namespace ByteAether.Ulid.LinqToDB;
 
 internal static class UlidShuffler
 {

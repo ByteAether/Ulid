@@ -6,7 +6,7 @@ using Microsoft.Data.Sqlite;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ByteAether.Ulid.Linq2Db.IntegrationTests;
+namespace ByteAether.Ulid.LinqToDB.IntegrationTests;
 
 public class TestEntity
 {
