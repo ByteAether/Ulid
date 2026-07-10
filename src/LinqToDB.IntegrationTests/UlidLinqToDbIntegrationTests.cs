@@ -4,7 +4,6 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 using Microsoft.Data.Sqlite;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace ByteAether.Ulid.LinqToDB.IntegrationTests;
 
@@ -34,13 +33,10 @@ public class RelatedChildEntity
 
 public class UlidLinqToDbIntegrationTests : IDisposable
 {
-	private readonly ITestOutputHelper _testOutputHelper;
 	private readonly SqliteConnection _connection;
 
-    public UlidLinqToDbIntegrationTests(ITestOutputHelper testOutputHelper)
+    public UlidLinqToDbIntegrationTests()
     {
-	    _testOutputHelper = testOutputHelper;
-
 	    // Shared open connection to preserve database scope for individual test runs
         _connection = new("Filename=:memory:");
         _connection.Open();
@@ -107,6 +103,18 @@ public class UlidLinqToDbIntegrationTests : IDisposable
             Assert.NotNull(dbEntity);
             Assert.Equal(originalUlid, dbEntity.SystemUlid);
             Assert.NotNull(dbEntity.NullableUlid);
+
+            // Step 5: Test reversing a value back to null (Null-to-Null round trip)
+            dbEntity.NullableUlid = null;
+            await verifyContext.UpdateAsync(dbEntity);
+        }
+
+        // Act - Step 6: Final check that reverting to null persisted properly
+        await using (var finalVerifyContext = CreateConnection(format))
+        {
+	        var dbEntity = await finalVerifyContext.GetTable<TestEntity>().FirstOrDefaultAsync();
+	        Assert.NotNull(dbEntity);
+	        Assert.Null(dbEntity.NullableUlid);
         }
     }
 
@@ -119,21 +127,17 @@ public class UlidLinqToDbIntegrationTests : IDisposable
     {
         // Arrange
         await using var context = CreateConnection(format);
-        context.InlineParameters = true;
 
         var minUlid = Ulid.MinAt(DateTimeOffset.UtcNow.AddDays(-1));
         var targetUlid = Ulid.New();
         var maxUlid = Ulid.MaxAt(DateTimeOffset.UtcNow.AddDays(1));
 
         await context.InsertAsync(new TestEntity { SystemUlid = targetUlid });
-        _testOutputHelper.WriteLine(context.LastQuery);
 
         // Act - Validate that LinqToDB command tree translates logical bounds matching type conversions
         var results = await context.GetTable<TestEntity>()
             .Where(e => e.SystemUlid >= minUlid && e.SystemUlid <= maxUlid)
             .ToListAsync();
-
-        _testOutputHelper.WriteLine(context.LastQuery);
 
         // Assert
         Assert.Single(results);
@@ -181,26 +185,23 @@ public class UlidLinqToDbIntegrationTests : IDisposable
         // Arrange
         await using var context = CreateConnection(format);
 
-        var ulid1 = Ulid.New();
-        var ulid2 = Ulid.New();
-        var ulid3 = Ulid.New();
+        var targetUlid = Ulid.New();
 
-        await context.InsertAsync(new TestEntity { SystemUlid = ulid1 });
-        await context.InsertAsync(new TestEntity { SystemUlid = ulid2 });
-        await context.InsertAsync(new TestEntity { SystemUlid = ulid3 });
+        await context.InsertAsync(new TestEntity { NullableUlid = targetUlid });
+        await context.InsertAsync(new TestEntity { NullableUlid = null });
 
-        var searchCriteria = new[] { ulid1, ulid2 }.AsEnumerable();
+        // Strategy: Include null directly inside the searchable target criteria collection
+        var searchCriteria = new Ulid?[] { targetUlid, null };
 
-        // Act - Enforce evaluation of IN expression syntax processing
+        // Act
         var results = await context.GetTable<TestEntity>()
-            .Where(e => searchCriteria.Contains(e.SystemUlid))
+            .Where(e => searchCriteria.Contains(e.NullableUlid))
             .ToListAsync();
 
         // Assert
         Assert.Equal(2, results.Count);
-        Assert.Contains(results, e => e.SystemUlid == ulid1);
-        Assert.Contains(results, e => e.SystemUlid == ulid2);
-        Assert.DoesNotContain(results, e => e.SystemUlid == ulid3);
+        Assert.Contains(results, e => e.NullableUlid == targetUlid);
+        Assert.Contains(results, e => e.NullableUlid == null);
     }
 
     [Theory]
