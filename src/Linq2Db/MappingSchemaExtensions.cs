@@ -6,13 +6,9 @@ namespace ByteAether.Ulid.Linq2Db;
 
 public static class MappingSchemaExtensions
 {
-	private static readonly UlidGuardInterceptor _guardInterceptor = new();
-
     public static DataOptions RegisterUlid(
         this DataOptions options,
-        UlidStorageFormat storageFormat = UlidStorageFormat.String,
-        bool forceAllowComparisonOperators = false
-
+        UlidStorageFormat storageFormat = UlidStorageFormat.String
     )
     {
 	    var mappingSchema = new MappingSchema();
@@ -60,17 +56,6 @@ public static class MappingSchemaExtensions
         mappingSchema.SetScalarType(typeof(Ulid));
         mappingSchema.SetCanBeNull(typeof(Ulid), true);
 
-        var mustGuard =
-	        storageFormat == UlidStorageFormat.Guid
-	        || (storageFormat == UlidStorageFormat.SqlServerGuid && options.ConnectionOptions.ProviderName != ProviderName.SqlServer);
-
-        var opts = options;
-	    opts = opts.UseAdditionalMappingSchema(mappingSchema);
-	    /*if (mustGuard && !forceAllowComparisonOperators)
-	    {
-		    opts = opts.UseInterceptor(_guardInterceptor);
-	    }*/
-
-	    return opts;
+	    return options.UseAdditionalMappingSchema(mappingSchema);
     }
 }
