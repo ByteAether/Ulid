@@ -5,16 +5,20 @@
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.linq2db?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.linq2db?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
 
-An official extension package for `ByteAether.Ulid`, providing seamless integration with LinqToDB. It enables effortless mapping of `Ulid` and `Ulid?` properties to database columns using customizable persistence strategies.
+An official extension package for `ByteAether.Ulid`, providing seamless integration with [LinqToDB](https://github.com/linq2db/linq2db). It enables effortless mapping of `Ulid` and `Ulid?` properties to database columns using customizable persistence strategies.
 
 For the core library and full details, visit our [GitHub repository](https://github.com/ByteAether/Ulid).
 
 ## Features
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
+![LinqToDB 6.0.0+](https://img.shields.io/badge/LinqToDB-6.0.0+-orange)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
+![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
+![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
 
+- **Version Support**: Fully compatible with **[LinqToDB](https://github.com/linq2db/linq2db) versions 6.0.0 and newer**.
 - **Automated Configuration**: Register mappings globally for both nullable and non-nullable `Ulid` types using a single extension method on your `MappingSchema`.
 - **Flexible Storage Strategies**: Choose how your identifiers are persisted based on your database engine constraints:
 	- `String`: 26-character [Crockford's Base32](https://www.crockford.com/base32.html) string (mapped to `DataType.Char`). **(Default)**

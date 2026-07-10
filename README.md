@@ -351,20 +351,22 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
         .HasConversion<UlidToSqlServerGuidConverter>();
 }
 ```
-### LinqToDB Integration – ByteAether.Ulid.linq2db
+
+### [LinqToDB](https://github.com/linq2db/linq2db) Integration – ByteAether.Ulid.linq2db
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.linq2db?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.linq2db?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
 
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
+![LinqToDB 6.0.0+](https://img.shields.io/badge/LinqToDB-6.0.0+-orange)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
 ![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
 ![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
 
-To integrate with LinqToDB, install the specialized extension package:
+To integrate with [LinqToDB](https://github.com/linq2db/linq2db), install the specialized extension package:
 
 ```sh
 dotnet add package ByteAether.Ulid.linq2db
@@ -384,8 +386,6 @@ var options = new DataOptions()
     // Supports: UlidStorageFormat.String (Default), Binary, Guid, and SqlServerGuid
     .RegisterUlid(UlidStorageFormat.Binary);
 ```
-
-> ⚠️ **Important Limitation on Range Queries (`>=`, `<=`, `OrderBy`)**: High-performance index-backed database range queries are supported globally across all engines **only** when using `UlidStorageFormat.String` or `UlidStorageFormat.Binary`. If you choose `UlidStorageFormat.SqlServerGuid`, native range queries are supported **only** when running on a true Microsoft SQL Server instance due to its customized trailing-byte index sorting mechanics. Range comparisons using `Guid` or `SqlServerGuid` on engines like SQLite or PostgreSQL will result in broken chronological data evaluation because those engines inspect shuffled GUID bytes sequentially from left-to-right.
 
 ### Dapper Integration
 To use ULIDs with Dapper, you can create a custom **TypeHandler** to convert between `Ulid` and `byte[]`. Here's how to set it up:
