@@ -4,9 +4,19 @@ using LinqToDB.Mapping;
 
 namespace ByteAether.Ulid.Linq2Db;
 
-public static class MappingSchemaExtensions
+/// <summary>
+/// Provides extension methods for <see cref="DataOptions"/> to configure and register ULID support within LinqToDB.
+/// </summary>
+public static class DataOptionsExtensions
 {
-    public static DataOptions RegisterUlid(
+	/// <summary>
+	/// Registers custom mapping schemas for the <see cref="Ulid"/> type in LinqToDB based on the specified storage format.
+	/// </summary>
+	/// <param name="options">The <see cref="DataOptions"/> instance to extend.</param>
+	/// <param name="storageFormat">The preferred storage format for saving ULIDs to the database. Defaults to <see cref="UlidStorageFormat.String"/>.</param>
+	/// <returns>The modified <see cref="DataOptions"/> instance containing the registered ULID mapping schema.</returns>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown when an invalid or unsupported <see cref="UlidStorageFormat"/> is provided.</exception>
+	public static DataOptions RegisterUlid(
         this DataOptions options,
         UlidStorageFormat storageFormat = UlidStorageFormat.String
     )
