@@ -52,8 +52,8 @@ jobs:
       - name: Build the code
         run: |
           # Restore dependencies and build the C# project
-          dotnet restore src/Ulid/Impl.csproj --configuration CI-Release
-          dotnet restore src/EFCore/EFCore.Impl.csproj --configuration CI-Release
+          dotnet restore src/Ulid/Impl.csproj -p:Configuration=CI-Release
+          dotnet restore src/EFCore/EFCore.Impl.csproj -p:Configuration=CI-Release
           dotnet build src/Ulid/Impl.csproj --configuration CI-Release --no-incremental
           dotnet build src/EFCore/EFCore.Impl.csproj --configuration CI-Release --no-incremental
 

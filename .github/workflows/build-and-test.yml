@@ -37,7 +37,7 @@ jobs:
           5.x
 
     - name: Restore dependencies
-      run: dotnet restore src/ByteAether.Ulid.slnx --configuration CI-Release
+      run: dotnet restore src/ByteAether.Ulid.slnx -p:Configuration=CI-Release
 
     - name: Build
       run: dotnet build src/ByteAether.Ulid.slnx --configuration CI-Release --no-restore
