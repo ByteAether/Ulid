@@ -8,6 +8,10 @@
     <RootNamespace>ByteAether.Ulid.Benchmarks</RootNamespace>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(IsCIBuild)' == 'true'">
+    <ExcludeFromBuild>true</ExcludeFromBuild>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageReference Include="NetUlid" Version="2.1.0" />

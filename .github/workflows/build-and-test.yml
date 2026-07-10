@@ -37,10 +37,10 @@ jobs:
           5.x
 
     - name: Restore dependencies
-      run: dotnet restore src/ByteAether.Ulid.sln
+      run: dotnet restore -p:IsCIBuild=true src/ByteAether.Ulid.sln
 
     - name: Build
-      run: dotnet build --no-restore --configuration Release src/ByteAether.Ulid.sln
+      run: dotnet build -p:IsCIBuild=true --no-restore --configuration Release src/ByteAether.Ulid.sln
 
     - name: Upload DLLs
       uses: actions/upload-artifact@v7
@@ -52,7 +52,7 @@ jobs:
 
     - name: Run tests
       continue-on-error: true
-      run: dotnet test --no-build --verbosity normal --logger "trx" --configuration Release src/ByteAether.Ulid.sln
+      run: dotnet test -p:IsCIBuild=true --no-build --verbosity normal --logger "trx" --configuration Release src/ByteAether.Ulid.sln
 
     - name: Upload test results
       uses: actions/upload-artifact@v7
@@ -61,7 +61,7 @@ jobs:
         path: ./**/TestResults/**/*.trx
 
     - name: Pack
-      run: dotnet pack --configuration Release /p:ContinuousIntegrationBuild=true /p:PackageVersion=0.0.0-ci-${{ steps.vars.outputs.sha_short }} /p:PackageReleaseNotes="CI Build ${{ steps.vars.outputs.sha_short }}" --output ./output src/ByteAether.Ulid.sln
+      run: dotnet pack -p:IsCIBuild=true --configuration Release -p:ContinuousIntegrationBuild=true -p:PackageVersion=0.0.0-ci-${{ steps.vars.outputs.sha_short }} -p:PackageReleaseNotes="CI Build ${{ steps.vars.outputs.sha_short }}" --output ./output src/ByteAether.Ulid.sln
 
     - name: Upload NuGet package
       uses: actions/upload-artifact@v7
