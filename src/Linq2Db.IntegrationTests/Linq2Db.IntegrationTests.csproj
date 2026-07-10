@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Linq2Db.Impl\Linq2Db.Impl.csproj" />
+    <ProjectReference Include="..\Linq2Db\Linq2Db.Impl.csproj" />
   </ItemGroup>
 
 </Project>

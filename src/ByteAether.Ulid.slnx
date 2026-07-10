@@ -10,6 +10,10 @@
     <Project Path="EFCore.Tests/EFCore.Tests.csproj" />
     <Project Path="EFCore/EFCore.Impl.csproj" />
   </Folder>
+  <Folder Name="/Linq2Db/">
+    <Project Path="Linq2Db.IntegrationTests/Linq2Db.IntegrationTests.csproj" />
+    <Project Path="Linq2Db/Linq2Db.Impl.csproj" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path="../README.md" />
     <File Path=".editorconfig" />
