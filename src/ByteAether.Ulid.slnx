@@ -5,12 +5,15 @@
     <BuildType Name="CI-Debug" />
     <BuildType Name="CI-Release" />
   </Configurations>
-  <Folder Name="/EFCore/">
+  <Folder Name="/DB/">
+    <Project Path="DB.Shared.Tests/DB.Shared.Tests.csproj" />
+    <Project Path="DB.Shared/DB.Shared.csproj" />
+  </Folder>
+  <Folder Name="/DB/EFCore/">
     <Project Path="EFCore.IntegrationTests/EFCore.IntegrationTests.csproj" />
-    <Project Path="EFCore.Tests/EFCore.Tests.csproj" />
     <Project Path="EFCore/EFCore.Impl.csproj" />
   </Folder>
-  <Folder Name="/LinqToDB/">
+  <Folder Name="/DB/LinqToDB/">
     <Project Path="LinqToDB\LinqToDB.Impl.csproj" />
     <Project Path="LinqToDB.IntegrationTests\LinqToDB.IntegrationTests.csproj" />
   </Folder>

@@ -1,6 +1,6 @@
-namespace ByteAether.Ulid.LinqToDB;
+namespace ByteAether.Ulid.DB.Shared;
 
-internal static class UlidShuffler
+public static class MsSqlUlidShuffler
 {
 	public static Guid ToSqlServerGuid(Ulid ulid)
 	{

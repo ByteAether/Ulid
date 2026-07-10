@@ -1,3 +1,4 @@
+using ByteAether.Ulid.DB.Shared;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -48,10 +49,10 @@ public static class DataOptionsExtensions
                 break;
 
             case UlidStorageFormat.SqlServerGuid:
-                mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, UlidShuffler.ToSqlServerGuid(ulid), DataType.Guid));
+                mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, MsSqlUlidShuffler.ToSqlServerGuid(ulid), DataType.Guid));
 
-                mappingSchema.SetConvertExpression<Guid, Ulid>(guid => UlidShuffler.FromSqlServerGuid(guid));
-                mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(UlidShuffler.FromSqlServerGuid(new(bytes))));
+                mappingSchema.SetConvertExpression<Guid, Ulid>(guid => MsSqlUlidShuffler.FromSqlServerGuid(guid));
+                mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(MsSqlUlidShuffler.FromSqlServerGuid(new(bytes))));
 
                 mappingSchema.SetDataType(typeof(Ulid), DataType.Guid);
                 break;

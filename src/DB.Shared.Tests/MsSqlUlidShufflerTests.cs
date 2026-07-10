@@ -1,8 +1,8 @@
-using System.Data.SqlTypes; // For SqlGuid testing
+using System.Data.SqlTypes;
 
-namespace ByteAether.Ulid.EntityFrameworkCore.Tests;
+namespace ByteAether.Ulid.DB.Shared.Tests;
 
-public class SqlServerGuidConverterTests
+public class MsSqlUlidShufflerTests
 {
 	[Fact]
 	public void Converter_ShouldBePerfectRoundTrip()
@@ -11,8 +11,8 @@ public class SqlServerGuidConverterTests
 		var originalUlid = Ulid.New();
 
 		// Act
-		var sqlGuid = UlidToSqlServerGuidConverter.ToSqlServerGuid(originalUlid);
-		var roundTrippedUlid = UlidToSqlServerGuidConverter.FromSqlServerGuid(sqlGuid);
+		var sqlGuid = MsSqlUlidShuffler.ToSqlServerGuid(originalUlid);
+		var roundTrippedUlid = MsSqlUlidShuffler.FromSqlServerGuid(sqlGuid);
 
 		// Assert
 		Assert.Equal(originalUlid, roundTrippedUlid);
@@ -26,8 +26,8 @@ public class SqlServerGuidConverterTests
 		var secondUlid = Ulid.New(DateTimeOffset.UtcNow);
 
 		// Act - Convert using our custom shuffler
-		var firstGuid = UlidToSqlServerGuidConverter.ToSqlServerGuid(firstUlid);
-		var secondGuid = UlidToSqlServerGuidConverter.ToSqlServerGuid(secondUlid);
+		var firstGuid = MsSqlUlidShuffler.ToSqlServerGuid(firstUlid);
+		var secondGuid = MsSqlUlidShuffler.ToSqlServerGuid(secondUlid);
 
 		// Wrap them in .NET's SqlGuid, which uses the exact same sorting rules as SQL Server engine
 		var sqlGuid1 = new SqlGuid(firstGuid);
