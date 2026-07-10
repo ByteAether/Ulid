@@ -18,6 +18,12 @@ jobs:
     name: Analyze
     runs-on: ubuntu-latest
 
+    env:
+      PROJECT_PATHS: >- # List of projects to analyze
+        src/Ulid/Impl.csproj
+        src/EFCore/EFCore.Impl.csproj
+        src/LinqToDB/LinqToDB.Impl.csproj
+
     permissions:
       actions: read          # Allow GitHub Actions to read workflow files
       contents: read         # Allow access to repository contents
@@ -51,11 +57,17 @@ jobs:
 
       - name: Build the code
         run: |
-          # Restore dependencies and build the C# project
-          dotnet restore src/Ulid/Impl.csproj -p:Configuration=CI-Release
-          dotnet restore src/EFCore/EFCore.Impl.csproj -p:Configuration=CI-Release
-          dotnet build src/Ulid/Impl.csproj --configuration CI-Release --no-incremental
-          dotnet build src/EFCore/EFCore.Impl.csproj --configuration CI-Release --no-incremental
+          # Loop for restoring dependencies
+          for project in ${{ env.PROJECT_PATHS }}; do
+            echo "Restoring: $project"
+            dotnet restore "$project" -p:Configuration=CI-Release
+          done
+
+          # Loop for building the projects
+          for project in ${{ env.PROJECT_PATHS }}; do
+            echo "Building: $project"
+            dotnet build "$project" --configuration CI-Release --no-incremental
+          done
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
