@@ -1,11 +1,12 @@
-# ULID Entity Framework Core Integration
+# ULID [Entity Framework Core](https://github.com/dotnet/efcore) Integration
 *from ByteAether*
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
+![Entity Framework Core 6.0.0+](https://img.shields.io/badge/Entity_Framework_Core-6.0.0+-orange)
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.EntityFrameworkCore?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.EntityFrameworkCore/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.EntityFrameworkCore?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.EntityFrameworkCore/)
 
-An official extension package for `ByteAether.Ulid`, providing seamless integration with Entity Framework Core. It enables effortless mapping of `Ulid` and `Ulid?` properties to database columns using customizable persistence strategies.
+An official extension package for `ByteAether.Ulid`, providing seamless integration with [Entity Framework Core](https://github.com/dotnet/efcore). It enables effortless mapping of `Ulid` and `Ulid?` properties to database columns using customizable persistence strategies.
 
 For the core library and full details, visit our [GitHub repository](https://github.com/ByteAether/Ulid).
 
@@ -17,6 +18,7 @@ For the core library and full details, visit our [GitHub repository](https://git
 ![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
 ![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
 
+- **Version Support**: Fully compatible with **[Entity Framework Core](https://github.com/dotnet/efcore) versions 6.0.0 and newer**.
 - **Automated Configuration**: Register mappings globally for both nullable and non-nullable `Ulid` types using a single extension method.
 - **Flexible Storage Strategies**: Choose how your identifiers are persisted based on your database engine constraints:
     - `String`: 26-character [Crockford's Base32](https://www.crockford.com/base32.html) string (e.g., `CHAR(26)`). **(Default)**

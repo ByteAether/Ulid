@@ -293,8 +293,9 @@ Supports seamless integration as a route or query parameter with built-in `TypeC
 
 Includes a `JsonConverter` for easy serialization and deserialization.
 
-### EF Core Integration – ByteAether.Ulid.EntityFrameworkCore
+### [EF Core](https://github.com/dotnet/efcore) Integration – ByteAether.Ulid.EntityFrameworkCore
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
+![Entity Framework Core 6.0.0+](https://img.shields.io/badge/Entity_Framework_Core-6.0.0+-orange)
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.EntityFrameworkCore?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.EntityFrameworkCore/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.EntityFrameworkCore?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.EntityFrameworkCore/)
 
@@ -305,7 +306,7 @@ Includes a `JsonConverter` for easy serialization and deserialization.
 ![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
 ![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
 
-To seamlessly use ULIDs with Entity Framework Core, install the specialized extension package:
+To seamlessly use ULIDs with [Entity Framework Core](https://github.com/dotnet/efcore), install the specialized extension package:
 
 ```sh
 dotnet add package ByteAether.Ulid.EntityFrameworkCore
@@ -355,11 +356,11 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 ### [LinqToDB](https://github.com/linq2db/linq2db) Integration – ByteAether.Ulid.linq2db
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
+![LinqToDB 6.0.0+](https://img.shields.io/badge/LinqToDB-6.0.0+-orange)
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.linq2db?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.linq2db?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
 
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
-![LinqToDB 6.0.0+](https://img.shields.io/badge/LinqToDB-6.0.0+-orange)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
@@ -376,7 +377,6 @@ Register the ULID conventions for your `DataOptions` instance using your preferr
 
 ```csharp
 using LinqToDB;
-using LinqToDB.Mapping;
 using ByteAether.Ulid.LinqToDB;
 
 var options = new DataOptions()
