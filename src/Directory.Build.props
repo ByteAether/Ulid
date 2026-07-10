@@ -27,6 +27,22 @@
     <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)' == 'CI-Release'"><Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+
+    <PublishRelease>true</PublishRelease>
+    <PackRelease>true</PackRelease>
+
+    <RuntimeIdentifierGraphPath Condition="'$(RuntimeIdentifierGraphPath)' == ''"></RuntimeIdentifierGraphPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'CI-Debug'">
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\assets\logo.png" Pack="true" PackagePath="\" Visible="false" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\LICENSE" />

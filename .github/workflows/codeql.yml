@@ -52,10 +52,10 @@ jobs:
       - name: Build the code
         run: |
           # Restore dependencies and build the C# project
-          dotnet restore src/Ulid/Impl.csproj
-          dotnet restore src/EFCore/EFCore.Impl.csproj
-          dotnet build --no-incremental --configuration Release src/Ulid/Impl.csproj
-          dotnet build --no-incremental --configuration Release src/EFCore/EFCore.Impl.csproj
+          dotnet restore src/Ulid/Impl.csproj --configuration CI-Release
+          dotnet restore src/EFCore/EFCore.Impl.csproj --configuration CI-Release
+          dotnet build src/Ulid/Impl.csproj --configuration CI-Release --no-incremental
+          dotnet build src/EFCore/EFCore.Impl.csproj --configuration CI-Release --no-incremental
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
