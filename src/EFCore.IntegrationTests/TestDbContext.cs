@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -14,6 +15,7 @@ public class RelatedChildEntity
 {
 	public int Id { get; set; }
 	public Ulid ParentSystemUlid { get; set; } // Foreign Key mapped to the ULID
+	[MaxLength(256)]
 	public string Description { get; set; } = string.Empty;
 }
 

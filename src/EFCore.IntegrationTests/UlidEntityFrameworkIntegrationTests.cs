@@ -177,7 +177,7 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    context.ChangeTracker.Clear();
 
 	    // Strategy: Include null directly inside the searchable target criteria collection
-	    var searchCriteria = new Ulid?[] { targetUlid, null };
+	    var searchCriteria = new Ulid?[] { targetUlid, null }.AsEnumerable();
 
 	    // Act
 	    var results = await context.TestEntities
