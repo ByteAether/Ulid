@@ -1,6 +1,5 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 
 namespace ByteAether.Ulid.EntityFrameworkCore.IntegrationTests;
 

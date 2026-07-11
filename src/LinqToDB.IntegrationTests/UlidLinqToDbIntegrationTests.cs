@@ -3,7 +3,6 @@ using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using Microsoft.Data.Sqlite;
-using Xunit;
 
 namespace ByteAether.Ulid.LinqToDB.IntegrationTests;
 

@@ -8,14 +8,6 @@
     <RootNamespace>ByteAether.Ulid.Benchmarks</RootNamespace>
   </PropertyGroup>
 
-  <Target Name="SkipBenchmarkOnCI" BeforeTargets="BeforeBuild;Build;Restore" Condition="'$(IsCIBuild)' == 'true'">
-    <PropertyGroup>
-      <DesignTimeBuild>true</DesignTimeBuild>
-      <BuildingProject>false</BuildingProject>
-    </PropertyGroup>
-    <Message Importance="high" Text="Skipping benchmark project compilation for CI loop." />
-  </Target>
-
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageReference Include="NetUlid" Version="2.1.0" />
