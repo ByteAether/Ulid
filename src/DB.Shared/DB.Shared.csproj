@@ -18,4 +18,8 @@
     <Compile Include="..\Compatibility\**\*.cs" Link="Compatibility\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.9" />
+  </ItemGroup>
+
 </Project>
