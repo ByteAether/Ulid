@@ -8,12 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="linq2db">
-      <HintPath>..\..\..\..\.cache\nuget_packages\linq2db\5.0.0\lib\net6.0\linq2db.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0'"/>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" Condition="'$(TargetFramework)' != 'net6.0' And '$(TargetFramework)' != 'net7.0'"/>
 
