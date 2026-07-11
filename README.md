@@ -39,6 +39,8 @@ ULID addresses this by design, mandating strict lexicographical sortability and 
 
 ## Features
 
+This library explicitly **multi-targets** each runtime version listed below, enabling native optimizations, zero-allocation memory abstractions, and performance benefits tailored specifically to each target platform.
+
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
@@ -397,10 +399,8 @@ var options = new DataOptions()
 
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
-![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
-![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
-![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
+![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-green)
 
 To integrate with [Dapper](https://github.com/DapperLib/Dapper), install the specialized extension package:
 
