@@ -1,0 +1,20 @@
+changelog:
+  categories:
+    - title: "⚠️ BREAKING CHANGES / MIGRATION WARNINGS"
+      labels:
+        - breaking-change
+    - title: "ByteAether.Ulid"
+      labels:
+        - pkg:Ulid
+    - title: "ByteAether.Ulid.EntityFrameworkCore"
+      labels:
+        - pkg:EFCore
+    - title: "ByteAether.Ulid.linq2db"
+      labels:
+        - pkg:LinqToDB
+    - title: "ByteAether.Ulid.Dapper"
+      labels:
+        - pkg:Dapper
+    - title: "Other"
+      labels:
+        - "*" # Catch-all for PRs that don't match the package labels above
