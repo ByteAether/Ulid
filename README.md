@@ -365,10 +365,8 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
-![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
-![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
-![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
+![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-green)
 
 To integrate with [LinqToDB](https://github.com/linq2db/linq2db), install the specialized extension package:
 
