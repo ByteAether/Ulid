@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
+    <OutputType>library</OutputType>
+    <IsAotCompatible>true</IsAotCompatible>
+    <NoWarn>NU1903</NoWarn>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Title>ByteAether.Ulid.Dapper - High-Performance ULID Type Handlers for Dapper</Title>
+    <Description>Official Dapper extension for ByteAether.Ulid. Provides seamless global mapping of Ulid and nullable Ulid properties to database columns using flexible storage strategies (String, Binary, Guid, and SqlServerGuid). Optimized for index-backed time range queries and Native AOT compatibility.</Description>
+
+    <PackageId>ByteAether.Ulid.Dapper</PackageId>
+    <PackageTags>ulid;dapper;micro-orm;database;primary-key;type-handler;sqlserver;postgres;sqlite;guid;csharp</PackageTags>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+
+    <RootNamespace>ByteAether.Ulid.Dapper</RootNamespace>
+    <AssemblyName>ByteAether.Ulid.Dapper</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DB.Shared\DB.Shared.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\Ulid\Impl.csproj" PrivateAssets="None" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

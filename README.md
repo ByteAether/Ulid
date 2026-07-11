@@ -58,8 +58,9 @@ ULID addresses this by design, mandating strict lexicographical sortability and 
 - **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
 
 ### Extension Packages
-* **[ByteAether.Ulid.EntityFrameworkCore](#ef-core-integration--byteaetherulidentityframeworkcore)**: Dedicated Entity Framework Core integration providing specialized storage formats (`String`, `Binary`, `Guid`, and `SqlServerGuid`).
-* **[ByteAether.Ulid.linq2db](#linqtodb-integration--byteaetherulidlinq2db)**: Official LinqToDB integration supporting global type mappings and optimized storage schemes (`String`, `Binary`, `Guid`, and `SqlServerGuid`).
+* **[ByteAether.Ulid.EntityFrameworkCore](#ef-core-integration--byteaetherulidentityframeworkcore)**: Dedicated Entity Framework Core integration package supporting global and per-property type mappings and optimized storage schemes (`String`, `Binary`, `Guid`, and `SqlServerGuid`).
+* **[ByteAether.Ulid.linq2db](#linqtodb-integration--byteaetherulidlinq2db)**: Dedicated LinqToDB integration package supporting global type mappings and optimized storage schemes (`String`, `Binary`, `Guid`, and `SqlServerGuid`).
+* **[ByteAether.Ulid.Dapper](#dapper-integration--byteaetheruliddapper)**: Dedicated Dapper integration package supporting global type mappings and optimized storage schemes (`String`, `Binary`, `Guid`, and `SqlServerGuid`).
 
 These features collectively make **ByteAether.Ulid** a robust and efficient choice for managing unique identifiers in your .NET applications.
 
@@ -193,7 +194,7 @@ The `Ulid` implementation provides the following properties and methods:
 - `Ulid.New(ReadOnlySpan<byte> bytes)`\
   Creates a ULID from an existing byte array.
 - `Ulid.New(Guid guid)`\
-  Create from existing `Guid`.
+  Create from an existing `Guid`.
 - `Ulid.MinAt(DateTimeOffset datetime)`\
   Creates the minimum possible ULID value for the specified `DateTimeOffset`.
 - `Ulid.MinAt(long timestamp)`\
@@ -387,73 +388,54 @@ var options = new DataOptions()
     .RegisterUlid(UlidStorageFormat.Binary);
 ```
 
-### Dapper Integration
-To use ULIDs with Dapper, you can create a custom **TypeHandler** to convert between `Ulid` and `byte[]`. Here's how to set it up:
+### [Dapper](https://github.com/DapperLib/Dapper) Integration – ByteAether.Ulid.Dapper
 
-#### 1. Create the ULID Type Handler
+[![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
+![Dapper 2.0.0+](https://img.shields.io/badge/Dapper-2.0.0+-orange)
+[![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.Dapper?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.Dapper/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.Dapper?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.Dapper/)
+
+![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
+![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
+![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
+![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
+![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
+![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
+
+To integrate with [Dapper](https://github.com/DapperLib/Dapper), install the specialized extension package:
+
+```sh
+dotnet add package ByteAether.Ulid.Dapper
+```
+
+Call `DapperUlid.RegisterUlid()` during application startup (e.g., in `Program.cs`) before executing database queries. You can choose from various underlying storage formats (`String`, `Binary`, `Guid`, or `SqlServerGuid`):
+
 ```csharp
-using Dapper;
-using System.Data;
+using ByteAether.Ulid.Dapper;
 
-public class UlidTypeHandler : SqlMapper.TypeHandler<Ulid>
+// Registers the mapping globally for both Ulid and Ulid? types.
+// Supports: UlidStorageFormat.String (Default), Binary, Guid, and SqlServerGuid
+DapperUlid.RegisterUlid(UlidStorageFormat.Binary);
+```
+
+Once registered, queries executing via Dapper parameters or multi-mapping configurations translate fields automatically:
+
+```csharp
+public class User
 {
-    public override void SetValue(IDbDataParameter parameter, Ulid value)
-    {
-        parameter.Value = value.ToByteArray();
-    }
-    
-    public override Ulid Parse(object value)
-    {
-        return Ulid.New((byte[])value);
-    }
+    public int Id { get; set; }
+    public Ulid AccountId { get; set; }
+    public Ulid? ManagedById { get; set; }
 }
-```
-#### 2. Register the Type Handler
-After creating the `UlidTypeHandler`, you need to register it with Dapper. You can do this during application startup (e.g., in the `Main` method or `ConfigureServices` for ASP.NET Core).
-```csharp
-Dapper.SqlMapper.AddTypeHandler(new UlidTypeHandler());
-```
-### MessagePack Integration
-To use ULIDs with **MessagePack**, you can create a custom **MessagePackResolver** to handle the serialization and deserialization of `Ulid` as `byte[]`. Here's how to set it up:
 
-#### 1. Create the Custom Formatter
-
-First, create a custom formatter for `Ulid` to handle its conversion to and from `byte[]`:
-```csharp
-using MessagePack;
-using MessagePack.Formatters;
-
-public class UlidFormatter : IMessagePackFormatter<Ulid>
-{
-    public Ulid Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
-    {
-        var bytes = reader.ReadByteArray();
-        return Ulid.New(bytes);
-    }
-    
-    public void Serialize(ref MessagePackWriter writer, Ulid value, MessagePackSerializerOptions options)
-    {
-        writer.Write(value.ToByteArray());
-    }
-}
-```
-#### 2. Register the Formatter
-
-Once the `UlidFormatter` is created, you need to register it with the `MessagePackSerializer` to handle the `Ulid` type.
-```csharp
-MessagePack.Resolvers.CompositeResolver.Register(
-    new IMessagePackFormatter[] { new UlidFormatter() },
-    MessagePack.Resolvers.StandardResolver.GetFormatterWithVerify<Ulid>()
+var user = connection.QueryFirstOrDefault<User>(
+    "SELECT * FROM Users WHERE AccountId = @Id", 
+    new { Id = myUlid }
 );
 ```
-Alternatively, you can register the formatter globally when configuring MessagePack options:
-```csharp
-MessagePackSerializer.DefaultOptions = MessagePackSerializer.DefaultOptions
-    .WithResolver(MessagePack.Resolvers.CompositeResolver.Create(
-        new IMessagePackFormatter[] { new UlidFormatter() },
-        MessagePack.Resolvers.StandardResolver.Instance
-    ));
-```
+
+> ⚠️ **Note**: Dapper maps .NET types globally via a 1:1 scheme (`Type` → `TypeHandler`). You can choose exactly one global strategy for your application lifecycle. You cannot use different formats across distinct tables within the same runtime.
+
 ### Newtonsoft.Json Integration
 
 To use ULIDs with **Newtonsoft.Json**, you need to create a custom **JsonConverter** to handle the serialization and deserialization of ULID values. Here's how to set it up:

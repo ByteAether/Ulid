@@ -23,6 +23,7 @@ jobs:
         src/Ulid/Impl.csproj
         src/EFCore/EFCore.Impl.csproj
         src/LinqToDB/LinqToDB.Impl.csproj
+        src/Dapper/Dapper.Impl.csproj
 
     permissions:
       actions: read          # Allow GitHub Actions to read workflow files
