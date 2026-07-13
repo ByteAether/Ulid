@@ -356,6 +356,8 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 }
 ```
 
+More details in the package's [PACKAGE.md](./src/EFCore/PACKAGE.md) file.
+
 ### [LinqToDB](https://github.com/linq2db/linq2db) Integration – ByteAether.Ulid.linq2db
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
@@ -388,6 +390,8 @@ var options = new DataOptions()
     .RegisterUlid(UlidStorageFormat.Binary);
 ```
 
+More details in the package's [PACKAGE.md](./src/LinqToDB/PACKAGE.md) file.
+
 ### [Dapper](https://github.com/DapperLib/Dapper) Integration – ByteAether.Ulid.Dapper
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
@@ -416,23 +420,9 @@ using ByteAether.Ulid.Dapper;
 DapperUlid.RegisterUlid(UlidStorageFormat.Binary);
 ```
 
-Once registered, queries executing via Dapper parameters or multi-mapping configurations translate fields automatically:
-
-```csharp
-public class User
-{
-    public int Id { get; set; }
-    public Ulid AccountId { get; set; }
-    public Ulid? ManagedById { get; set; }
-}
-
-var user = connection.QueryFirstOrDefault<User>(
-    "SELECT * FROM Users WHERE AccountId = @Id", 
-    new { Id = myUlid }
-);
-```
-
 > ⚠️ **Note**: Dapper maps .NET types globally via a 1:1 scheme (`Type` → `TypeHandler`). You can choose exactly one global strategy for your application lifecycle. You cannot use different formats across distinct tables within the same runtime.
+
+More details in the package's [PACKAGE.md](./src/Dapper/PACKAGE.md) file.
 
 ### Newtonsoft.Json Integration
 
