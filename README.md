@@ -29,9 +29,9 @@ ULIDs (Universally Unique Lexicographically Sortable Identifiers) offer a modern
 
 ### Resilient Concurrency & Monotonic Overflow Handling
 
-During high-throughput transaction bursts within the same millisecond, the 80-bit random component of a ULID can saturate. Traditional libraries respond to this saturation by throwing an `OverflowException`, halting operations. ByteAether.Ulid implementation introduces a resilient, non-blocking strategy: when the random segment saturates, it gracefully increments the millisecond timestamp component instead.
+During high-throughput transaction bursts within the same millisecond, the 80-bit random component of a ULID can saturate. Traditional libraries respond to this saturation by throwing an `OverflowException` to protect strict timestamp boundaries. ByteAether.Ulid introduces a non-blocking alternative: when the 80-bit random segment saturates during a high-throughput burst within a single millisecond, it gracefully increments the millisecond timestamp component instead of throwing. This ensures uninterrupted ID generation under extreme local load.
 
-While this continuous generation introduces a micro-scale internal clock drift localized strictly to the executing instance, the drift remains well below standard network latency and NTP synchronization tolerances. This behavior fully aligns with the architectural workarounds established in [ULID specification issue #39](https://github.com/ulid/spec/issues/39#issuecomment-2252145597).
+While this introduces a micro-scale timestamp adjustment localized strictly to the executing instance, the system clock catches up immediately once the burst subsides. The drift remains well within standard network latency boundaries and aligns with the workarounds in [ULID specification issue #39](https://github.com/ulid/spec/issues/39#issuecomment-2252145597).
 
 ### Mitigating Enumeration Attacks
 
@@ -39,11 +39,11 @@ Monotonic identifiers generated in rapid succession can expose predictable seque
 
 ### ULID vs UUIDv7
 
-While modern standards like UUIDv7 introduce timestamp-based sorting, [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562#name-monotonicity-and-counters) treats sub-millisecond monotonicity as strictly optional. [The native .NET UUIDv7 provider (`Guid.CreateVersion7`)](https://github.com/dotnet/runtime/blob/571b044582ceb7fe426b7f143c703064aa9ea4db/src/libraries/System.Private.CoreLib/src/System/Guid.cs#L306) uses random bits within the sub-millisecond payload rather than a strict sequential counter, which sacrifices true chronological ordering under heavy bursts.
+While modern standards like UUIDv7 introduce timestamp-based sorting, [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562#name-monotonicity-and-counters) treats sub-millisecond monotonicity as optional. [The native .NET UUIDv7 provider (`Guid.CreateVersion7`)](https://github.com/dotnet/runtime/blob/571b044582ceb7fe426b7f143c703064aa9ea4db/src/libraries/System.Private.CoreLib/src/System/Guid.cs#L306) uses random bits within the sub-millisecond payload rather than a strict sequential counter, sacrificing true chronological ordering under heavy bursts.
 
 Furthermore, using .NET's native `Guid` structures for sequential IDs introduces severe endianness conflicts. Because `System.Guid` utilizes a legacy mixed-endian internal structure, most standard database providers serialize this raw memory layout directly to disk without adjustment. This scrambles the big-endian timestamp layout, completely breaking chronological index sorting. For engines with highly rigid index layouts like Microsoft SQL Server, time-first structures natively conflict with [custom `uniqueidentifier` indexing order](https://learn.microsoft.com/en-us/dotnet/api/system.data.sqltypes.sqlguid.compareto?view=net-10.0#remarks), triggering catastrophic page fragmentation.
 
-ULID corrects this by mandating big-endian, strict lexicographical sortability directly at the specification level. To bridge the gap between application performance and storage persistence, **ByteAether.Ulid** features optimized storage strategies (`String`, `Binary`, `Guid`, and `SqlServerGuid`) across major ORMs. This ensures your application maintains perfect index allocations and deterministic sorting whether targeting PostgreSQL, MS SQL Server, MySQL, or SQLite.
+**ByteAether.Ulid** corrects this by mandating big-endian, strict lexicographical sortability directly at the specification level. It features optimized storage strategies (`String`, `Binary`, `Guid`, and `SqlServerGuid`) across major ORMs to maintain perfect index allocations and deterministic sorting whether targeting PostgreSQL, MS SQL Server, MySQL, or SQLite.
 
 ## ✨ Features
 
@@ -68,12 +68,12 @@ This library explicitly **multi-targets** each runtime version listed below, ena
 - **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
 
 ### Extension Packages
-* 📦 **[ByteAether.Ulid.EntityFrameworkCore](#ef-core-integration--byteaetherulidentityframeworkcore)**
-  `dotnet add package ByteAether.Ulid.EntityFrameworkCore`
-* 📦 **[ByteAether.Ulid.linq2db](#linqtodb-integration--byteaetherulidlinq2db)**
-  `dotnet add package ByteAether.Ulid.linq2db`
-* 📦 **[ByteAether.Ulid.Dapper](#dapper-integration--byteaetheruliddapper)**
-  `dotnet add package ByteAether.Ulid.Dapper`
+* 📦 **[Entity Framework Core](#ef-core-integration--byteaetherulidentityframeworkcore)**
+  `ByteAether.Ulid.EntityFrameworkCore`
+* 📦 **[LinqToDB](#linqtodb-integration--byteaetherulidlinq2db)**
+  `ByteAether.Ulid.linq2db`
+* 📦 **[Dapper](#dapper-integration--byteaetheruliddapper)**
+  `ByteAether.Ulid.Dapper`
 
 These features collectively make **ByteAether.Ulid** a robust and efficient choice for managing unique identifiers in your .NET applications.
 
@@ -136,6 +136,7 @@ var query = "SELECT * FROM Records WHERE Id >= @Min AND Id <= @Max";
 
 > [!IMPORTANT]
 > **Database Persistence Considerations**
+> 
 > While range evaluations remain consistent for in-memory object graphs, executing these queries against a relational database introduces critical persistence dependencies:
 > * **Storage Format & Byte Order**: Certain database engines and native UUID data types utilize mixed-endian byte layouts. If a ULID is persisted using a strategy that reorders its raw big-endian bytes, chronological sorting behavior will diverge between the application and the database server.
 > * **Index & Query Integrity**: Mismatches between the database engine's native sorting rules and the chosen storage format can result in broken data retrieval, bypassed indexes, or incorrect query results during database-side range operations (`>=`, `<=`) and `ORDER BY` execution.
@@ -432,7 +433,7 @@ DapperUlid.RegisterUlid(UlidStorageFormat.Binary);
 ```
 
 > [!NOTE]
-> Dapper maps .NET types globally via a 1:1 scheme (`Type` → `TypeHandler`). You can choose exactly one global strategy for your application lifecycle. You cannot use different formats across distinct tables within the same runtime.
+> Dapper maps .NET types globally via a 1:1 scheme (`Type` → `TypeHandler`). You must choose a single global storage strategy for your entire application lifecycle. Mixing different formats (e.g., `String` and `Binary`) across distinct tables within the same runtime instance is not supported.
 
 More details in the package's [PACKAGE.md](./src/Dapper/PACKAGE.md) file.
 
