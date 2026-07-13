@@ -10,7 +10,7 @@ An official extension package for `ByteAether.Ulid`, providing seamless integrat
 
 For the core library and full details, visit our [GitHub repository](https://github.com/ByteAether/Ulid).
 
-## Features
+## ✨ Features
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
@@ -26,14 +26,14 @@ For the core library and full details, visit our [GitHub repository](https://git
     - `Guid`: Native UUID format (ideal for PostgreSQL `uuid`).
     - `SqlServerGuid`: Shuffled SQL Server sequential `uniqueidentifier` to maintain native index sorting properties.
 
-## Installation
+## 💾 Installation
 
 Install the stable package via NuGet:
 ```sh
 dotnet add package ByteAether.Ulid.EntityFrameworkCore
 ```
 
-## Usage
+## 🚀 Usage
 
 Override the `ConfigureConventions` method in your `DbContext` to register the type mappings across all entities:
 
@@ -91,14 +91,15 @@ All storage formats are technically supported, but their ability to maintain chr
   * **Constraint**: This format **only** works as intended if the underlying column is typed as `uniqueidentifier`. Storing it as `BINARY(16)` or `VARCHAR` will break sorting.
   * **Trade-off**: This internal byte reordering sacrifices cross-database compatibility (e.g., migrating data to PostgreSQL or SQLite) in exchange for raw SQL Server index performance.
 
-> **CRITICAL**: Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's sorting behavior will result in broken data retrieval and missed records.
+> [!CAUTION]
+> Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's sorting behavior will result in broken data retrieval and missed records.
 
-## Native AOT & Trimming Compatibility
+## ⚡ Native AOT & Trimming Compatibility
 
 `ByteAether.Ulid.EntityFrameworkCore` is fully trimmed and annotated for **Native AOT** compilation. It introduces zero reflection or dynamic code generation.
 
 > While this extension package is entirely AOT-safe, your underlying application must still conform to [Entity Framework Core's native AOT constraints](https://learn.microsoft.com/en-us/ef/core/performance/nativeaot-and-precompiled-queries) (such as using EF Core Precompiled Models via `dotnet ef dbcontext optimize`).
 
-## License
+## 📜 License
 
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/ByteAether/Ulid/blob/main/LICENSE) file for details.

@@ -10,7 +10,7 @@ An official extension package for `ByteAether.Ulid`, providing seamless integrat
 
 For the core library and full details, visit our [GitHub repository](https://github.com/ByteAether/Ulid).
 
-## Features
+## ✨ Features
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
@@ -24,14 +24,14 @@ For the core library and full details, visit our [GitHub repository](https://git
 	- `Guid`: Native UUID format (ideal for PostgreSQL `uuid`).
 	- `SqlServerGuid`: Shuffled SQL Server sequential `uniqueidentifier` to maintain native index sorting properties.
 
-## Installation
+## 💾 Installation
 
 Install the stable package via NuGet:
 ```sh
 dotnet add package ByteAether.Ulid.Dapper
 ```
 
-## Usage
+## 🚀 Usage
 
 Call `DapperUlid.RegisterUlid()` during your application's startup lifecycle (e.g., inside `Program.cs` or a global initialization block) before executing any queries:
 
@@ -80,14 +80,15 @@ All storage formats are technically supported, but their ability to maintain chr
 	* **Constraint**: This format **only** works as intended if the underlying column is typed as `uniqueidentifier`. Storing it as `BINARY(16)` or `VARCHAR` will break sorting.
 	* **Trade-off**: This internal byte reordering sacrifices cross-database compatibility (e.g., migrating data to PostgreSQL or SQLite) in exchange for raw SQL Server index performance.
 
-> **CRITICAL**: Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's sorting behavior will result in broken data retrieval and missed records.
+> [!CAUTION]
+> Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's sorting behavior will result in broken data retrieval and missed records.
 
-## Native AOT & Trimming Compatibility
+## ⚡ Native AOT & Trimming Compatibility
 
 `ByteAether.Ulid.Dapper` introduces no runtime reflection, dynamic IL injection, or dynamic code compilation patterns inside its mapping block. The explicit `SqlMapper.TypeHandler<T>` strategy is fully safe for **Native AOT compilation** and trimming.
 
 > Ensure your version of the underlying Dapper framework itself is explicitly configured to support AOT workloads
 
-## License
+## 📜 License
 
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/ByteAether/Ulid/blob/main/LICENSE) file for details.

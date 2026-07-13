@@ -10,7 +10,7 @@ An official extension package for `ByteAether.Ulid`, providing seamless integrat
 
 For the core library and full details, visit our [GitHub repository](https://github.com/ByteAether/Ulid).
 
-## Features
+## ✨ Features
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
@@ -24,7 +24,7 @@ For the core library and full details, visit our [GitHub repository](https://git
 	- `Guid`: Native UUID format (mapped to `DataType.Guid`).
 	- `SqlServerGuid`: Shuffled sequential `uniqueidentifier` optimized to maintain index sorting properties inside Microsoft SQL Server.
 
-## Installation
+## 💾 Installation
 
 Install the stable package via NuGet:
 
@@ -32,7 +32,7 @@ Install the stable package via NuGet:
 dotnet add package ByteAether.Ulid.linq2db
 ```
 
-## Usage
+## 🚀 Usage
 
 Call the `RegisterUlid` extension method on your `DataOptions` instance to register the type mappings across your LinqToDB queries:
 
@@ -56,16 +56,17 @@ All storage formats are technically supported, but their ability to maintain chr
 
 * **Globally Safe (`String` and `Binary`)**: These formats preserve the raw left-to-right chronological order of ULIDs natively across all database engines (SQLite, PostgreSQL, SQL Server, etc.).
 * **Provider Dependent (`Guid`)**: Standard `.NET Guid` structures use a mixed-endian layout.
-	* **PostgreSQL**: Supported. The connection driver automatically corrects the endianness when mapping to native `uuid` columns, preserving chronological sorting.
-	* **SQLite / Others**: Incompatible for range queries. These engines store GUIDs as raw byte streams, meaning the mixed-endian layout will scramble chronological comparison (though **equality operations remain fully functional**).
+    * **PostgreSQL**: Supported. The connection driver automatically corrects the endianness when mapping to native `uuid` columns, preserving chronological sorting.
+    * **SQLite / Others**: Incompatible for range queries. These engines store GUIDs as raw byte streams, meaning the mixed-endian layout will scramble chronological comparison (though **equality operations remain fully functional**).
 * **SQL Server Specific (`SqlServerGuid`)**: This format explicitly optimizes byte shuffling for Microsoft SQL Server's unique sequential indexing rules. It should **only** be paired with SQL Server if range operations are required.
 
-> **CRITICAL**: Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's sorting behavior will result in broken data retrieval and missed records.
+> [!CAUTION]
+> Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's sorting behavior will result in broken data retrieval and missed records.
 
-## Native AOT & Trimming Compatibility
+## ⚡ Native AOT & Trimming Compatibility
 
 `ByteAether.Ulid.linq2db` is fully trimmed and annotated for **Native AOT** compilation. It introduces zero reflection or dynamic code generation.
 
-## License
+## 📜 License
 
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/ByteAether/Ulid/blob/main/LICENSE) file for details.
