@@ -23,7 +23,7 @@ A high-performance, fully compliant .NET implementation of ULIDs (Universally Un
 
 ## 📖 Introduction
 
-<img align="right" width="100px" src="assets/logo_ulid.png" />
+[<img align="right" width="100px" src="assets/logo_ulid.png" />](https://www.nuget.org/packages/ByteAether.Ulid/)
 
 ULIDs (Universally Unique Lexicographically Sortable Identifiers) offer a modern, human-readable alternative to traditional GUIDs, optimized specifically for distributed systems and time-ordered data. **ByteAether.Ulid** delivers a high-performance, specification-compliant .NET implementation engineered to resolve critical concurrency and persistence edge cases left unaddressed by alternative libraries.
 
@@ -489,6 +489,49 @@ settings.Converters.Add(new UlidJsonConverter());
 var json = JsonConvert.SerializeObject(myObject, settings);
 var deserializedObject = JsonConvert.DeserializeObject<MyObject>(json, settings);
 ```
+
+### MessagePack Integration
+To use ULIDs with **MessagePack**, you can create a custom **MessagePackResolver** to handle the serialization and deserialization of `Ulid` as `byte[]`. Here's how to set it up:
+
+#### 1. Create the Custom Formatter
+
+First, create a custom formatter for `Ulid` to handle its conversion to and from `byte[]`:
+```csharp
+using MessagePack;
+using MessagePack.Formatters;
+
+public class UlidFormatter : IMessagePackFormatter<Ulid>
+{
+	public Ulid Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+	{
+		var bytes = reader.ReadByteArray();
+		return Ulid.New(bytes);
+	}
+
+	public void Serialize(ref MessagePackWriter writer, Ulid value, MessagePackSerializerOptions options)
+	{
+		writer.Write(value.ToByteArray());
+	}
+}
+```
+#### 2. Register the Formatter
+
+Once the `UlidFormatter` is created, you need to register it with the `MessagePackSerializer` to handle the `Ulid` type.
+```csharp
+MessagePack.Resolvers.CompositeResolver.Register(
+	new IMessagePackFormatter[] { new UlidFormatter() },
+	MessagePack.Resolvers.StandardResolver.GetFormatterWithVerify<Ulid>()
+);
+```
+Alternatively, you can register the formatter globally when configuring MessagePack options:
+```csharp
+MessagePackSerializer.DefaultOptions = MessagePackSerializer.DefaultOptions
+	.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(
+		new IMessagePackFormatter[] { new UlidFormatter() },
+		MessagePack.Resolvers.StandardResolver.Instance
+	));
+```
+
 ## 📊 Benchmarking
 
 Benchmarking was performed using [BenchmarkDotNet](https://github.com/dotnet/BenchmarkDotNet) to demonstrate the performance and efficiency of this ULID implementation. Comparisons include [NetUlid](https://github.com/ultimicro/netulid) 2.1.0, [Ulid](https://github.com/Cysharp/Ulid) 1.4.1, [NUlid](https://github.com/RobThree/NUlid) 1.7.3, and `Guid` for overlapping functionalities like creation, parsing, and byte conversions.
