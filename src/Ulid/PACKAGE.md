@@ -9,7 +9,7 @@ A high-performance, fully compliant .NET implementation of ULIDs (Universally Un
 
 For more detailed documentation, visit our [GitHub repository](https://github.com/ByteAether/Ulid).
 
-## Features
+## ✨ Features
 
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
@@ -26,10 +26,10 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 - **Lock-Free Synchronization**: Monotonic generation utilizes a high-performance, **lock-free compare-and-exchange (CAS)** approach.
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
-- **Ahead-of-Time (AoT) Compilation Compatible**: Fully compatible with AoT compilation for improved startup performance and smaller binary sizes.
+- **Ahead-of-Time (AOT) Compilation Compatible**: Fully compatible with AOT compilation for improved startup performance and smaller binary sizes.
 - **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
 
-## Installation
+## 💾 Installation
 
 Install the latest stable package via NuGet:
 ```sh
@@ -40,7 +40,7 @@ To install a specific [preview version](https://www.nuget.org/packages/ByteAethe
 dotnet add package ByteAether.Ulid --version <VERSION_NUMBER>
 ```
 
-## Usage
+## 🚀 Usage
 
 Here is a basic example of how to use the ULID implementation:
 ```csharp
@@ -65,7 +65,7 @@ var ulidFromString = Ulid.Parse(ulidString);
 Console.WriteLine($"ULID: {ulid}, GUID: {guid}, String: {ulidString}");
 ```
 
-## API
+## ⚙️ API
 
 The `Ulid` implementation provides the following properties and methods:
 
@@ -174,7 +174,7 @@ This library comes with two default `IRandomProvider` implementations:
 
 Custom `IRandomProvider` implementations can also be created.
 
-## Integration with Other Libraries
+## 🔌 Integration with Other Libraries
 
 ### ASP.NET Core
 
@@ -188,7 +188,7 @@ Includes a `JsonConverter` for easy serialization and deserialization.
 
 Check out [README in GitHub repository](https://github.com/ByteAether/Ulid/blob/main/README.md) for examples to integrate with Entity Framework Core, Dapper, MessagePack, and Newtonsoft.Json.
 
-## Prior Art
+## 🏛️ Prior Art
 
 Much of this implementation is either based on or inspired by existing works. This library is standing on the shoulders of giants.
 
@@ -198,6 +198,6 @@ Much of this implementation is either based on or inspired by existing works. Th
   * [Official ULID specification](https://github.com/ulid/spec)
   * [Crockford's Base32](https://www.crockford.com/base32.html)
 
-## License
+## 📜 License
 
 This project is licensed under the MIT License. See the [LICENSE](https://github.com/ByteAether/Ulid/blob/main/LICENSE) file for details.
