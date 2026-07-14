@@ -24,7 +24,7 @@
     <PackageReleaseNotes>See $(RepositoryUrl)/releases/tag/v$(PackageVersion)</PackageReleaseNotes>
 
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageIcon>logo.png</PackageIcon>
+
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'CI-Release'"><Optimize>true</Optimize>
@@ -44,7 +44,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\assets\logo.png" Pack="true" PackagePath="\" Visible="false" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\LICENSE" />
   </ItemGroup>
 

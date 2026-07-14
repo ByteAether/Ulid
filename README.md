@@ -1,4 +1,4 @@
-# ![ULID from ByteAether](assets/header.png)
+# ![ULID from ByteAether](assets/header_ulid.png)
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid/)
@@ -23,7 +23,7 @@ A high-performance, fully compliant .NET implementation of ULIDs (Universally Un
 
 ## 📖 Introduction
 
-<img align="right" width="100px" src="assets/logo.png" />
+<img align="right" width="100px" src="assets/logo_ulid.png" />
 
 ULIDs (Universally Unique Lexicographically Sortable Identifiers) offer a modern, human-readable alternative to traditional GUIDs, optimized specifically for distributed systems and time-ordered data. **ByteAether.Ulid** delivers a high-performance, specification-compliant .NET implementation engineered to resolve critical concurrency and persistence edge cases left unaddressed by alternative libraries.
 
@@ -309,6 +309,9 @@ Supports seamless integration as a route or query parameter with built-in `TypeC
 Includes a `JsonConverter` for easy serialization and deserialization.
 
 ### [EF Core](https://github.com/dotnet/efcore) Integration – ByteAether.Ulid.EntityFrameworkCore
+
+[<img align="right" width="100px" src="assets/logo_ulid_efcore.png" />](https://www.nuget.org/packages/ByteAether.Ulid.EntityFrameworkCore/)
+
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
 ![Entity Framework Core 6.0.0+](https://img.shields.io/badge/Entity_Framework_Core-6.0.0+-orange)
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.EntityFrameworkCore?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.EntityFrameworkCore/)
@@ -372,6 +375,8 @@ More details in the package's [PACKAGE.md](./src/EFCore/PACKAGE.md) file.
 
 ### [LinqToDB](https://github.com/linq2db/linq2db) Integration – ByteAether.Ulid.linq2db
 
+[<img align="right" width="100px" src="assets/logo_ulid_linq2db.png" />](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
+
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
 ![LinqToDB 6.0.0+](https://img.shields.io/badge/LinqToDB-6.0.0+-orange)
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.linq2db?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.linq2db/)
@@ -405,6 +410,8 @@ var options = new DataOptions()
 More details in the package's [PACKAGE.md](./src/LinqToDB/PACKAGE.md) file.
 
 ### [Dapper](https://github.com/DapperLib/Dapper) Integration – ByteAether.Ulid.Dapper
+
+[<img align="right" width="100px" src="assets/logo_ulid_dapper.png" />](https://www.nuget.org/packages/ByteAether.Ulid.Dapper/)
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
 ![Dapper 2.0.0+](https://img.shields.io/badge/Dapper-2.0.0+-orange)

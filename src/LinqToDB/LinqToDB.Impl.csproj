@@ -12,6 +12,7 @@
     <Description>Official LinqToDB extension for ByteAether.Ulid. Provides seamless mapping of Ulid and nullable Ulid properties to database columns using flexible storage strategies (String, Binary, Guid, and SqlServerGuid). Optimized for index-backed time range queries and Native AOT compatibility.</Description>
 
     <PackageId>ByteAether.Ulid.linq2db</PackageId>
+    <PackageIcon>logo_ulid_linq2db.png</PackageIcon>
     <PackageTags>ulid;linq2db;linqtodb;database;primary-key;value-converter;mapping;sqlserver;postgres;guid;csharp</PackageTags>
     <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
 
@@ -29,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\assets\logo_ulid_linq2db.png" Pack="true" PackagePath="\" Visible="false" />
     <None Include="PACKAGE.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>

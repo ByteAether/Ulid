@@ -13,6 +13,7 @@
     <Description>Official Dapper extension for ByteAether.Ulid. Provides seamless global mapping of Ulid and nullable Ulid properties to database columns using flexible storage strategies (String, Binary, Guid, and SqlServerGuid). Optimized for index-backed time range queries and Native AOT compatibility.</Description>
 
     <PackageId>ByteAether.Ulid.Dapper</PackageId>
+    <PackageIcon>logo_ulid_dapper.png</PackageIcon>
     <PackageTags>ulid;dapper;micro-orm;database;primary-key;type-handler;sqlserver;postgres;sqlite;guid;csharp</PackageTags>
     <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
 
@@ -30,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\assets\logo_ulid_dapper.png" Pack="true" PackagePath="\" Visible="false" />
     <None Include="PACKAGE.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>

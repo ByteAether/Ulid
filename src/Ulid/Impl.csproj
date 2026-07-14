@@ -13,6 +13,7 @@
     <Description>A fast, spec-compliant ULID (Universally Unique Lexicographically Sortable Identifier) implementation for modern .NET. Optimized for database primary keys, Native AOT, zero-allocation, GUID interoperability, and high-performance serialization.</Description>
 
     <PackageId>ByteAether.Ulid</PackageId>
+    <PackageIcon>logo_ulid.png</PackageIcon>
     <PackageTags>ulid;id;uuid;guid;id-generator;unique-id;aot-ready;efcore;dotnet;csharp</PackageTags>
     <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
 
@@ -34,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\assets\logo_ulid.png" Pack="true" PackagePath="\" Visible="false" />
     <None Include="PACKAGE.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
