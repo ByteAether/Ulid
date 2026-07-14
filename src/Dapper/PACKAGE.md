@@ -1,4 +1,4 @@
-# ULID [Dapper](https://github.com/DapperLib/Dapper) Integration
+# ULID Integration for Dapper
 *from ByteAether*
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)

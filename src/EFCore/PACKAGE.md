@@ -1,4 +1,4 @@
-# ULID [Entity Framework Core](https://github.com/dotnet/efcore) Integration
+# ULID Integration for Entity Framework Core
 *from ByteAether*
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)

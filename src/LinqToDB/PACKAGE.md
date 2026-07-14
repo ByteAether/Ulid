@@ -1,4 +1,4 @@
-# ULID [LinqToDB](https://github.com/linq2db/linq2db) Integration
+# ULID Integration for LinqToDB
 *from ByteAether*
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
