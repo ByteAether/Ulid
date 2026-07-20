@@ -23,7 +23,7 @@ public readonly partial struct Ulid
 	/// Represents the maximum possible value for a ULID.
 	/// </summary>
 	/// <remarks>
-	/// The <see cref="Max"/> field is a ULID where all byte components are set to their highest possible value (0xFF).
+	/// The <see cref="MaxValue"/> field is a ULID where all byte components are set to their highest possible value (0xFF).
 	/// It can be used as a sentinel or boundary value in comparison operations or range validations.
 	/// </remarks>
 	public static Ulid MaxValue { get; } = New(Enumerable.Repeat((byte)0xFF, _ulidSize).ToArray());
