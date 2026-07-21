@@ -21,12 +21,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DB.Shared\DB.Shared.csproj" PrivateAssets="All" />
-    <ProjectReference Include="..\Ulid\Impl.csproj" PrivateAssets="None" />
+    <ProjectReference Include="..\DB.Shared\DB.Shared.csproj" />
+    <ProjectReference Include="..\Ulid\Impl.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="linq2db" Version="6.0.0" />
+    <PackageReference Include="linq2db" Version="6.0.0">
+      <PrivateAssets>build;analyzers</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

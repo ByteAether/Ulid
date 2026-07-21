@@ -22,8 +22,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DB.Shared\DB.Shared.csproj" PrivateAssets="All" />
-    <ProjectReference Include="..\Ulid\Impl.csproj" PrivateAssets="None" />
+    <ProjectReference Include="..\DB.Shared\DB.Shared.csproj" />
+    <ProjectReference Include="..\Ulid\Impl.csproj" />
   </ItemGroup>
 
   <ItemGroup>

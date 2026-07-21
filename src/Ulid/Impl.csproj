@@ -26,12 +26,12 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.10" PrivateAssets="All"/>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.10" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" PrivateAssets="All"/>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
   </ItemGroup>
 
   <ItemGroup>
