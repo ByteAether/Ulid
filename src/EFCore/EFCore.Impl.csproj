@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DB.Shared\DB.Shared.csproj" />
+    <ProjectReference Include="..\DB.Shared\DB.Shared.csproj" PrivateAssets="All" />
     <ProjectReference Include="..\Ulid\Impl.csproj" />
   </ItemGroup>
 
@@ -32,6 +32,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.10" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\..\assets\logo_ulid_efcore.png" Pack="true" PackagePath="\" Visible="false" />
     <None Include="PACKAGE.md">
@@ -39,5 +43,16 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
+
+  <PropertyGroup>
+    <!-- Hook custom target to bundle referenced project DLLs into lib/ folders -->
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeReferencedProjectInPackage</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <Target Name="IncludeReferencedProjectInPackage">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(TargetDir)ByteAether.Ulid.DB.Shared.dll" />
+    </ItemGroup>
+  </Target>
 
 </Project>
