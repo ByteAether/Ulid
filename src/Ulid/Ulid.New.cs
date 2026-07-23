@@ -161,23 +161,6 @@ public readonly partial struct Ulid
 		return ulid;
 	}
 
-	// Separates Lock and LastUlid into different cache lines to prevent "false sharing"
-	// x64 has 64-byte cache lines; ARM64 (e.g., Apple Silicon) has 128-byte cache lines
-	[StructLayout(LayoutKind.Explicit)]
-	private class State
-	{
-		// Cache Line 1
-		[FieldOffset(16)] public LowLatencyLock Lock;
-
-		// Cache Line 2(ARM64)/3(x64)
-#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
-		[FieldOffset(16+128)] public ulong LastUlidPart0;
-		[FieldOffset(16+128+8)] public ulong LastUlidPart1;
-#pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
-	}
-
-	private static readonly State _state = new();
-
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
@@ -202,13 +185,15 @@ public readonly partial struct Ulid
             return;
         }
 
-        ref var lastUlidRef = ref Unsafe.As<ulong, byte>(ref _state.LastUlidPart0);
+        var state = options.CurrentState;
 
-        using(_state.Lock.Enter())
+        ref var lastUlidRef = ref Unsafe.As<ulong, byte>(ref state.LastUlidPart0);
+
+        using(state.Lock.Enter())
         {
 	        // Read the last timestamp (from bytes 0-7 of "last ULID")
             // Shift it to get 48 bits.
-            var lastTime = ReverseOnLittleEndian(_state.LastUlidPart0);
+            var lastTime = ReverseOnLittleEndian(state.LastUlidPart0);
             lastTime >>= 16;
 
             // If the timestamp is bigger than the last one, generate a new ULID
@@ -234,7 +219,7 @@ public readonly partial struct Ulid
 
 	            if (monotonicity == GenerationOptions.MonotonicityOptions.MonotonicIncrement)
 	            {
-		            LastUlidIncrement(0);
+		            state.Increment(0);
 	            }
 	            else
 	            {
@@ -253,41 +238,12 @@ public readonly partial struct Ulid
 		            var mask = (uint)((1UL << totalBitsToKeep) - 1);
 		            increment &= mask;
 
-		            LastUlidIncrement(increment);
+		            state.Increment(increment);
 	            }
 
 	            // Copy full last ULID back to generated ULID
 	            Unsafe.CopyBlock(ref ulidBytesRef, ref lastUlidRef, _ulidSize);
             }
         }
-	}
-
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-	private static void LastUlidIncrement(uint addition)
-	{
-		var increment = (ulong)addition + 1; // carry = 1 is built-in
-		var part1 = ReverseOnLittleEndian(_state.LastUlidPart1);
-		var newPart1 = part1 + increment;
-		_state.LastUlidPart1 = ReverseOnLittleEndian(newPart1);
-
-		if (newPart1 >= part1)
-		{
-			return;
-		}
-
-		var part0 = ReverseOnLittleEndian(_state.LastUlidPart0);
-		part0++;
-		_state.LastUlidPart0 = ReverseOnLittleEndian(part0);
-		if (part0 == 0)
-		{
-			throw new OverflowException("Addition resulted in a ULID value larger than the absolute maximum ULID value.");
-		}
 	}
 }

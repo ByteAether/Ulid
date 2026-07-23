@@ -25,7 +25,7 @@ A high-performance, fully compliant .NET implementation of ULIDs (Universally Un
 
 [<img align="right" width="100px" src="assets/logo_ulid.png" />](https://www.nuget.org/packages/ByteAether.Ulid/)
 
-ULIDs (Universally Unique Lexicographically Sortable Identifiers) offer a modern, human-readable alternative to traditional GUIDs, optimized specifically for distributed systems and time-ordered data. **ByteAether.Ulid** delivers a high-performance, specification-compliant .NET implementation engineered to resolve critical concurrency and persistence edge cases left unaddressed by alternative libraries.
+ULIDs (Universally Unique Lexicographically Sortable Identifiers) offer a modern, human-readable alternative to traditional GUIDs, optimized specifically for distributed systems and time-ordered data. **ByteAether.Ulid** delivers a high-performance, specification-compliant .NET implementation engineered to resolve critical concurrency and persistence edge cases unaddressed by alternative libraries.
 
 ### Resilient Concurrency & Monotonic Overflow Handling
 
@@ -150,7 +150,11 @@ You can customize ULID generation by providing `GenerationOptions`. This allows 
 
 #### Example: Monotonic ULID with Random Increments
 
-To generate ULIDs that are monotonically increasing with a random increment, you can specify the `Monotonicity` option.
+The monotonicity state (last generated timestamp and 80-bit random payload) is bound directly to the lifecycle of the `GenerationOptions` instance.
+
+* **Instance Reuse (Recommended for Sequences):** Reusing a single `GenerationOptions` instance across calls guarantees strict, cross-thread monotonic ordering via lock-free atomic compare-and-exchange (CAS) operations.
+* **Instance Isolation:** Passing a new `GenerationOptions` instance on each call isolates state, disabling monotonic sequence tracking between calls and eliminating CAS contention.
+
 ```csharp
 using System;
 using ByteAether.Ulid;
@@ -241,13 +245,13 @@ The `Ulid` implementation provides the following properties and methods:
 ### Properties
 
 - `Ulid.MinValue`\
-  Represents an empty ULID, equivalent to `default(Ulid)` and `Ulid.New(new byte[16])`.
+  Represents an empty ULID, equivalent to `default(Ulid)` or `Ulid.New(new byte[16])`.
 - `Ulid.MaxValue`\
   Represents the maximum possible value for a ULID (all bytes set to `0xFF`).
 - `Ulid.Empty`\
   Alias for `Ulid.MinValue`.
 - `Ulid.DefaultGenerationOptions`\
-  Default configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
+  Gets or sets the global default `GenerationOptions` configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
 - `.Time`\
   Gets the timestamp component of the ULID as a `DateTimeOffset`.
 - `.TimeBytes`\
@@ -278,10 +282,15 @@ The `Ulid` implementation provides the following properties and methods:
 
 ### GenerationOptions
 
-The `GenerationOptions` class provides detailed configuration for ULID generation, with the following key properties:
+The `GenerationOptions` class encapsulates generation strategy, state retention, and lock-free thread synchronization for monotonic ULID generation.
+
+Configurable properties:
 
 - `Monotonicity`\
-  Controls the behavior of ULID generation when multiple identifiers are created within the same millisecond. It determines whether ULIDs are strictly increasing or allow for random ordering within that millisecond. Available options include: `NonMonotonic`, `MonotonicIncrement` (default), `MonotonicRandom1Byte`, `MonotonicRandom2Byte`, `MonotonicRandom3Byte`, `MonotonicRandom4Byte`.
+  Defines the monotonic strategy when generating multiple ULIDs within the same millisecond. Each instance maintains an atomic state machine using lock-free Compare-And-Swap (CAS) primitives to guarantee strict sequential ordering without mutex locking. Options include:
+  - `NonMonotonic`: Generates fully random 80-bit payloads without state tracking. 
+  - `MonotonicIncrement` (Default): Increments the least significant bit of the random payload upon sub-millisecond collisions. 
+  - `MonotonicRandom1Byte`, `MonotonicRandom2Byte`, `MonotonicRandom3Byte`, `MonotonicRandom4Byte`: Adds a random integer increment within the specified byte range to the payload, strengthening entropy against enumeration attacks while maintaining monotonicity.
 
 - `InitialRandomSource`\
   An `IRandomProvider` for generating the random bytes of a ULID. The default `CryptographicallySecureRandomProvider` ensures robust, unpredictable ULIDs using a cryptographically secure generator.

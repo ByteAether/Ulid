@@ -1,3 +1,6 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
 namespace ByteAether.Ulid;
 
 public readonly partial struct Ulid
@@ -138,5 +141,51 @@ public readonly partial struct Ulid
 		/// Defaults to an instance of <see cref="PseudoRandomProvider"/>.
 		/// </value>
 		public IRandomProvider IncrementRandomSource { get; init; } = new PseudoRandomProvider();
-	};
+
+		internal readonly State CurrentState = new();
+
+		// Separates Lock and LastUlid into different cache lines to prevent "false sharing"
+		// x64 has 64-byte cache lines; ARM64 (e.g., Apple Silicon) has 128-byte cache lines
+		[StructLayout(LayoutKind.Explicit)]
+		internal class State
+		{
+			// Cache Line 1
+			[FieldOffset(16)] public LowLatencyLock Lock;
+
+			// Cache Line 2(ARM64)/3(x64)
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
+			[FieldOffset(16+128)] public ulong LastUlidPart0;
+			[FieldOffset(16+128+8)] public ulong LastUlidPart1;
+#pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
+
+#if NET5_0_OR_GREATER
+			[SkipLocalsInit]
+#endif
+#if NETCOREAPP3_0_OR_GREATER
+			[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+			internal void Increment(uint addition)
+			{
+				var increment = (ulong)addition + 1; // carry = 1 is built-in
+				var part1 = ReverseOnLittleEndian(LastUlidPart1);
+				var newPart1 = part1 + increment;
+				LastUlidPart1 = ReverseOnLittleEndian(newPart1);
+
+				if (newPart1 >= part1)
+				{
+					return;
+				}
+
+				var part0 = ReverseOnLittleEndian(LastUlidPart0);
+				part0++;
+				LastUlidPart0 = ReverseOnLittleEndian(part0);
+				if (part0 == 0)
+				{
+					throw new OverflowException("Addition resulted in a ULID value larger than the absolute maximum ULID value.");
+				}
+			}
+		}
+	}
 }
