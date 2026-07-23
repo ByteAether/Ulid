@@ -31,7 +31,7 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore dependencies
-      run: dotnet restore src/ByteAether.Ulid.slnx -p:Configuration=CI-Release --use-current-runtime -p:SelfContained=true
+      run: dotnet restore src/Ulid.Tests.AotConsole/Tests.AotConsole.csproj -p:Configuration=CI-Release --use-current-runtime -p:SelfContained=true
 
     - name: Build and Publish AOT Console Application (${{ matrix.os }})
       run: dotnet publish src/Ulid.Tests.AotConsole/Tests.AotConsole.csproj --configuration CI-Release --no-restore --use-current-runtime --self-contained true -o ./publish

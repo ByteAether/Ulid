@@ -31,10 +31,10 @@ jobs:
           dotnet-version: 10.x
 
       - name: Restore dependencies
-        run: dotnet restore src/ByteAether.Ulid.slnx -p:Configuration=CI-Release
+        run: dotnet restore src/ByteAether.Ulid.slnx -p:Configuration=CI-Debug
 
       - name: Build
-        run: dotnet build src/ByteAether.Ulid.slnx --configuration CI-Release --no-restore
+        run: dotnet build src/ByteAether.Ulid.slnx --configuration CI-Debug --no-restore
 
       - name: Upload DLLs
         uses: actions/upload-artifact@v7
@@ -62,8 +62,7 @@ jobs:
           failed=0
           for tfm in "${frameworks[@]}"; do
             echo "::group::Testing $tfm"
-            # --no-build skips recompiling since we already built the solution above
-            if ! dotnet test src/ByteAether.Ulid.slnx --configuration CI-Release --no-build -p:ImplTargetFramework=$tfm --verbosity normal --logger "trx;LogFileName=results-$tfm.trx"; then
+            if ! dotnet test src/ByteAether.Ulid.slnx --configuration CI-Debug -p:ImplTargetFramework=$tfm --verbosity normal --logger "trx;LogFileName=results-$tfm.trx"; then
               echo "❌ Tests failed for $tfm"
               failed=1
             fi
@@ -82,7 +81,7 @@ jobs:
           path: ./**/TestResults/**/*.trx
 
       - name: Pack
-        run: dotnet pack src/ByteAether.Ulid.slnx --configuration CI-Release -p:ContinuousIntegrationBuild=true -p:PackageVersion=0.0.0-ci-${{ steps.vars.outputs.sha_short }} -p:PackageReleaseNotes="CI Build ${{ steps.vars.outputs.sha_short }}" --output ./output
+        run: dotnet pack src/ByteAether.Ulid.slnx --configuration CI-Debug -p:ContinuousIntegrationBuild=true -p:PackageVersion=0.0.0-ci-${{ steps.vars.outputs.sha_short }} -p:PackageReleaseNotes="CI Build ${{ steps.vars.outputs.sha_short }}" --output ./output
 
       - name: Upload NuGet package
         uses: actions/upload-artifact@v7
