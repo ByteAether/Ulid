@@ -15,8 +15,8 @@ For the core library and full details, visit our [GitHub repository](https://git
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
-![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
-![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
+![.NET 7.0](https://img.shields.io/badge/.NET-7.0-brightgreen)
+![.NET 6.0](https://img.shields.io/badge/.NET-6.0-brightgreen)
 
 - **Version Support**: Fully compatible with **[Entity Framework Core](https://github.com/dotnet/efcore) versions 6.0.0 and newer**.
 - **Automated Configuration**: Register mappings globally for both nullable and non-nullable `Ulid` types using a single extension method.

@@ -15,11 +15,11 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
-![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
-![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
-![.NET 5.0](https://img.shields.io/badge/.NET-5.0-yellow)
-![.NET Standard 2.1](https://img.shields.io/badge/.NET-Standard_2.1-yellow)
-![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-green)
+![.NET 7.0](https://img.shields.io/badge/.NET-7.0-brightgreen)
+![.NET 6.0](https://img.shields.io/badge/.NET-6.0-brightgreen)
+![.NET 5.0](https://img.shields.io/badge/.NET-5.0-brightgreen)
+![.NET Standard 2.1](https://img.shields.io/badge/.NET-Standard_2.1-brightgreen)
+![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-brightgreen)
 
 - **Universally Unique**: Ensures global uniqueness across systems.
 - **Sortable**: Lexicographically ordered for time-based sorting.

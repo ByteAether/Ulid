@@ -14,7 +14,7 @@ For the core library and full details, visit our [GitHub repository](https://git
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
-![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-green)
+![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-brightgreen)
 
 - **Version Support**: Fully compatible with **[LinqToDB](https://github.com/linq2db/linq2db) versions 6.0.0 and newer**.
 - **Automated Configuration**: Register mappings globally for both nullable and non-nullable `Ulid` types using a single extension method on your `DataOptions`.

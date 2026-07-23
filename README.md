@@ -53,11 +53,11 @@ This library explicitly **multi-targets** each runtime version listed below, ena
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
-![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
-![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
-![.NET 5.0](https://img.shields.io/badge/.NET-5.0-yellow)
-![.NET Standard 2.1](https://img.shields.io/badge/.NET-Standard_2.1-yellow)
-![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-green)
+![.NET 7.0](https://img.shields.io/badge/.NET-7.0-brightgreen)
+![.NET 6.0](https://img.shields.io/badge/.NET-6.0-brightgreen)
+![.NET 5.0](https://img.shields.io/badge/.NET-5.0-brightgreen)
+![.NET Standard 2.1](https://img.shields.io/badge/.NET-Standard_2.1-brightgreen)
+![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-brightgreen)
 
 - **Universally Unique**: Ensures global uniqueness across systems.
 - **Sortable**: Lexicographically ordered for time-based sorting.
@@ -321,8 +321,8 @@ Includes a `JsonConverter` for easy serialization and deserialization.
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 9.0](https://img.shields.io/badge/.NET-9.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
-![.NET 7.0](https://img.shields.io/badge/.NET-7.0-green)
-![.NET 6.0](https://img.shields.io/badge/.NET-6.0-green)
+![.NET 7.0](https://img.shields.io/badge/.NET-7.0-brightgreen)
+![.NET 6.0](https://img.shields.io/badge/.NET-6.0-brightgreen)
 
 To seamlessly use ULIDs with [Entity Framework Core](https://github.com/dotnet/efcore), install the specialized extension package:
 
@@ -387,7 +387,7 @@ More details in the package's [PACKAGE.md](./src/EFCore/PACKAGE.md) file.
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
-![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-green)
+![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-brightgreen)
 
 To integrate with [LinqToDB](https://github.com/linq2db/linq2db), install the specialized extension package:
 
@@ -423,7 +423,7 @@ More details in the package's [PACKAGE.md](./src/LinqToDB/PACKAGE.md) file.
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
-![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-green)
+![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-brightgreen)
 
 To integrate with [Dapper](https://github.com/DapperLib/Dapper), install the specialized extension package:
 
