@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
-    <IsTestProject>true</IsTestProject>
+    <TargetFramework>net10.0</TargetFramework>
+    <SupportedImplFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0</SupportedImplFrameworks>
+
+    <IsTestProject Condition="$(SupportedImplFrameworks.Contains('$(ImplTargetFramework)'))">true</IsTestProject>
     <NoWarn>NU1903</NoWarn>
 
     <RootNamespace>ByteAether.Ulid.EntityFrameworkCore.IntegrationTests</RootNamespace>
@@ -17,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EFCore\EFCore.Impl.csproj" />
+    <ProjectReference Include="..\EFCore\EFCore.Impl.csproj" SetTargetFramework="TargetFramework=$(ImplTargetFramework)" />
   </ItemGroup>
 
 </Project>

@@ -1,8 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net10.0;net8.0;net7.0</TargetFrameworks>
-    <IsTestProject>true</IsTestProject>
+    <TargetFramework>net10.0</TargetFramework>
+    <SupportedImplFrameworks>net10.0;net8.0;netstandard2.0</SupportedImplFrameworks>
+
+    <IsTestProject Condition="$(SupportedImplFrameworks.Contains('$(ImplTargetFramework)'))">true</IsTestProject>
     <NoWarn>NU1903</NoWarn>
 
     <RootNamespace>ByteAether.Ulid.LinqToDB.IntegrationTests</RootNamespace>
@@ -14,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LinqToDB\LinqToDB.Impl.csproj" />
+    <ProjectReference Include="..\LinqToDB\LinqToDB.Impl.csproj" SetTargetFramework="TargetFramework=$(ImplTargetFramework)" />
   </ItemGroup>
 
 </Project>

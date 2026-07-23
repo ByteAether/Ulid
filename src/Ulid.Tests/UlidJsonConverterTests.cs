@@ -97,6 +97,7 @@ public class UlidJsonConverterTests
 		Assert.Equal(ulid, resultDto.UlidProperty);
 	}
 
+#if NET6_0_OR_GREATER
 	[Theory]
 	[InlineData(true)]
 	[InlineData(false)]
@@ -135,5 +136,6 @@ public class UlidJsonConverterTests
 		Assert.True(deserializedDictionary.ContainsKey(ulid));
 		Assert.Equal("value", deserializedDictionary[ulid]);
 	}
+#endif
 }
 #endif

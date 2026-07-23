@@ -7,9 +7,9 @@ updates:
   - package-ecosystem: nuget
     directories:
       - "/src/Ulid"
-      - "/src/Dapper.Impl"
-      - "/src/EFCore.Impl"
-      - "/src/LinqToDB.Impl"
+      - "/src/Dapper"
+      - "/src/EFCore"
+      - "/src/LinqToDB"
       - "/src/DB.Shared"
     schedule:
       interval: "weekly"

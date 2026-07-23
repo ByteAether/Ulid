@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true' And '$(ImplTargetFramework)' != ''">
+    <!-- 1. Stop .NET SDK from automatically adding default net10.0 symbols -->
+    <DisableImplicitFrameworkDefines>true</DisableImplicitFrameworkDefines>
+
+    <!-- 2. NETCOREAPP (defined only for non-netstandard / non-net4x) -->
+    <DefineConstants Condition="!$(ImplTargetFramework.StartsWith('netstandard')) And !$(ImplTargetFramework.StartsWith('net4'))">$(DefineConstants);NETCOREAPP</DefineConstants>
+
+    <!-- 3. NETSTANDARD -->
+    <DefineConstants Condition="$(ImplTargetFramework.StartsWith('netstandard'))">$(DefineConstants);NETSTANDARD</DefineConstants>
+    <DefineConstants Condition="'$(ImplTargetFramework)' == 'netstandard2.0'">$(DefineConstants);NETSTANDARD2_0;NETSTANDARD2_0_OR_GREATER</DefineConstants>
+    <DefineConstants Condition="'$(ImplTargetFramework)' == 'netstandard2.1'">$(DefineConstants);NETSTANDARD2_0_OR_GREATER;NETSTANDARD2_1;NETSTANDARD2_1_OR_GREATER</DefineConstants>
+
+    <!-- 4. Version-specific compatibility constants -->
+    <DefineConstants Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(ImplTargetFramework)', 'net5.0'))">$(DefineConstants);NET5_0;NET5_0_OR_GREATER</DefineConstants>
+    <DefineConstants Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(ImplTargetFramework)', 'net6.0'))">$(DefineConstants);NET6_0;NET6_0_OR_GREATER</DefineConstants>
+    <DefineConstants Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(ImplTargetFramework)', 'net7.0'))">$(DefineConstants);NET7_0;NET7_0_OR_GREATER</DefineConstants>
+    <DefineConstants Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(ImplTargetFramework)', 'net8.0'))">$(DefineConstants);NET8_0;NET8_0_OR_GREATER</DefineConstants>
+    <DefineConstants Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(ImplTargetFramework)', 'net9.0'))">$(DefineConstants);NET9_0;NET9_0_OR_GREATER</DefineConstants>
+    <DefineConstants Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(ImplTargetFramework)', 'net10.0'))">$(DefineConstants);NET10_0;NET10_0_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+</Project>

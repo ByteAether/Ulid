@@ -8,8 +8,12 @@
 
   <Folder Name="/Ulid/">
     <Project Path="Ulid/Impl.csproj" />
-    <Project Path="Ulid.Tests/Tests.csproj" />
-    <Project Path="Ulid.Tests.AotConsole/Tests.AotConsole.csproj" />
+    <Project Path="Ulid.Tests/Tests.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
+    <Project Path="Ulid.Tests.AotConsole/Tests.AotConsole.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
     <Project Path="Ulid.Benchmarks/Benchmarks.csproj">
       <Build Solution="CI-Debug|*" Project="false" />
       <Build Solution="CI-Release|*" Project="false" />
@@ -18,24 +22,33 @@
 
   <Folder Name="/DB/">
     <Project Path="DB.Shared/DB.Shared.csproj" />
-    <Project Path="DB.Shared.Tests/DB.Shared.Tests.csproj" />
+    <Project Path="DB.Shared.Tests/DB.Shared.Tests.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/DB/EFCore/">
     <Project Path="EFCore/EFCore.Impl.csproj" />
-    <Project Path="EFCore.IntegrationTests/EFCore.IntegrationTests.csproj" />
+    <Project Path="EFCore.IntegrationTests/EFCore.IntegrationTests.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/DB/LinqToDB/">
     <Project Path="LinqToDB\LinqToDB.Impl.csproj" />
-    <Project Path="LinqToDB.IntegrationTests\LinqToDB.IntegrationTests.csproj" />
+    <Project Path="LinqToDB.IntegrationTests\LinqToDB.IntegrationTests.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/DB/Dapper/">
     <Project Path="Dapper/Dapper.Impl.csproj" />
-    <Project Path="Dapper.IntegrationTests/Dapper.IntegrationTests.csproj" />
+    <Project Path="Dapper.IntegrationTests/Dapper.IntegrationTests.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
   </Folder>
 
   <Folder Name="/Solution Items/">
     <File Path="../README.md" />
     <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
     <File Path=".editorconfig" />
     <File Path=".runsettings" />
   </Folder>

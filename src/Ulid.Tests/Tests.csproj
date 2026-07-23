@@ -1,7 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <IsTestProject>true</IsTestProject>
+    <TargetFramework>net10.0</TargetFramework>
+    <SupportedImplFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0;net5.0;netstandard2.1;netstandard2.0</SupportedImplFrameworks>
+
+    <IsTestProject Condition="$(SupportedImplFrameworks.Contains('$(ImplTargetFramework)'))">true</IsTestProject>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <UseDataCollector/>
@@ -9,20 +12,11 @@
     <RootNamespace>ByteAether.Ulid.Tests</RootNamespace>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
-    <TargetFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
-    <TargetFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0;net472</TargetFrameworks>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Xunit.Combinatorial" Version="1.6.24" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ulid\Impl.csproj" />
+    <ProjectReference Include="..\Ulid\Impl.csproj" SetTargetFramework="TargetFramework=$(ImplTargetFramework)" />
   </ItemGroup>
-
 </Project>
