@@ -26,7 +26,7 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 - **Lock-Free Synchronization**: Monotonic generation utilizes a high-performance, **lock-free compare-and-exchange (CAS)** approach.
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
-- **Ahead-of-Time (AOT) Compilation Compatible**: Fully compatible with AOT compilation for improved startup performance and smaller binary sizes.
+- **Ahead-of-Time (AOT) Compilation**: Fully compatible with Native AOT for improved startup performance and smaller binary footprints.
 - **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
 
 ## 💾 Installation
@@ -84,7 +84,7 @@ The `Ulid` implementation provides the following properties and methods:
 - `Ulid.New(ReadOnlySpan<byte> bytes)`\
   Creates a ULID from an existing byte array.
 - `Ulid.New(Guid guid)`\
-  Create from existing `Guid`.
+  Creates a ULID from an existing `Guid`.
 - `Ulid.MinAt(DateTimeOffset datetime)`\
   Creates the minimum possible ULID value for the specified `DateTimeOffset`.
 - `Ulid.MinAt(long timestamp)`\
@@ -97,11 +97,11 @@ The `Ulid` implementation provides the following properties and methods:
 ### Checking Validity
 
 - `Ulid.IsValid(string ulidString)`\
-  Validates if the given string is a valid ULID.
+  Validates whether the specified string represents a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<char> ulidString)`\
-  Validates if the given span of characters is a valid ULID.
+  Validates whether the specified span of characters represents a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<byte> ulidBytes)`\
-  Validates if the given byte array represents a valid ULID.
+  Validates whether the specified byte array represents a valid ULID.
 
 ### Parsing
 
@@ -127,7 +127,7 @@ The `Ulid` implementation provides the following properties and methods:
 - `.Time`\
   Gets the timestamp component of the ULID as a `DateTimeOffset`.
 - `.TimeBytes`\
-  Gets the time component of the ULID as a `ReadOnlySpan<byte>`.
+  Gets the timestamp component of the ULID as a `ReadOnlySpan<byte>`.
 - `.Random`\
   Gets the random component of the ULID as a `ReadOnlySpan<byte>`.
 

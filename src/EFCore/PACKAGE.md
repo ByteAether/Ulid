@@ -33,6 +33,10 @@ Install the stable package via NuGet:
 dotnet add package ByteAether.Ulid.EntityFrameworkCore
 ```
 
+> [!NOTE]
+> This package automatically includes `ByteAether.Ulid` as a transitive dependency, so installing it separately is unnecessary.
+> If you do install `ByteAether.Ulid` directly, its version must be **greater than or equal to** `ByteAether.Ulid.EntityFrameworkCore`. Referencing an older version will trigger a **NU1605 (Package Downgrade)** build error.
+
 ## 🚀 Usage
 
 Override the `ConfigureConventions` method in your `DbContext` to register the type mappings across all entities:
@@ -81,18 +85,18 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 ### Range Queries & Sorting Compatibility (`>=`, `<=`, `OrderBy`)
 
-All storage formats are technically supported, but their ability to maintain chronological sorting and support range queries depends entirely on how the underlying database provider handles GUID byte layouts. Because ULIDs rely on a big-endian timestamp for sorting, your choice of database provider determines which formats remain index-friendly:
+While all storage formats are fully supported, their ability to preserve chronological order and execute valid range queries depends on how the underlying database engine handles byte-order comparisons and GUID representations. Because ULIDs rely on a big-endian timestamp for sorting, your choice of database provider determines which formats remain index-friendly:
 
 * **Globally Safe (`String` and `Binary`)**: These formats preserve the raw left-to-right chronological order of ULIDs natively across all database engines (SQLite, PostgreSQL, SQL Server, etc.).
 * **Provider Dependent (`Guid`)**: Standard `.NET Guid` structures use a mixed-endian layout.
   * **PostgreSQL**: Supported. The connection driver automatically corrects the endianness when mapping to native `uuid` columns, preserving chronological sorting.
-  * **SQLite / Others**: Incompatible for range queries. These engines store GUIDs as raw byte streams, meaning the mixed-endian layout will scramble chronological comparison (though **equality operations remain fully functional**).
+  * **SQLite / Others**: Incompatible for range queries. These engines store GUIDs as raw bytes or text strings, causing standard mixed-endian byte ordering to corrupt chronological comparisons (**though equality lookups remain fully functional**).
 * **SQL Server Specific (`SqlServerGuid`)**: This format explicitly optimizes byte shuffling for Microsoft SQL Server's unique sequential indexing rules.
   * **Constraint**: This format **only** works as intended if the underlying column is typed as `uniqueidentifier`. Storing it as `BINARY(16)` or `VARCHAR` will break sorting.
-  * **Trade-off**: This internal byte reordering sacrifices cross-database compatibility (e.g., migrating data to PostgreSQL or SQLite) in exchange for raw SQL Server index performance.
+  * **Trade-off**: This byte-shuffling strategy sacrifices cross-database data portability (e.g., directly reading or migrating database rows to PostgreSQL or SQLite) to optimize index page fragmentation and B-tree insertion performance in SQL Server.
 
 > [!CAUTION]
-> Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's sorting behavior will result in broken data retrieval and missed records.
+> Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's native comparison logic will lead to incorrect query ordering and omitted records during range filtering.
 
 ## ⚡ Native AOT & Trimming Compatibility
 

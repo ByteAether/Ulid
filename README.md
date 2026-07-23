@@ -29,19 +29,19 @@ ULIDs (Universally Unique Lexicographically Sortable Identifiers) offer a modern
 
 ### Resilient Concurrency & Monotonic Overflow Handling
 
-During high-throughput transaction bursts within the same millisecond, the 80-bit random component of a ULID can saturate. Traditional libraries respond to this saturation by throwing an `OverflowException` to protect strict timestamp boundaries. ByteAether.Ulid introduces a non-blocking alternative: when the 80-bit random segment saturates during a high-throughput burst within a single millisecond, it gracefully increments the millisecond timestamp component instead of throwing. This ensures uninterrupted ID generation under extreme local load.
+During high-throughput transaction bursts within the same millisecond, the 80-bit random component of a ULID can saturate. Traditional libraries respond to this saturation by throwing an `OverflowException` to protect strict timestamp boundaries. ByteAether.Ulid introduces a non-blocking alternative: when the 80-bit random segment saturates during a high-throughput burst within a single millisecond, it gracefully increments the millisecond timestamp component instead of throwing. This ensures uninterrupted ID generation under extreme local loads.
 
 While this introduces a micro-scale timestamp adjustment localized strictly to the executing instance, the system clock catches up immediately once the burst subsides. The drift remains well within standard network latency boundaries and aligns with the workarounds in [ULID specification issue #39](https://github.com/ulid/spec/issues/39#issuecomment-2252145597).
 
 ### Mitigating Enumeration Attacks
 
-Monotonic identifiers generated in rapid succession can expose predictable sequences, leaving systems vulnerable to enumeration attacks. This library mitigates this by supporting configurable random increments (ranging from 1-byte to 4-bytes) to the random component, as discussed in [ULID specification issue #105](https://github.com/ulid/spec/issues/105). This preserves strict lexicographical sortability while ensuring cryptographic unpredictability.
+Monotonic identifiers generated in rapid succession can expose predictable sequences, leaving systems vulnerable to enumeration attacks. This library mitigates this risk by supporting configurable random increments (ranging from 1 to 4 bytes) applied to the random component, as discussed in [ULID specification issue #105](https://github.com/ulid/spec/issues/105). This preserves strict lexicographical sortability while ensuring cryptographic unpredictability.
 
 ### ULID vs UUIDv7
 
 While modern standards like UUIDv7 introduce timestamp-based sorting, [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562#name-monotonicity-and-counters) treats sub-millisecond monotonicity as optional. [The native .NET UUIDv7 provider (`Guid.CreateVersion7`)](https://github.com/dotnet/runtime/blob/571b044582ceb7fe426b7f143c703064aa9ea4db/src/libraries/System.Private.CoreLib/src/System/Guid.cs#L306) uses random bits within the sub-millisecond payload rather than a strict sequential counter, sacrificing true chronological ordering under heavy bursts.
 
-Furthermore, using .NET's native `Guid` structures for sequential IDs introduces severe endianness conflicts. Because `System.Guid` utilizes a legacy mixed-endian internal structure, most standard database providers serialize this raw memory layout directly to disk without adjustment. This scrambles the big-endian timestamp layout, completely breaking chronological index sorting. For engines with highly rigid index layouts like Microsoft SQL Server, time-first structures natively conflict with [custom `uniqueidentifier` indexing order](https://learn.microsoft.com/en-us/dotnet/api/system.data.sqltypes.sqlguid.compareto?view=net-10.0#remarks), triggering catastrophic page fragmentation.
+Furthermore, using .NET's native `Guid` structures for sequential IDs introduces severe endianness conflicts. Because `System.Guid` utilizes a legacy mixed-endian internal structure, most database providers serialize this raw memory layout directly to disk without modification. This scrambles the big-endian timestamp layout, completely breaking chronological index sorting. For engines with highly rigid index layouts like Microsoft SQL Server, time-first structures natively conflict with [custom `uniqueidentifier` indexing order](https://learn.microsoft.com/en-us/dotnet/api/system.data.sqltypes.sqlguid.compareto?view=net-10.0#remarks), triggering catastrophic page fragmentation.
 
 **ByteAether.Ulid** corrects this by mandating big-endian, strict lexicographical sortability directly at the specification level. It features optimized storage strategies (`String`, `Binary`, `Guid`, and `SqlServerGuid`) across major ORMs to maintain perfect index allocations and deterministic sorting whether targeting PostgreSQL, MS SQL Server, MySQL, or SQLite.
 
@@ -64,7 +64,7 @@ This library explicitly **multi-targets** each runtime version listed below, ena
 - **Lock-Free Synchronization**: Monotonic generation utilizes a high-performance, **lock-free compare-and-exchange (CAS)** approach.
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
-- **Ahead-of-Time (AOT) Compilation Compatible**: Fully compatible with AOT compilation for improved startup performance and smaller binary sizes.
+- **Ahead-of-Time (AOT) Compilation**: Fully compatible with Native AOT for improved startup performance and smaller binary footprints.
 - **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
 
 ### Extension Packages
@@ -118,7 +118,7 @@ Console.WriteLine($"ULID: {ulid}, GUID: {guid}, String: {ulidString}");
 Because ULIDs embed a millisecond-precision timestamp and maintain lexicographical order, you can use `Ulid.MinAt()` and `Ulid.MaxAt()` to generate boundary instances for specific time windows. This approach provides a uniform mechanism for range filtering across both in-memory collections and abstract data layers:
 
 ```csharp
-// Define the temporal boundaries of your window
+// Define temporal boundaries for the target window
 DateTimeOffset startTime = DateTimeOffset.UtcNow.AddDays(-7);
 DateTimeOffset endTime = DateTimeOffset.UtcNow;
 
@@ -137,7 +137,7 @@ var query = "SELECT * FROM Records WHERE Id >= @Min AND Id <= @Max";
 > [!IMPORTANT]
 > **Database Persistence Considerations**
 > 
-> While range evaluations remain consistent for in-memory object graphs, executing these queries against a relational database introduces critical persistence dependencies:
+> While range evaluations remain consistent across in-memory object graphs, executing these queries against a relational data store introduces critical persistence dependencies:
 > * **Storage Format & Byte Order**: Certain database engines and native UUID data types utilize mixed-endian byte layouts. If a ULID is persisted using a strategy that reorders its raw big-endian bytes, chronological sorting behavior will diverge between the application and the database server.
 > * **Index & Query Integrity**: Mismatches between the database engine's native sorting rules and the chosen storage format can result in broken data retrieval, bypassed indexes, or incorrect query results during database-side range operations (`>=`, `<=`) and `ORDER BY` execution.
 >
@@ -208,7 +208,7 @@ The `Ulid` implementation provides the following properties and methods:
 - `Ulid.New(ReadOnlySpan<byte> bytes)`\
   Creates a ULID from an existing byte array.
 - `Ulid.New(Guid guid)`\
-  Create from an existing `Guid`.
+  Creates a ULID from an existing `Guid`.
 - `Ulid.MinAt(DateTimeOffset datetime)`\
   Creates the minimum possible ULID value for the specified `DateTimeOffset`.
 - `Ulid.MinAt(long timestamp)`\
@@ -221,11 +221,11 @@ The `Ulid` implementation provides the following properties and methods:
 ### Checking Validity
 
 - `Ulid.IsValid(string ulidString)`\
-  Validates if the given string is a valid ULID.
+  Validates whether the specified string represents a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<char> ulidString)`\
-  Validates if the given span of characters is a valid ULID.
+  Validates whether the specified span of characters represents a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<byte> ulidBytes)`\
-  Validates if the given byte array represents a valid ULID.
+  Validates whether the specified byte array represents a valid ULID.
 
 ### Parsing
 
@@ -251,7 +251,7 @@ The `Ulid` implementation provides the following properties and methods:
 - `.Time`\
   Gets the timestamp component of the ULID as a `DateTimeOffset`.
 - `.TimeBytes`\
-  Gets the time component of the ULID as a `ReadOnlySpan<byte>`.
+  Gets the timestamp component of the ULID as a `ReadOnlySpan<byte>`.
 - `.Random`\
   Gets the random component of the ULID as a `ReadOnlySpan<byte>`.
 
@@ -329,6 +329,7 @@ To seamlessly use ULIDs with [Entity Framework Core](https://github.com/dotnet/e
 ```sh
 dotnet add package ByteAether.Ulid.EntityFrameworkCore
 ```
+
 Register the ULID conventions within your `DbContext` via the `ConfigureConventions` method. You can choose from various underlying storage strategies (`String`, `Binary`, `Guid`, or `SqlServerGuid`):
 
 ```csharp
@@ -338,7 +339,8 @@ protected override void ConfigureConventions(ModelConfigurationBuilder configura
 {
     // Registers mapping for both Ulid and Ulid? types.
     // Supports: UlidStorageFormat.String (Default), Binary, Guid, and SqlServerGuid
-    configurationBuilder.RegisterUlid(UlidStorageFormat.Binary);
+    configurationBuilder
+        .RegisterUlid(UlidStorageFormat.Binary);
 }
 ```
 #### Per-Property Mapping (Fine-Grained Control)
@@ -440,7 +442,7 @@ DapperUlid.RegisterUlid(UlidStorageFormat.Binary);
 ```
 
 > [!NOTE]
-> Dapper maps .NET types globally via a 1:1 scheme (`Type` → `TypeHandler`). You must choose a single global storage strategy for your entire application lifecycle. Mixing different formats (e.g., `String` and `Binary`) across distinct tables within the same runtime instance is not supported.
+> Dapper maps .NET types globally using a 1:1 scheme (`Type` → `TypeHandler`). A single global storage strategy must be selected for the entire application lifecycle. Mixing formats (e.g., `String` and `Binary`) across distinct tables within the same process instance is not supported.
 
 More details in the package's [PACKAGE.md](./src/Dapper/PACKAGE.md) file.
 
@@ -450,20 +452,30 @@ To use ULIDs with **Newtonsoft.Json**, you need to create a custom **JsonConvert
 
 #### 1. Create the Custom JsonConverter
 
-First, create a custom `JsonConverter` for `Ulid` to serialize and deserialize it as a `string`:
+First, create a custom `JsonConverter<Ulid>` for `Ulid` to handle string serialization and deserialization:
 ```csharp
 using Newtonsoft.Json;
 using System;
 
 public class UlidJsonConverter : JsonConverter<Ulid>
 {
-    public override Ulid ReadJson(JsonReader reader, Type objectType, Ulid existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override Ulid ReadJson(
+        JsonReader reader,
+        Type objectType,
+        Ulid existingValue,
+        bool hasExistingValue,
+        JsonSerializer serializer
+    )
     {
         var value = (string)reader.Value;
         return Ulid.Parse(value);
     }
   
-    public override void WriteJson(JsonWriter writer, Ulid value, JsonSerializer serializer)
+    public override void WriteJson(
+        JsonWriter writer,
+        Ulid value,
+        JsonSerializer serializer
+    )
     {
         writer.WriteValue(value.ToString());
     }
@@ -502,13 +514,19 @@ using MessagePack.Formatters;
 
 public class UlidFormatter : IMessagePackFormatter<Ulid>
 {
-	public Ulid Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+	public Ulid Deserialize(
+        ref MessagePackReader reader,
+        MessagePackSerializerOptions options
+    )
 	{
 		var bytes = reader.ReadByteArray();
 		return Ulid.New(bytes);
 	}
 
-	public void Serialize(ref MessagePackWriter writer, Ulid value, MessagePackSerializerOptions options)
+	public void Serialize(
+        ref MessagePackWriter writer,
+        Ulid value, MessagePackSerializerOptions options
+    )
 	{
 		writer.Write(value.ToByteArray());
 	}
@@ -626,9 +644,9 @@ Job=DefaultJob
 Alternative .NET ecosystem solutions exhibit design constraints or spec deviations under heavy production loads:
 
 1. `NetUlid`: Monotonicity guarantees are thread-confined and fail across concurrent multi-threaded execution loops.
-2. `NUlid`: While providing a monotonic random provider (`MonotonicUlidRng`), it does not offer automated, out-of-the-box global state management. Developers must manually instantiate and persist the generator across calls, requiring custom generation wrappers to maintain thread-safe monotonicity in practice.
+2. `NUlid`: Although it provides a monotonic random provider (`MonotonicUlidRng`), it lacks out-of-the-box global state management. Developers must manually instantiate and persist the generator instance, requiring custom wrappers to maintain thread-safe monotonicity across call sites.
 3. `Ulid` (Cysharp) & `GuidV7`: Do not implement monotonicity.
-4. `Ulid` (Cysharp): Relies on a cryptographically non-secure `XOR-Shift64` algorithm for sequence generation after seeding.
+4. `Ulid` (Cysharp): Relies on a cryptographically insecure `XOR-Shift64` algorithm for sequence generation after seeding.
 5. Native `Guid` / `GuidV7`: [Microsoft documentation explicitly warns](https://learn.microsoft.com/en-us/dotnet/api/system.guid.newguid?view=net-9.0#remarks) that the underlying RNG is not guaranteed to be cryptographically secure, rendering them unsuitable for security-sensitive unique keys.
 6. `AsByteSpan`: A zero-allocation performance optimization unique to `ByteAether.Ulid`, exposing a direct `ReadOnlySpan<byte>` slice of the underlying structure.
 
