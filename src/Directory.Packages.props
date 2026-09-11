@@ -7,7 +7,7 @@
     <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.10" />
     <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
 
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.9" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.12" />
     <PackageVersion Include="linq2db" Version="6.3.0" />
 
     <PackageVersion Include="xunit.v3" Version="4.0.0" />
