@@ -51,16 +51,16 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    await using (var writeContext = CreateContext(format))
 	    {
 	        writeContext.TestEntities.Add(entity);
-	        await writeContext.SaveChangesAsync();
+	        await writeContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 	    }
 
 	    // Act - Step 2: Read back from an isolated context instance & Query via Null comparison
 	    await using (var readContext = CreateContext(format))
 	    {
-	        var dbEntity = await readContext.TestEntities.FirstOrDefaultAsync(e => e.SystemUlid == originalUlid);
+	        var dbEntity = await readContext.TestEntities.FirstOrDefaultAsync(e => e.SystemUlid == originalUlid, cancellationToken: TestContext.Current.CancellationToken);
 
 	        // Verify querying directly by matching a null column works flawlessly
-	        var nullQueryEntity = await readContext.TestEntities.FirstOrDefaultAsync(e => e.NullableUlid == null);
+	        var nullQueryEntity = await readContext.TestEntities.FirstOrDefaultAsync(e => e.NullableUlid == null, cancellationToken: TestContext.Current.CancellationToken);
 
 	        // Assert
 	        Assert.NotNull(dbEntity);
@@ -72,13 +72,13 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	        var updatedUlid = Ulid.New();
 	        dbEntity.NullableUlid = updatedUlid;
 	        readContext.TestEntities.Update(dbEntity);
-	        await readContext.SaveChangesAsync();
+	        await readContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 	    }
 
 	    // Act - Step 4: Validate update retrieval
 	    await using (var verifyContext = CreateContext(format))
 	    {
-	        var dbEntity = await verifyContext.TestEntities.FirstOrDefaultAsync();
+	        var dbEntity = await verifyContext.TestEntities.FirstOrDefaultAsync(cancellationToken: TestContext.Current.CancellationToken);
 	        Assert.NotNull(dbEntity);
 	        Assert.Equal(originalUlid, dbEntity.SystemUlid);
 	        Assert.NotNull(dbEntity.NullableUlid);
@@ -86,13 +86,13 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	        // Step 5: Test reversing a value back to null (Null-to-Null round trip)
 	        dbEntity.NullableUlid = null;
 	        verifyContext.TestEntities.Update(dbEntity);
-	        await verifyContext.SaveChangesAsync();
+	        await verifyContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 	    }
 
 	    // Act - Step 6: Final check that reverting to null persisted properly
 	    await using (var finalVerifyContext = CreateContext(format))
 	    {
-	        var dbEntity = await finalVerifyContext.TestEntities.FirstOrDefaultAsync();
+	        var dbEntity = await finalVerifyContext.TestEntities.FirstOrDefaultAsync(cancellationToken: TestContext.Current.CancellationToken);
 	        Assert.NotNull(dbEntity);
 	        Assert.Null(dbEntity.NullableUlid);
 	    }
@@ -111,12 +111,12 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
         var maxUlid = Ulid.MaxAt(DateTimeOffset.UtcNow.AddDays(1));
 
         context.TestEntities.Add(new(){ SystemUlid = targetUlid });
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         // Act - Evaluate if EF translation properly maps parameter types to database lookups
         var results = await context.TestEntities
             .Where(e => e.SystemUlid >= minUlid && e.SystemUlid <= maxUlid)
-            .ToListAsync();
+            .ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Single(results);
@@ -135,18 +135,18 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    var targetUlid = Ulid.New();
 
 	    context.TestEntities.Add(new() { SystemUlid = targetUlid, NullableUlid = Ulid.New() });
-	    await context.SaveChangesAsync();
+	    await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 	    context.ChangeTracker.Clear();
 
 	    // Act - Step 1: Project into an anonymous type
 	    var anonymousResult = await context.TestEntities
 		    .Select(e => new { e.Id, e.SystemUlid, e.NullableUlid })
-		    .FirstOrDefaultAsync(e => e.SystemUlid == targetUlid);
+		    .FirstOrDefaultAsync(e => e.SystemUlid == targetUlid, cancellationToken: TestContext.Current.CancellationToken);
 
 	    // Act - Step 2: Project directly into a raw primitive/value type collection
 	    var rawUlidList = await context.TestEntities
 		    .Select(e => e.SystemUlid)
-		    .ToListAsync();
+		    .ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
 
 	    // Assert
 	    Assert.NotNull(anonymousResult);
@@ -172,7 +172,7 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 		    new TestEntity { SystemUlid = Ulid.New(), NullableUlid = targetUlid },
 		    new TestEntity { SystemUlid = Ulid.New(), NullableUlid = null }
 	    );
-	    await context.SaveChangesAsync();
+	    await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 	    context.ChangeTracker.Clear();
 
 	    // Strategy: Include null directly inside the searchable target criteria collection
@@ -181,7 +181,7 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    // Act
 	    var results = await context.TestEntities
 		    .Where(e => searchCriteria.Contains(e.NullableUlid))
-		    .ToListAsync();
+		    .ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
 
 	    // Assert
 	    Assert.Equal(2, results.Count);
@@ -231,10 +231,10 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    await using var command = _connection.CreateCommand();
 	    command.CommandText = "PRAGMA table_info(TestEntities);";
 
-	    await using var reader = await command.ExecuteReaderAsync();
+	    await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
 
 	    var foundSystemUlid = false;
-	    while (await reader.ReadAsync())
+	    while (await reader.ReadAsync(TestContext.Current.CancellationToken))
 	    {
 		    var columnName = reader.GetString(reader.GetOrdinal("name"));
 		    if (columnName != nameof(TestEntity.SystemUlid))
@@ -261,9 +261,9 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    await using var context = CreateContext(format);
 
 	    var first = Ulid.New();
-	    await Task.Delay(10); // Ensure timestamp progression if relying on machine clock
+	    await Task.Delay(10, TestContext.Current.CancellationToken); // Ensure timestamp progression if relying on machine clock
 	    var second = Ulid.New();
-	    await Task.Delay(10);
+	    await Task.Delay(10, TestContext.Current.CancellationToken);
 	    var third = Ulid.New();
 
 	    // Add them completely out of order
@@ -272,10 +272,10 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 		    new TestEntity { SystemUlid = third },
 		    new TestEntity { SystemUlid = first }
 	    );
-	    await context.SaveChangesAsync();
+	    await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 	    // Act
-	    var orderedList = await context.TestEntities.OrderBy(e => e.SystemUlid).ToListAsync();
+	    var orderedList = await context.TestEntities.OrderBy(e => e.SystemUlid).ToListAsync(cancellationToken: TestContext.Current.CancellationToken);
 
 	    // Assert
 	    Assert.Equal(3, orderedList.Count);
@@ -305,7 +305,7 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 
 	    context.TestEntities.Add(parentEntity);
 	    context.Set<RelatedChildEntity>().Add(childEntity);
-	    await context.SaveChangesAsync();
+	    await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 	    context.ChangeTracker.Clear();
 
 	    // Act - Explicit inner join execution over ULID properties
@@ -316,7 +316,7 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 			    child => child.ParentSystemUlid,
 			    (parent, child) => new { parent.Id, parent.SystemUlid, child.Description }
 		    )
-		    .FirstOrDefaultAsync(x => x.SystemUlid == parentUlid);
+		    .FirstOrDefaultAsync(x => x.SystemUlid == parentUlid, cancellationToken: TestContext.Current.CancellationToken);
 
 	    // Assert
 	    Assert.NotNull(joinResult);
@@ -336,18 +336,18 @@ public class UlidEntityFrameworkIntegrationTests : IDisposable
 	    await using (var setupContext = CreateContext(format))
 	    {
 		    setupContext.TestEntities.Add(new() { SystemUlid = originalUlid, NullableUlid = Ulid.New() });
-		    await setupContext.SaveChangesAsync();
+		    await setupContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 	    }
 
 	    // Act & Assert
 	    await using (var trackingContext = CreateContext(format))
 	    {
 		    // Load the entity completely into memory state tracking
-		    var dbEntity = await trackingContext.TestEntities.FirstOrDefaultAsync(e => e.SystemUlid == originalUlid);
+		    var dbEntity = await trackingContext.TestEntities.FirstOrDefaultAsync(e => e.SystemUlid == originalUlid, cancellationToken: TestContext.Current.CancellationToken);
 		    Assert.NotNull(dbEntity);
 
 		    // Attempt a Save without modifying any structural data properties
-		    var affectedRows = await trackingContext.SaveChangesAsync();
+		    var affectedRows = await trackingContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
 		    // Verify that EF Core understands the model is completely clean
 		    // (Returns 0 updates executed to the underlying data provider)

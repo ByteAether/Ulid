@@ -9,10 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageReference Include="NetUlid" Version="2.1.0" />
-    <PackageReference Include="NUlid" Version="1.7.3" />
-    <PackageReference Include="Ulid" Version="1.4.1" />
+    <PackageReference Include="BenchmarkDotNet" VersionOverride="0.15.8" />
+    <PackageReference Include="NetUlid" VersionOverride="2.1.0" />
+    <PackageReference Include="NUlid" VersionOverride="1.7.3" />
+    <PackageReference Include="Ulid" VersionOverride="1.4.1" />
   </ItemGroup>
 
   <ItemGroup>
