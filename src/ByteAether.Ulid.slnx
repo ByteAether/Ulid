@@ -21,7 +21,6 @@
   </Folder>
 
   <Folder Name="/DB/">
-    <Project Path="DB.Shared/DB.Shared.csproj" />
     <Project Path="DB.Shared.Tests/DB.Shared.Tests.csproj">
       <Build Solution="CI-Release|*" Project="false" />
     </Project>
