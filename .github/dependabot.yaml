@@ -5,11 +5,6 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: nuget
-    directories:
-      - "/src/Ulid"
-      - "/src/Dapper"
-      - "/src/EFCore"
-      - "/src/LinqToDB"
-      - "/src/DB.Shared"
+    directory: "/src"
     schedule:
       interval: "weekly"
