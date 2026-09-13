@@ -27,6 +27,8 @@
 
     <!-- Default to net10.0 if not specified via CLI -->
     <ImplTargetFramework Condition="'$(ImplTargetFramework)' == ''">net10.0</ImplTargetFramework>
+
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename $(MSBuildProjectName)-$(ImplTargetFramework).trx</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'CI-Release'"><Optimize>true</Optimize>

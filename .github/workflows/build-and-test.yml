@@ -62,7 +62,7 @@ jobs:
           failed=0
           for tfm in "${frameworks[@]}"; do
             echo "::group::Testing $tfm"
-            if ! (cd src && dotnet test ByteAether.Ulid.slnx --configuration CI-Debug -p:ImplTargetFramework=$tfm --report-trx --report-trx-filename "results-$tfm.trx"); then
+            if ! (cd src && dotnet test ByteAether.Ulid.slnx --configuration CI-Debug -p:ImplTargetFramework=$tfm --results-directory "../TestResults"); then
               echo "❌ Tests failed for $tfm"
               failed=1
             fi
