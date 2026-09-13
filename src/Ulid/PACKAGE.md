@@ -29,6 +29,14 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 - **Ahead-of-Time (AOT) Compilation**: Fully compatible with Native AOT for improved startup performance and smaller binary footprints.
 - **Error-Free Generation**: Prevents `OverflowException` by incrementing the timestamp component when the random part overflows, ensuring continuous unique ULID generation.
 
+### Extension Packages
+* 📦 **[Entity Framework Core](https://www.nuget.org/packages/ByteAether.Ulid.EntityFrameworkCore)**
+  `ByteAether.Ulid.EntityFrameworkCore`
+* 📦 **[LinqToDB](https://www.nuget.org/packages/ByteAether.Ulid.linq2db)**
+  `ByteAether.Ulid.linq2db`
+* 📦 **[Dapper](https://www.nuget.org/packages/ByteAether.Ulid.Dapper)**
+  `ByteAether.Ulid.Dapper`
+
 ## 💾 Installation
 
 Install the latest stable package via NuGet:
