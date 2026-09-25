@@ -11,7 +11,7 @@
     <PackageVersion Include="linq2db" Version="6.3.0" />
 
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
-    <PackageVersion Include="Xunit.Combinatorial" Version="2.1.41" />
+    <PackageVersion Include="Xunit.Combinatorial" Version="2.1.43" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
