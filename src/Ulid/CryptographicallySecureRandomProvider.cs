@@ -10,7 +10,9 @@ namespace ByteAether.Ulid;
 /// </summary>
 public readonly struct CryptographicallySecureRandomProvider : IRandomProvider
 {
+#if !NETCOREAPP3_0_OR_GREATER
 	private static readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
+#endif
 
 	/// <inheritdoc/>
 #if NETCOREAPP3_0_OR_GREATER
@@ -18,5 +20,12 @@ public readonly struct CryptographicallySecureRandomProvider : IRandomProvider
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public void GetBytes(Span<byte> buffer) => _rng.GetBytes(buffer);
+	public void GetBytes(Span<byte> buffer)
+	{
+#if NETCOREAPP3_0_OR_GREATER
+		RandomNumberGenerator.Fill(buffer);
+#else
+		_rng.GetBytes(buffer);
+#endif
+	}
 }

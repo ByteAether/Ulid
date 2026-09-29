@@ -269,4 +269,17 @@ public class UlidNewTests
 		Assert.Equal(timestamp + 1, ulid2.Time.ToUnixTimeMilliseconds());
 		Assert.Equal(new byte[10], ulid2.Random.ToArray());
 	}
+
+	[Fact]
+	public void New_Monotonic_ShouldRemainUniqueWhenGeneratedConcurrently()
+	{
+		var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+		var options = new Ulid.GenerationOptions();
+		var generated = new Ulid[1024];
+
+		Parallel.For(0, generated.Length, i => generated[i] = Ulid.New(timestamp, options));
+
+		Assert.All(generated, ulid => Assert.InRange(ulid.Time.ToUnixTimeMilliseconds(), timestamp, timestamp + 1));
+		Assert.Equal(generated.Length, generated.Distinct().Count());
+	}
 }

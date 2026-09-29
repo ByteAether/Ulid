@@ -15,7 +15,8 @@ var benchmarkConfig = ManualConfig
 
 BenchmarkRunner.Run(
 	typeof(Program).Assembly,
-	benchmarkConfig
+	benchmarkConfig,
+	args
 );
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
