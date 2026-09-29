@@ -20,6 +20,13 @@
     </Project>
   </Folder>
 
+  <Folder Name="/Cli/">
+    <Project Path="Cli/Cli.Impl.csproj" />
+    <Project Path="Cli.Tests/Cli.Tests.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
+  </Folder>
+
   <Folder Name="/DB/">
     <Project Path="DB.Shared.Tests/DB.Shared.Tests.csproj">
       <Build Solution="CI-Release|*" Project="false" />
@@ -47,6 +54,7 @@
   <Folder Name="/Solution Items/">
     <File Path="../README.md" />
     <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
     <File Path="Directory.Build.targets" />
     <File Path=".editorconfig" />
     <File Path=".runsettings" />

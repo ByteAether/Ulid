@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+
+    <IsTestProject>true</IsTestProject>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <UseDataCollector/>
+
+    <RootNamespace>ByteAether.Ulid.Cli.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cli\Cli.Impl.csproj" />
+    <ProjectReference Include="..\Ulid\Impl.csproj" />
+  </ItemGroup>
+
+</Project>
