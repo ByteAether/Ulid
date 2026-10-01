@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>Latest</LangVersion>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>ulid</ToolCommandName>
+    <RollForward>Major</RollForward>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Title>ByteAether.Ulid.Cli - Command Line Interface and .NET Tool for ULID</Title>
+    <Description>Official CLI companion tool and library for ByteAether.Ulid. Provides generation and inspection of Universally Unique Lexicographically Sortable Identifiers (ULIDs) with support for custom timestamps, time bytes, and random bytes, formatted for terminal and script interop.</Description>
+
+    <PackageId>ByteAether.Ulid.Cli</PackageId>
+    <Version Condition="'$(PackageVersion)' != ''">$(PackageVersion)</Version>
+    <PackageIcon>logo_ulid_tool.png</PackageIcon>
+    <PackageTags>ulid;cli;tool;dotnet-tool;generator;inspector;crockford-base32;guid;unique-id;csharp</PackageTags>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+
+    <RootNamespace>ByteAether.Ulid.Cli</RootNamespace>
+    <AssemblyName>ByteAether.Ulid.Cli</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ulid\Impl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\assets\logo_ulid_tool.png" Pack="true" PackagePath="\" Visible="false" />
+    <None Include="PACKAGE.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>

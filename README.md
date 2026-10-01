@@ -74,6 +74,8 @@ This library explicitly **multi-targets** each runtime version listed below, ena
   `ByteAether.Ulid.linq2db`
 * 📦 **[Dapper](#dapper-integration--byteaetheruliddapper)**
   `ByteAether.Ulid.Dapper`
+* 📦 **[CLI & .NET Tool](#net-tool--cli-integration--byteaetherulidcli)**
+  `ByteAether.Ulid.Cli`
 
 These features collectively make **ByteAether.Ulid** a robust and efficient choice for managing unique identifiers in your .NET applications.
 
@@ -558,6 +560,50 @@ MessagePackSerializer.DefaultOptions = MessagePackSerializer.DefaultOptions
 		MessagePack.Resolvers.StandardResolver.Instance
 	));
 ```
+
+### [.NET Tool & CLI](https://www.nuget.org/packages/ByteAether.Ulid.Cli/) Integration – ByteAether.Ulid.Cli
+
+[<img align="right" width="100px" src="assets/logo_ulid_tool.png" />](https://www.nuget.org/packages/ByteAether.Ulid.Cli/)
+
+[![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
+[![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.Cli?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.Cli/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.Cli?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.Cli/)
+![.NET 6.0+](https://img.shields.io/badge/.NET-6.0+-brightgreen)
+
+An official CLI tool and companion utility for `ByteAether.Ulid`, providing command-line generation and inspection of Universally Unique Lexicographically Sortable Identifiers (ULIDs). Optimized for scripting, pipelines, terminal workflows, and tool interop.
+
+To install globally as a .NET Tool:
+
+```sh
+dotnet tool install -g ByteAether.Ulid.Cli
+```
+
+Or install locally in your repository/project:
+
+```sh
+dotnet new tool-manifest # if not already present
+dotnet tool install ByteAether.Ulid.Cli
+```
+
+#### Usage
+
+When installed globally, run `ulid`. When installed locally, prefix commands with `dotnet ulid`.
+
+```sh
+# Generate a single ULID
+ulid
+
+# Generate 5 ULIDs formatted as GUIDs
+ulid -c 5 -f guid
+
+# Inspect a ULID
+ulid 01AN4Z07BY79KA1307SR9X4MV3
+
+# Inspect from stdin and output as JSON
+echo "01AN4Z07BY79KA1307SR9X4MV3" | ulid --json
+```
+
+More details in the package's [PACKAGE.md](./src/Cli/PACKAGE.md) file.
 
 ## 📊 Benchmarking
 
