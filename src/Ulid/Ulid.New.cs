@@ -104,16 +104,11 @@ public readonly partial struct Ulid
 #endif
 	public static Ulid New(long timestamp, GenerationOptions? options = null)
 	{
-		Ulid ulid = default;
+		Unsafe.SkipInit(out Ulid ulid);
 
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
 
-		// Fill timestamp
-		var ts = (ulong)timestamp << 16;
-		ts = ReverseOnLittleEndian(ts);
-		Unsafe.WriteUnaligned(ref ulidRef, ts);
-
-		FillRandom(ref ulidRef, timestamp, options ?? DefaultGenerationOptions);
+		Fill(ref ulidRef, timestamp, options ?? DefaultGenerationOptions);
 
 		return ulid;
 	}
@@ -142,14 +137,12 @@ public readonly partial struct Ulid
 #endif
 	public static Ulid New(long timestamp, Span<byte> random)
 	{
-		Ulid ulid = default;
+		Unsafe.SkipInit(out Ulid ulid);
 
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
 
 		// Fill timestamp
-		var ts = (ulong)timestamp << 16;
-		ts = ReverseOnLittleEndian(ts);
-		Unsafe.WriteUnaligned(ref ulidRef, ts);
+		FillTimestamp(ref ulidRef, timestamp);
 
 		// Fill random
 		Unsafe.CopyBlockUnaligned(
@@ -165,85 +158,103 @@ public readonly partial struct Ulid
 	[SkipLocalsInit]
 #endif
 #if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	private static void FillRandom(ref byte ulidBytesRef, long timestamp, GenerationOptions options)
+	private static void FillTimestamp(ref byte ulidBytesRef, long timestamp)
+	{
+		var ts = (ulong)timestamp << 16;
+		ts = ReverseOnLittleEndian(ts);
+		Unsafe.WriteUnaligned(ref ulidBytesRef, ts);
+	}
+
+#if NET5_0_OR_GREATER
+	[SkipLocalsInit]
+#endif
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+#else
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+	private static void Fill(ref byte ulidBytesRef, long timestamp, GenerationOptions options)
 	{
 		// Calculate offset to a random part
-        ref var ulidBytesRandomRef = ref Unsafe.Add(ref ulidBytesRef, _ulidSizeTime);
-        var monotonicity = options.Monotonicity;
+		var monotonicity = options.Monotonicity;
 
-        if (monotonicity == GenerationOptions.MonotonicityOptions.NonMonotonic)
-        {
-            options.InitialRandomSource.GetBytes(
-#if NETCOREAPP
-	            MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom)
-#else
-	            Compatibility.MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom)
+		if (monotonicity == GenerationOptions.MonotonicityOptions.NonMonotonic)
+		{
+			FillTimestamp(ref ulidBytesRef, timestamp);
+			options.InitialRandomSource.GetBytes(CreateSpan(ref Unsafe.Add(ref ulidBytesRef, _ulidSizeTime), _ulidSizeRandom));
+			return;
+		}
+
+		FillMonotonic(ref ulidBytesRef, timestamp, options, monotonicity);
+	}
+
+#if NET5_0_OR_GREATER
+	[SkipLocalsInit]
 #endif
-            );
-            return;
-        }
-
-        var state = options.CurrentState;
-
-        ref var lastUlidRef = ref Unsafe.As<ulong, byte>(ref state.LastUlidPart0);
-
-        using(state.Lock.Enter())
-        {
-	        // Read the last timestamp (from bytes 0-7 of "last ULID")
-            // Shift it to get 48 bits.
-            var lastTime = ReverseOnLittleEndian(state.LastUlidPart0);
-            lastTime >>= 16;
-
-            // If the timestamp is bigger than the last one, generate a new ULID
-            if (timestamp > (long)lastTime)
-            {
-	            // We work on "generated ULID", then copy it into "last ULID"
-
-	            // Generate a new random to the generated ULID
-	            options.InitialRandomSource.GetBytes(
-#if NETCOREAPP
-		            MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom)
-#else
-	                Compatibility.MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom)
+#if NETCOREAPP3_0_OR_GREATER
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 #endif
-	            );
+	private static void FillMonotonic(
+		ref byte ulidBytesRef,
+		long timestamp,
+		GenerationOptions options,
+		GenerationOptions.MonotonicityOptions monotonicity
+	)
+	{
+		ref var ulidBytesRandomRef = ref Unsafe.Add(ref ulidBytesRef, _ulidSizeTime);
 
-	            // Copy full generated ULID back to last ULID
-	            Unsafe.CopyBlock(ref lastUlidRef, ref ulidBytesRef, _ulidSize);
-            }
-            else // Otherwise, increment the last ULID
-            {
-	            // We work on "last ULID", then copy it into "generated ULID"
+		var state = options.CurrentState;
 
-	            if (monotonicity == GenerationOptions.MonotonicityOptions.MonotonicIncrement)
-	            {
-		            state.Increment(0);
-	            }
-	            else
-	            {
-		            // We can use the random bytes of incomplete ULID for the random increment span
-		            var tempSpan =
-#if NETCOREAPP
-			            MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, sizeof(uint));
-#else
-			            Compatibility.MemoryMarshal.CreateSpan(ref ulidBytesRandomRef, sizeof(uint));
-#endif
-		            options.IncrementRandomSource.GetBytes(tempSpan[..(int)monotonicity]);
-		            var increment = BinaryPrimitives.ReadUInt32LittleEndian(tempSpan);
+		using (state.Lock.Enter())
+		{
+			// Read the last timestamp (from bytes 0-7 of "last ULID")
+			// Shift it to get 48 bits.
+			var lastTime = ReverseOnLittleEndian(state.LastUlidPart0);
+			lastTime >>= 16;
 
-		            // The tempSpan may contain garbage, so mask that out
-		            var totalBitsToKeep = (int)monotonicity * 8;
-		            var mask = (uint)((1UL << totalBitsToKeep) - 1);
-		            increment &= mask;
+			// If the timestamp is bigger than the last one, generate a new ULID
+			if (timestamp > (long)lastTime)
+			{
+				// We work on "generated ULID", then copy it into "last ULID"
+				FillTimestamp(ref ulidBytesRef, timestamp);
 
-		            state.Increment(increment);
-	            }
+				// Generate a new random to the generated ULID
+				options.InitialRandomSource.GetBytes(CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom));
 
-	            // Copy full last ULID back to generated ULID
-	            Unsafe.CopyBlock(ref ulidBytesRef, ref lastUlidRef, _ulidSize);
-            }
-        }
+				// Store the generated ULID as two native-width words in the state.
+				state.LastUlidPart0 = Unsafe.ReadUnaligned<ulong>(ref ulidBytesRef);
+				state.LastUlidPart1 = Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong)));
+			}
+			else // Otherwise, increment the last ULID
+			{
+				// We work on "last ULID", then copy it into "generated ULID"
+				if (monotonicity == GenerationOptions.MonotonicityOptions.MonotonicIncrement)
+				{
+					state.Increment(0);
+				}
+				else
+				{
+					// We can use the random bytes of incomplete ULID for the random increment span
+					var tempSpan = CreateSpan(ref ulidBytesRandomRef, sizeof(uint));
+					options.IncrementRandomSource.GetBytes(tempSpan[..(int)monotonicity]);
+					var increment = BinaryPrimitives.ReadUInt32LittleEndian(tempSpan);
+
+					// The tempSpan may contain garbage, so mask that out
+					var totalBitsToKeep = (int)monotonicity * 8;
+					var mask = (uint)((1UL << totalBitsToKeep) - 1);
+					increment &= mask;
+
+					state.Increment(increment);
+				}
+
+				// Copy the state back as two native-width words.
+				Unsafe.WriteUnaligned(ref ulidBytesRef, state.LastUlidPart0);
+				Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong)), state.LastUlidPart1);
+			}
+		}
 	}
 }
