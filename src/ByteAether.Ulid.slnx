@@ -50,6 +50,18 @@
       <Build Solution="CI-Release|*" Project="false" />
     </Project>
   </Folder>
+  <Folder Name="/ASP.NET Core/">
+    <Project Path="AspNetCore/AspNetCore.Impl.csproj" />
+    <Project Path="AspNetCore.Tests.AotConsole/AspNetCore.Tests.AotConsole.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
+    <Project Path="AspNetCore.IntegrationTests.OpenApi/AspNetCore.IntegrationTests.OpenApi.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
+    <Project Path="AspNetCore.IntegrationTests/AspNetCore.IntegrationTests.csproj">
+      <Build Solution="CI-Release|*" Project="false" />
+    </Project>
+  </Folder>
 
   <Folder Name="/Solution Items/">
     <File Path="../README.md" />

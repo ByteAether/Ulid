@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <TargetFrameworks>net10.0;net9.0;net8.0;net7.0;net6.0</TargetFrameworks>
+    <OutputType>library</OutputType>
+    <IsAotCompatible>true</IsAotCompatible>
+    <NoWarn>NU1903</NoWarn>
+
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Title>ByteAether.Ulid.AspNetCore - ASP.NET Core Integration for ULID</Title>
+    <Description>Official ASP.NET Core integration for ByteAether.Ulid. Provides a ULID route constraint and optional OpenAPI schema integration while supporting built-in request and response serialization and model binding.</Description>
+
+    <PackageId>ByteAether.Ulid.AspNetCore</PackageId>
+    <PackageTags>ulid;aspnetcore;asp-net-core;web;minimal-api;openapi;api;csharp</PackageTags>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+
+    <RootNamespace>ByteAether.Ulid.AspNetCore</RootNamespace>
+    <AssemblyName>ByteAether.Ulid.AspNetCore</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ulid\Impl.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Microsoft.OpenApi" Version="1.2.3" PrivateAssets="all" Condition="'$(TargetFramework)' != 'net9.0' and '$(TargetFramework)' != 'net10.0'" />
+    <PackageReference Include="Microsoft.OpenApi" Version="1.6.17" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net10.0'" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.0.0" PrivateAssets="all" Condition="'$(TargetFramework)' != 'net10.0'" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.0.0" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net10.0'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PACKAGE.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
