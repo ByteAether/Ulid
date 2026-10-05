@@ -36,7 +36,11 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
   `ByteAether.Ulid.linq2db`
 * 📦 **[Dapper](https://www.nuget.org/packages/ByteAether.Ulid.Dapper)**
   `ByteAether.Ulid.Dapper`
-
+* 📦 **[ASP.NET Core](https://www.nuget.org/packages/ByteAether.Ulid.AspNetCore)**
+	`ByteAether.Ulid.AspNetCore`
+* 📦 **[CLI & .NET Tool](https://www.nuget.org/packages/ByteAether.Ulid.Cli)**
+  `ByteAether.Ulid.Cli`
+  
 ## 💾 Installation
 
 Install the latest stable package via NuGet:
@@ -186,7 +190,7 @@ Custom `IRandomProvider` implementations can also be created.
 
 ### ASP.NET Core
 
-Supports seamless integration as a route or query parameter with built-in `TypeConverter`.
+The optional `ByteAether.Ulid.AspNetCore` companion library adds ASP.NET Core-specific conveniences such as ULID route constraints, OpenAPI schema metadata, and typed ASP.NET Core integration. Basic ASP.NET Core usage still works without it, because the core `Ulid` type already supports common model binding and JSON serialization scenarios out of the box.
 
 ### System.Text.Json
 
