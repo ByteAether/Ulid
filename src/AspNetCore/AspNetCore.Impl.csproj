@@ -9,11 +9,12 @@
 
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Title>ByteAether.Ulid.AspNetCore - ASP.NET Core Integration for ULID</Title>
-    <Description>Official ASP.NET Core integration for ByteAether.Ulid. Provides a ULID route constraint and optional OpenAPI schema integration while supporting built-in request and response serialization and model binding.</Description>
+    <Title>ByteAether.Ulid.AspNetCore - ULID route constraints, JSON, and OpenAPI support for ASP.NET Core</Title>
+    <Description>Official ASP.NET Core integration for ByteAether.Ulid. Adds ULID route constraints, model binding support, JSON serialization for `Ulid` values, and optional OpenAPI/Swagger schema metadata for Minimal APIs, MVC, and web apps.</Description>
 
     <PackageId>ByteAether.Ulid.AspNetCore</PackageId>
-    <PackageTags>ulid;aspnetcore;asp-net-core;web;minimal-api;openapi;api;csharp</PackageTags>
+    <PackageIcon>logo_ulid_aspnetcore.png</PackageIcon>
+    <PackageTags>ulid;aspnetcore;asp-net-core;route-constraint;model-binding;minimal-api;openapi;swagger;json;web;csharp</PackageTags>
     <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
 
     <RootNamespace>ByteAether.Ulid.AspNetCore</RootNamespace>
@@ -36,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\assets\logo_ulid_aspnetcore.png" Pack="true" PackagePath="\" Visible="false" />
     <None Include="PACKAGE.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
