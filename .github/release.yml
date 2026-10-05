@@ -6,6 +6,9 @@ changelog:
     - title: "ByteAether.Ulid"
       labels:
         - pkg:Ulid
+    - title: "ByteAether.Ulid.AspNetCore"
+      labels:
+        - pkg:AspNetCore
     - title: "ByteAether.Ulid.EntityFrameworkCore"
       labels:
         - pkg:EFCore
@@ -15,6 +18,9 @@ changelog:
     - title: "ByteAether.Ulid.Dapper"
       labels:
         - pkg:Dapper
+    - title: "ByteAether.Ulid.Cli"
+      labels:
+        - pkg:Cli
     - title: "Other"
       labels:
         - "*" # Catch-all for PRs that don't match the package labels above
