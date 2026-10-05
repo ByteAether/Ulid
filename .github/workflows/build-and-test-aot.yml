@@ -39,3 +39,13 @@ jobs:
     - name: Run AOT Compiled Application (${{ matrix.os }})
       shell: bash # Ensure bash is used on Windows as well for consistent pathing syntax (./)
       run: ./publish/Tests.AotConsole
+
+    - name: Restore ASP.NET Core AOT test dependencies
+      run: dotnet restore src/AspNetCore.Tests.AotConsole/AspNetCore.Tests.AotConsole.csproj -p:Configuration=CI-Release --use-current-runtime -p:SelfContained=true
+
+    - name: Build and Publish ASP.NET Core AOT Test (${{ matrix.os }})
+      run: dotnet publish src/AspNetCore.Tests.AotConsole/AspNetCore.Tests.AotConsole.csproj --configuration CI-Release --no-restore --use-current-runtime --self-contained true -o ./publish-aspnetcore
+
+    - name: Run ASP.NET Core AOT Test (${{ matrix.os }})
+      shell: bash
+      run: ./publish-aspnetcore/AspNetCore.Tests.AotConsole

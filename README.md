@@ -74,6 +74,8 @@ This library explicitly **multi-targets** each runtime version listed below, ena
   `ByteAether.Ulid.linq2db`
 * 📦 **[Dapper](#dapper-integration--byteaetheruliddapper)**
   `ByteAether.Ulid.Dapper`
+* 📦 **[ASP.NET Core](#aspnet-core)**
+  `ByteAether.Ulid.AspNetCore`
 * 📦 **[CLI & .NET Tool](#net-tool--cli-integration--byteaetherulidcli)**
   `ByteAether.Ulid.Cli`
 
@@ -311,9 +313,44 @@ Custom `IRandomProvider` implementations can also be created.
 
 ## 🔌 Integration with Other Libraries
 
-### ASP.NET Core
+### ASP.NET Core Integration – ByteAether.Ulid.AspNetCore
 
-Supports seamless integration as a route or query parameter with built-in `TypeConverter`.
+[<img align="right" width="100px" src="assets/logo_ulid_aspnetcore.png" />](https://www.nuget.org/packages/ByteAether.Ulid.AspNetCore/)
+
+[![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
+![ASP.NET Core 6.0+](https://img.shields.io/badge/ASP.NET_Core-6.0+-orange)
+[![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.AspNetCore?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.AspNetCore/)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.AspNetCore?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.AspNetCore/)
+
+**This companion package is optional.** The core `ByteAether.Ulid` library already supports ULIDs as ASP.NET Core route and query parameters through its built-in `TypeConverter`, and serializes ULIDs as strings with `System.Text.Json`. Install the companion package only if you need its additional ASP.NET Core integrations:
+
+- A `:ulid` route constraint that matches only valid ULIDs.
+- Typed `Ulid` route link generation.
+- Optional OpenAPI schema support for Swashbuckle or built-in ASP.NET Core OpenAPI.
+
+To use these additional features, install the package:
+
+```sh
+dotnet add package ByteAether.Ulid.AspNetCore
+```
+
+Then register the `ulid` route constraint during application startup:
+
+```csharp
+using ByteAether.Ulid;
+using ByteAether.Ulid.AspNetCore;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddUlidRouteConstraint();
+
+var app = builder.Build();
+app.MapGet("/users/{id:ulid}", (Ulid id) => Results.Ok(id));
+app.Run();
+```
+
+The package depends on `ByteAether.Ulid`. OpenAPI packages remain optional and are not added transitively.
+
+More details in the package's [PACKAGE.md](./src/AspNetCore/PACKAGE.md) file.
 
 ### System.Text.Json (.NET 5.0+)
 
