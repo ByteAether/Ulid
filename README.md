@@ -158,6 +158,7 @@ The monotonicity state (last generated timestamp and 80-bit random payload) is b
 
 * **Instance Reuse (Recommended for Sequences):** Reusing a single `GenerationOptions` instance across calls guarantees strict, cross-thread monotonic ordering via lock-free atomic compare-and-exchange (CAS) operations.
 * **Instance Isolation:** Passing a new `GenerationOptions` instance on each call isolates state, disabling monotonic sequence tracking between calls and eliminating CAS contention.
+* **Copies:** A copy made with a `with` expression (e.g. `options with { Monotonicity = ... }`) gets its own, fresh state. It never continues or shares the sequence of the instance it was copied from.
 
 ```csharp
 using System;

@@ -206,12 +206,8 @@ public readonly partial struct Ulid
 					// We can use the random bytes of incomplete ULID for the random increment span
 					var tempSpan = CreateSpan(ref ulidBytesRandomRef, sizeof(uint));
 					options.IncrementRandomSource.GetBytes(tempSpan[..(int)monotonicity]);
-					var increment = BinaryPrimitives.ReadUInt32LittleEndian(tempSpan);
-
 					// The tempSpan may contain garbage, so mask that out
-					var totalBitsToKeep = (int)monotonicity * 8;
-					var mask = (uint)((1UL << totalBitsToKeep) - 1);
-					increment &= mask;
+					var increment = BinaryPrimitives.ReadUInt32LittleEndian(tempSpan) & options.IncrementMask;
 
 					state.Increment(increment);
 				}

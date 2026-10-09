@@ -107,10 +107,20 @@ public readonly partial struct Ulid
 		public MonotonicityOptions Monotonicity
 		{
 			get;
-			init => field = Enum.IsDefined(typeof(MonotonicityOptions), value)
-				? value
-				: throw new ArgumentOutOfRangeException(nameof(Monotonicity), value, "Invalid monotonicity option.");
+			init
+			{
+				field = value is >= MonotonicityOptions.NonMonotonic and <= MonotonicityOptions.MonotonicRandom4Byte
+					? value
+					: throw new ArgumentOutOfRangeException(nameof(Monotonicity), value, "Invalid monotonicity option.");
+
+				// Keeps the lowest N bytes of a random increment for the MonotonicRandomNByte options
+				IncrementMask = value > MonotonicityOptions.MonotonicIncrement
+					? (uint)((1UL << ((int)value * 8)) - 1)
+					: 0;
+			}
 		} = MonotonicityOptions.MonotonicIncrement;
+
+		internal readonly uint IncrementMask;
 
 		/// <summary>
 		/// Initial random source used for ULID generation.
@@ -143,6 +153,31 @@ public readonly partial struct Ulid
 		public IRandomProvider IncrementRandomSource { get; init; } = new PseudoRandomProvider();
 
 		internal readonly State CurrentState = new();
+
+		/// <summary>
+		/// Initializes a new instance of <see cref="GenerationOptions"/> with default values and its own monotonicity state.
+		/// </summary>
+		public GenerationOptions()
+		{
+		}
+
+		/// <summary>
+		/// Initializes a copy of <paramref name="original"/> with its own monotonicity state.
+		/// </summary>
+		/// <remarks>
+		/// This constructor is invoked by <c>with</c> expressions. The copy never shares the monotonicity state
+		/// (last generated ULID) with <paramref name="original"/>, so the two instances generate independent sequences.
+		/// </remarks>
+		/// <param name="original">The instance to copy the configuration from.</param>
+		protected GenerationOptions(GenerationOptions original)
+		{
+			Monotonicity = original.Monotonicity;
+			InitialRandomSource = original.InitialRandomSource;
+			IncrementRandomSource = original.IncrementRandomSource;
+
+			// Field initializers do not run for record copy constructors
+			CurrentState = new();
+		}
 
 		// Separates Lock and LastUlid into different cache lines to prevent "false sharing"
 		// x64 has 64-byte cache lines; ARM64 (e.g., Apple Silicon) has 128-byte cache lines
