@@ -176,10 +176,8 @@ public readonly partial struct Ulid
 
 		using (state.EnterLock())
 		{
-			// Read the last timestamp (from bytes 0-7 of "last ULID")
-			// Shift it to get 48 bits.
-			var lastTime = ReverseOnLittleEndian(state.LastUlidPart0);
-			lastTime >>= 16;
+			// The last timestamp is in the upper 48 bits of the first half of "last ULID"
+			var lastTime = state.LastUlidPart0 >> 16;
 
 			// If the timestamp is bigger than the last one, generate a new ULID
 			if (timestamp > (long)lastTime)
@@ -190,9 +188,9 @@ public readonly partial struct Ulid
 				// Generate a new random to the generated ULID
 				options.InitialRandomSource.GetBytes(CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom));
 
-				// Store the generated ULID as two native-width words in the state.
-				state.LastUlidPart0 = Unsafe.ReadUnaligned<ulong>(ref ulidBytesRef);
-				state.LastUlidPart1 = Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong)));
+				// Store the generated ULID in the state as two numeric halves.
+				state.LastUlidPart0 = ReverseOnLittleEndian(Unsafe.ReadUnaligned<ulong>(ref ulidBytesRef));
+				state.LastUlidPart1 = ReverseOnLittleEndian(Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong))));
 			}
 			else // Otherwise, increment the last ULID
 			{
@@ -212,9 +210,9 @@ public readonly partial struct Ulid
 					state.Increment(increment);
 				}
 
-				// Copy the state back as two native-width words.
-				Unsafe.WriteUnaligned(ref ulidBytesRef, state.LastUlidPart0);
-				Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong)), state.LastUlidPart1);
+				// Copy the state back in big-endian byte order.
+				Unsafe.WriteUnaligned(ref ulidBytesRef, ReverseOnLittleEndian(state.LastUlidPart0));
+				Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong)), ReverseOnLittleEndian(state.LastUlidPart1));
 			}
 		}
 	}

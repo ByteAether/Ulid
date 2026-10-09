@@ -189,6 +189,7 @@ public readonly partial struct Ulid
 
 			[FieldOffset(_cacheLineSize)] public LowLatencyLock Lock;
 
+			// The last generated ULID as two numeric (not byte order) halves, so that increments need no byte swaps
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
 			[FieldOffset(_cacheLineSize * 2)] public ulong LastUlidPart0;
 			[FieldOffset(_cacheLineSize * 2 + 8)] public ulong LastUlidPart1;
@@ -221,18 +222,17 @@ public readonly partial struct Ulid
 			internal void Increment(uint addition)
 			{
 				var increment = (ulong)addition + 1; // carry = 1 is built-in
-				var part1 = ReverseOnLittleEndian(LastUlidPart1);
+				var part1 = LastUlidPart1;
 				var newPart1 = part1 + increment;
-				LastUlidPart1 = ReverseOnLittleEndian(newPart1);
+				LastUlidPart1 = newPart1;
 
 				if (newPart1 >= part1)
 				{
 					return;
 				}
 
-				var part0 = ReverseOnLittleEndian(LastUlidPart0);
-				part0++;
-				LastUlidPart0 = ReverseOnLittleEndian(part0);
+				var part0 = LastUlidPart0 + 1;
+				LastUlidPart0 = part0;
 				if (part0 == 0)
 				{
 					throw new OverflowException("Addition resulted in a ULID value larger than the absolute maximum ULID value.");
