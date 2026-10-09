@@ -301,6 +301,52 @@ public class UlidStringTests
 	}
 
 	[Fact]
+	public void ToString_RandomValues_ShouldRoundTrip()
+	{
+		// Arrange
+		var random = new Random(42);
+		var bytes = new byte[16];
+		Span<byte> utf8 = stackalloc byte[Ulid.UlidStringLength];
+
+		for (var i = 0; i < 10_000; i++)
+		{
+			random.NextBytes(bytes);
+			var ulid = Ulid.New(bytes);
+
+			// Act
+			var str = ulid.ToString();
+			ulid.TryFormat(utf8, out _, []);
+
+			// Assert
+			Assert.Equal(str, Encoding.ASCII.GetString(utf8.ToArray()));
+			Assert.Equal(ulid, Ulid.Parse(str));
+			Assert.Equal(ulid, Ulid.Parse(utf8));
+		}
+	}
+
+	[Fact]
+	public void TryParse_ShouldNotAllocate()
+	{
+		// Arrange
+		var bytes = Encoding.UTF8.GetBytes(_goodUlidString);
+		Ulid.TryParse(_goodUlidString.AsSpan(), null, out _);
+		Ulid.TryParse(bytes, null, out _);
+
+		// Act
+		var before = GC.GetAllocatedBytesForCurrentThread();
+		for (var i = 0; i < 100; i++)
+		{
+			Ulid.TryParse(_goodUlidString.AsSpan(), null, out _);
+			Ulid.TryParse(bytes, null, out _);
+			Ulid.TryParse("not a ulid".AsSpan(), null, out _);
+		}
+		var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
+
+		// Assert
+		Assert.Equal(0, allocated);
+	}
+
+	[Fact]
 	public void ToString_WrongLetters_ShouldReplaceWithCorrect()
 	{
 		// Crockford's Base32 substitution test

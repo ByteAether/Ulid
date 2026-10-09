@@ -43,7 +43,7 @@ public readonly partial struct Ulid
 		{
 			// 1. Fast check for the first character (prevent 128-bit overflow)
 			uint c0 = src[0];
-			if (c0 > 255 || _inverseBase32[c0] > 7)
+			if (c0 > 255 || _inverseBase32[(int)c0] > 7)
 			{
 				return false;
 			}

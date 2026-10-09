@@ -34,7 +34,8 @@ public readonly partial struct Ulid
 
 	private static readonly char[] _base32Chars = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".ToCharArray();
 	private static readonly byte[] _base32Bytes = Encoding.UTF8.GetBytes(_base32Chars);
-	private static readonly byte[] _inverseBase32 =
+	// Stored as RVA static data: no static field load, no initialization check and a constant length
+	private static ReadOnlySpan<byte> _inverseBase32 =>
 	[
 		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // controls
 		255, // space
@@ -193,7 +194,7 @@ public readonly partial struct Ulid
 		}
 
 		ref var src = ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(input));
-		ref var tableRef = ref _inverseBase32[0];
+		ref var tableRef = ref MemoryMarshal.GetReference(_inverseBase32);
 
 		// The 128-bit value is built as 2 big-endian 64-bit blocks (a | b and c | d), then the endianness is reversed.
 		// Every character is decoded and accumulated right away, which keeps the register pressure low,
@@ -311,7 +312,7 @@ public readonly partial struct Ulid
 
 		// Non-ASCII bytes (0x80 and above) are mapped to an invalid value in the table
 		ref var src = ref MemoryMarshal.GetReference(input);
-		ref var tableRef = ref _inverseBase32[0];
+		ref var tableRef = ref MemoryMarshal.GetReference(_inverseBase32);
 
 		// The 128-bit value is built as 2 big-endian 64-bit blocks (a | b and c | d), then the endianness is reversed.
 		// Every character is decoded and accumulated right away, which keeps the register pressure low,
@@ -549,35 +550,38 @@ public readonly partial struct Ulid
 
 	private void Fill<T>(Span<T> span, T[] map) where T: unmanaged
 	{
-		// Encode randomness
-		span[25] = map[_r9 & 0x1F];                      // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111|11111|]
-		span[24] = map[((_r8 & 0x3) << 3) | (_r9 >> 5)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111111|11][111|11111]
-		span[23] = map[(_r8 >> 2) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][1|11111|11][11111111]
-		span[22] = map[((_r7 & 0xF) << 1) | (_r8 >> 7)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][1111|1111][1|1111111][11111111]
-		span[21] = map[((_r6 & 0x1) << 4) | (_r7 >> 4)]; // [11111111][11111111][11111111][11111111][11111111][11111111][1111111|1][1111|1111][11111111][11111111]
-		span[20] = map[(_r6 >> 1) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11|11111|1][11111111][11111111][11111111]
-		span[19] = map[((_r5 & 0x7) << 2) | (_r6 >> 6)]; // [11111111][11111111][11111111][11111111][11111111][11111|111][11|111111][11111111][11111111][11111111]
-		span[18] = map[(_r5 >> 3) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][|11111|111][11111111][11111111][11111111][11111111]
-		span[17] = map[_r4 & 0x1F];                      // [11111111][11111111][11111111][11111111][111|11111|][11111111][11111111][11111111][11111111][11111111]
-		span[16] = map[((_r3 & 0x3) << 3) | (_r4 >> 5)]; // [11111111][11111111][11111111][11111111][111111|11][111|11111][11111111][11111111][11111111][11111111]
-		span[15] = map[(_r3 >> 2) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[14] = map[((_r2 & 0xF) << 1) | (_r3 >> 7)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[13] = map[((_r1 & 0x1) << 4) | (_r2 >> 4)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[12] = map[(_r1 >> 1) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[11] = map[((_r0 & 0x7) << 2) | (_r1 >> 6)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[10] = map[(_r0 >> 3) & 0x1F];               // [|11111|111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
+		// Load the ULID as two big-endian 64-bit halves and extract the 5-bit groups with shifts
+		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref Unsafe.AsRef(in this));
+		var hi = ReverseOnLittleEndian(Unsafe.ReadUnaligned<ulong>(ref ulidRef));
+		var lo = ReverseOnLittleEndian(Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref ulidRef, sizeof(ulong))));
 
-		// Encode timestamp
-		span[9] = map[_t5 & 0x1F];                       // 00[11111111][11111111][11111111][11111111][11111111][111|11111|]
-		span[8] = map[((_t4 & 0x3) << 3) | (_t5 >> 5)];  // 00[11111111][11111111][11111111][11111111][111111|11][111|11111]
-		span[7] = map[(_t4 >> 2) & 0x1F];                // 00[11111111][11111111][11111111][11111111][1|11111|11][11111111]
-		span[6] = map[((_t3 & 0xF) << 1) | (_t4 >> 7)];  // 00[11111111][11111111][11111111][1111|1111][1|1111111][11111111]
-		span[5] = map[((_t2 & 0x1) << 4) | (_t3 >> 4)];  // 00[11111111][11111111][1111111|1][1111|1111][11111111][11111111]
-		span[4] = map[(_t2 >> 1) & 0x1F];                // 00[11111111][11111111][11|11111|1][11111111][11111111][11111111]
-		span[3] = map[((_t1 & 0x7) << 2) | (_t2 >> 6)];  // 00[11111111][11111|111][11|111111][11111111][11111111][11111111]
-		span[2] = map[_t1 >> 3];                         // 00[11111111][|11111|111][11111111][11111111][11111111][11111111]
-		span[1] = map[_t0 & 0x1F];                       // 00[111|11111|][11111111][11111111][11111111][11111111][11111111]
-		span[0] = map[_t0 >> 5];                         // |00[111|11111][11111111][11111111][11111111][11111111][11111111]
+		// Writing the last element first removes the bounds checks of the other elements
+		span[25] = map[(int)lo & 0x1F];
+		span[24] = map[(int)(lo >> 5) & 0x1F];
+		span[23] = map[(int)(lo >> 10) & 0x1F];
+		span[22] = map[(int)(lo >> 15) & 0x1F];
+		span[21] = map[(int)(lo >> 20) & 0x1F];
+		span[20] = map[(int)(lo >> 25) & 0x1F];
+		span[19] = map[(int)(lo >> 30) & 0x1F];
+		span[18] = map[(int)(lo >> 35) & 0x1F];
+		span[17] = map[(int)(lo >> 40) & 0x1F];
+		span[16] = map[(int)(lo >> 45) & 0x1F];
+		span[15] = map[(int)(lo >> 50) & 0x1F];
+		span[14] = map[(int)(lo >> 55) & 0x1F];
+		span[13] = map[(int)((hi << 4) | (lo >> 60)) & 0x1F]; // Lowest bit of hi, highest 4 bits of lo
+		span[12] = map[(int)(hi >> 1) & 0x1F];
+		span[11] = map[(int)(hi >> 6) & 0x1F];
+		span[10] = map[(int)(hi >> 11) & 0x1F];
+		span[9] = map[(int)(hi >> 16) & 0x1F];
+		span[8] = map[(int)(hi >> 21) & 0x1F];
+		span[7] = map[(int)(hi >> 26) & 0x1F];
+		span[6] = map[(int)(hi >> 31) & 0x1F];
+		span[5] = map[(int)(hi >> 36) & 0x1F];
+		span[4] = map[(int)(hi >> 41) & 0x1F];
+		span[3] = map[(int)(hi >> 46) & 0x1F];
+		span[2] = map[(int)(hi >> 51) & 0x1F];
+		span[1] = map[(int)(hi >> 56) & 0x1F];
+		span[0] = map[(int)(hi >> 61)];
 	}
 
 	/// <summary>
