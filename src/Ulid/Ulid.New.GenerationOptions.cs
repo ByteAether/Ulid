@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace ByteAether.Ulid;
@@ -146,16 +146,21 @@ public readonly partial struct Ulid
 
 		// Separates Lock and LastUlid into different cache lines to prevent "false sharing"
 		// x64 has 64-byte cache lines; ARM64 (e.g., Apple Silicon) has 128-byte cache lines
+		// The leading and trailing padding keep neighboring heap objects off those cache lines.
 		[StructLayout(LayoutKind.Explicit)]
 		internal class State
 		{
-			// Cache Line 1
-			[FieldOffset(16)] public LowLatencyLock Lock;
+			private const int _cacheLineSize = 128;
 
-			// Cache Line 2(ARM64)/3(x64)
+			[FieldOffset(_cacheLineSize)] public LowLatencyLock Lock;
+
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
-			[FieldOffset(16+128)] public ulong LastUlidPart0;
-			[FieldOffset(16+128+8)] public ulong LastUlidPart1;
+			[FieldOffset(_cacheLineSize * 2)] public ulong LastUlidPart0;
+			[FieldOffset(_cacheLineSize * 2 + 8)] public ulong LastUlidPart1;
+
+#pragma warning disable CS0169 // Padding field is never used
+			[FieldOffset(_cacheLineSize * 3 + 8)] private readonly ulong _trailingPadding;
+#pragma warning restore CS0169
 #pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -22,10 +22,12 @@ internal struct LowLatencyLock
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private static void ContendedEnter(ref int lockState)
 	{
+		// Test-and-test-and-set: spin on a plain read, which keeps the cache line shared,
+		// and only attempt the exclusive compare-exchange once the lock looks free.
 		var spinner = new SpinWait();
 		while (true)
 		{
-			if (Interlocked.CompareExchange(ref lockState, 1, 0) == 0)
+			if (Volatile.Read(ref lockState) == 0 && Interlocked.CompareExchange(ref lockState, 1, 0) == 0)
 			{
 				return;
 			}
