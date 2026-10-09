@@ -158,11 +158,7 @@ public readonly partial struct Ulid
 			[FieldOffset(16+128+8)] public ulong LastUlidPart1;
 #pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
 
-#if NETCOREAPP3_0_OR_GREATER
-			[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 			internal Scope EnterLock()
 			{
 				Lock.Enter();
@@ -174,29 +170,14 @@ public readonly partial struct Ulid
 			{
 				private readonly State _state;
 
-#if NETCOREAPP3_0_OR_GREATER
-				[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 				internal Scope(State state) => _state = state;
 
-#if NETCOREAPP3_0_OR_GREATER
-				[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 				public void Dispose() => _state.Lock.Exit();
 			}
 
-#if NET5_0_OR_GREATER
-			[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-			[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			internal void Increment(uint addition)
 			{
 				var increment = (ulong)addition + 1; // carry = 1 is built-in

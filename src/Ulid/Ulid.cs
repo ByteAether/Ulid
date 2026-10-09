@@ -6,6 +6,10 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 #endif
 
+#if NET5_0_OR_GREATER
+[module: SkipLocalsInit]
+#endif
+
 namespace ByteAether.Ulid;
 
 /// <summary>
@@ -58,11 +62,7 @@ public readonly partial struct Ulid
 	[IgnoreDataMember]
 	public ReadOnlySpan<byte> Random
 	{
-#if NETCOREAPP3_0_OR_GREATER
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 		get => AsByteSpan()[_ulidSizeTime..];
 	}
 
@@ -79,11 +79,7 @@ public readonly partial struct Ulid
 	[IgnoreDataMember]
 	public ReadOnlySpan<byte> TimeBytes
 	{
-#if NETCOREAPP3_0_OR_GREATER
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 		get => AsByteSpan()[.._ulidSizeTime];
 	}
 
@@ -102,14 +98,7 @@ public readonly partial struct Ulid
 	[IgnoreDataMember]
 	public DateTimeOffset Time
 	{
-#if NET5_0_OR_GREATER
-		[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 		get
 		{
 			// Combine the 6 bytes into a 48-bit timestamp (big-endian order)
@@ -145,14 +134,7 @@ public readonly partial struct Ulid
 	/// A <see cref="ReadOnlySpan{T}"/> that points to the raw byte representation of the current <see cref="Ulid"/> struct.
 	/// </returns>
 #endif
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public ReadOnlySpan<byte> AsByteSpan()
 #if NETSTANDARD2_0
 		=> ToByteArray();
@@ -164,14 +146,7 @@ public readonly partial struct Ulid
 	/// Converts the ULID to a byte array.
 	/// </summary>
 	/// <returns>A byte array representing the ULID.</returns>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public byte[] ToByteArray()
 	{
 		var bytes = new byte[_ulidSize];

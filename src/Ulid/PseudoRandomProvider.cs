@@ -12,11 +12,7 @@ public readonly struct PseudoRandomProvider : IRandomProvider
 #if NET6_0_OR_GREATER
 	private static Random _rng
 	{
-#if NETCOREAPP3_0_OR_GREATER
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 		get => Random.Shared;
 	}
 #else
@@ -24,10 +20,6 @@ public readonly struct PseudoRandomProvider : IRandomProvider
 #endif
 
 	/// <inheritdoc/>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public void GetBytes(Span<byte> buffer) => _rng.NextBytes(buffer);
 }

@@ -87,28 +87,14 @@ public readonly partial struct Ulid
 	];
 
 	/// <inheritdoc />
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
 	/// <summary>
 	/// Returns a string representation of the current instance of <see cref="Ulid"/> in its canonical Crockford's Base32 format.'
 	/// </summary>
 	/// <returns>Crockford's Base32 representation of the ULID</returns>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public override string ToString()
 	{
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
@@ -132,14 +118,7 @@ public readonly partial struct Ulid
 	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
 	/// </remarks>
 	/// <exception cref="FormatException">Thrown if the input span is not a valid ULID string representation.</exception>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid Parse(ReadOnlySpan<char> chars, IFormatProvider? provider = null)
 	{
 		var ulid = ParseCore(chars, out var isValid);
@@ -163,14 +142,7 @@ public readonly partial struct Ulid
 	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
 	/// </remarks>
 	/// <exception cref="FormatException">Thrown if the input byte span does not contain a valid ULID string representation.</exception>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid Parse(ReadOnlySpan<byte> bytes, IFormatProvider? provider = null)
 	{
 		var ulid = ParseCore(bytes, out var isValid);
@@ -182,12 +154,6 @@ public readonly partial struct Ulid
 		return ulid;
 	}
 
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
 	private static Ulid ParseCore(ReadOnlySpan<char> input, out bool isValid)
 	{
 		if (input.Length != UlidStringLength)
@@ -335,12 +301,6 @@ public readonly partial struct Ulid
 	private static byte ReadLowByte(ref byte src, int index)
 		=> (byte)Unsafe.ReadUnaligned<ushort>(ref Unsafe.Add(ref src, index * sizeof(char)));
 
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
 	private static Ulid ParseCore(ReadOnlySpan<byte> input, out bool isValid)
 	{
 		if (input.Length != UlidStringLength)
@@ -471,11 +431,7 @@ public readonly partial struct Ulid
 	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
 	/// </remarks>
 	/// <exception cref="FormatException">Thrown if the input string is not a valid ULID string representation.</exception>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid Parse(string s, IFormatProvider? provider = null)
 		=> Parse(s.AsSpan(), provider);
 
@@ -491,11 +447,7 @@ public readonly partial struct Ulid
 	/// Crockford's Base32 alphabet, read case-insensitively, with <c>I</c> and <c>L</c> accepted as <c>1</c>, and
 	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
 	/// </remarks>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out Ulid result)
 		=> TryParse(s.AsSpan(), provider, out result);
 
@@ -511,11 +463,7 @@ public readonly partial struct Ulid
 	/// Crockford's Base32 alphabet, read case-insensitively, with <c>I</c> and <c>L</c> accepted as <c>1</c>, and
 	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
 	/// </remarks>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Ulid result)
 	{
 		result = ParseCore(s, out var isValid);
@@ -534,11 +482,7 @@ public readonly partial struct Ulid
 	/// Crockford's Base32 alphabet, read case-insensitively, with <c>I</c> and <c>L</c> accepted as <c>1</c>, and
 	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
 	/// </remarks>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static bool TryParse(ReadOnlySpan<byte> s, IFormatProvider? provider, out Ulid result)
 	{
 		result = ParseCore(s, out var isValid);
@@ -555,11 +499,7 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the formatting is successful and the destination span is large enough to contain the formatted data; otherwise, <c>false</c>.
 	/// </returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public bool TryFormat(
 		Span<char> destination,
 		out int charsWritten,
@@ -588,11 +528,7 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the formatting was successful; <c>false</c> if the destination span was too short to contain the formatted value.
 	/// </returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public bool TryFormat(
 		Span<byte> destination,
 		out int bytesWritten,
@@ -611,9 +547,6 @@ public readonly partial struct Ulid
 		return true;
 	}
 
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
 	private void Fill<T>(Span<T> span, T[] map) where T: unmanaged
 	{
 		// Encode randomness
@@ -652,11 +585,7 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="ulid"></param>
 	/// <returns></returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static implicit operator string(Ulid ulid) => ulid.ToString();
 
 	/// <summary>
@@ -665,10 +594,6 @@ public readonly partial struct Ulid
 	/// <param name="str">The ULID string representation. See <see cref="Parse(string, IFormatProvider)"/>.</param>
 	/// <returns>The parsed <see cref="Ulid"/>.</returns>
 	/// <exception cref="FormatException">Thrown if <paramref name="str"/> is not a valid ULID string representation.</exception>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static implicit operator Ulid(string str) => Parse(str);
 }

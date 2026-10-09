@@ -15,14 +15,7 @@ public readonly partial struct Ulid
 	/// Creates a new ULID using the specified GUID.
 	/// </summary>
 	/// <param name="guid">The GUID to initialize the ULID with.</param>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid New(Guid guid)
 		=> BitConverter.IsLittleEndian
 			? Shuffle<Guid, Ulid>(ref guid)
@@ -32,14 +25,7 @@ public readonly partial struct Ulid
 	/// Converts the ULID to a GUID.
 	/// </summary>
 	/// <returns>A GUID representing the ULID.</returns>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public Guid ToGuid()
 		=> BitConverter.IsLittleEndian
 			? Shuffle<Ulid, Guid>(ref Unsafe.AsRef(in this))
@@ -50,11 +36,7 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="ulid">The ULID to convert.</param>
 	/// <returns>A GUID representing the ULID.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static implicit operator Guid(Ulid ulid) => ulid.ToGuid();
 
 	/// <summary>
@@ -62,11 +44,7 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="guid">The GUID to convert.</param>
 	/// <returns>A ULID representing the GUID.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static implicit operator Ulid(Guid guid) => New(guid);
 
 #if NETCOREAPP
@@ -82,14 +60,7 @@ public readonly partial struct Ulid
 	// Int32, Int16, Int16, Int8, Int8, Int8, Int8, Int8, Int8, Int8, Int8
 	// Source: https://github.com/dotnet/runtime/blob/5c4686f831d34c2c127e943d0f0d144793eeb0ad/src/libraries/System.Private.CoreLib/src/System/Guid.cs
 	// More info: https://stackoverflow.com/questions/10190817/guid-byte-order-in-net/10191075#10191075
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	private static TOut Shuffle<TIn, TOut>(ref TIn bytes)
 	{
 #if NET7_0_OR_GREATER

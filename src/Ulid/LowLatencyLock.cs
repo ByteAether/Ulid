@@ -6,14 +6,7 @@ internal struct LowLatencyLock
 {
 	internal int LockState;
 
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	internal void Enter()
 	{
 		if (Interlocked.CompareExchange(ref LockState, 1, 0) != 0)
@@ -22,25 +15,11 @@ internal struct LowLatencyLock
 		}
 	}
 
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	internal void Exit()
 		=> Volatile.Write(ref LockState, 0);
 
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.NoInlining)]
-#endif
 	private static void ContendedEnter(ref int lockState)
 	{
 		var spinner = new SpinWait();
