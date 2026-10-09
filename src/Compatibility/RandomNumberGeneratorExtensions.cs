@@ -15,6 +15,8 @@ internal static class RandomNumberGeneratorExtensions
 		var rndInc = ArrayPool<byte>.Shared.Rent(buffer.Length);
 		rng.GetBytes(rndInc, 0, buffer.Length);
 		new ReadOnlySpan<byte>(rndInc, 0, buffer.Length).CopyTo(buffer);
+		// Clear, so that the generated secure random bytes do not linger in the shared pool
+		ArrayPool<byte>.Shared.Return(rndInc, clearArray: true);
 	}
 
 	// In NetStandard 2.0, Random.NextBytes() does not support Span<byte> overloads.
@@ -24,6 +26,7 @@ internal static class RandomNumberGeneratorExtensions
 		var rndInc = ArrayPool<byte>.Shared.Rent(buffer.Length);
 		rng.NextBytes(rndInc);
 		new ReadOnlySpan<byte>(rndInc, 0, buffer.Length).CopyTo(buffer);
+		ArrayPool<byte>.Shared.Return(rndInc);
 	}
 }
 #endif
