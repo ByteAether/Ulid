@@ -79,6 +79,33 @@ public class UlidNewTests
 	}
 
 	[Fact]
+	public void New_WithLongerRandom_ShouldUseFirst10Bytes()
+	{
+		// Arrange
+		var random = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+
+		// Act
+		var ulid = Ulid.New(0, random);
+
+		// Assert
+		Assert.Equal(random[..10], ulid.Random.ToArray());
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(4)]
+	[InlineData(9)]
+	public void New_WithTooShortRandom_ShouldThrowArgumentException(int length)
+	{
+		// Arrange
+		var random = new byte[length];
+
+		// Act & Assert
+		Assert.Throws<ArgumentException>("random", () => Ulid.New(0, random));
+		Assert.Throws<ArgumentException>("random", () => Ulid.New(DateTimeOffset.UtcNow, random));
+	}
+
+	[Fact]
 	public void New_NonMonotonic_CanProduceSmallerUlids()
 	{
 		// Arrange

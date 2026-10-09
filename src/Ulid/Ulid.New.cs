@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -77,12 +78,13 @@ public readonly partial struct Ulid
 	/// Must be at least 10 bytes long to populate the random component of the Ulid.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
+	/// <exception cref="ArgumentException">Thrown if <paramref name="random"/> is shorter than 10 bytes.</exception>
 #if NETCOREAPP3_0_OR_GREATER
 	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public static Ulid New(DateTimeOffset dateTimeOffset, Span<byte> random)
+	public static Ulid New(DateTimeOffset dateTimeOffset, ReadOnlySpan<byte> random)
 		=> New(dateTimeOffset.ToUnixTimeMilliseconds(), random);
 
 	/// <summary>
@@ -127,6 +129,7 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// A new <see cref="Ulid"/> instance composed of the given timestamp and random byte sequence.
 	/// </returns>
+	/// <exception cref="ArgumentException">Thrown if <paramref name="random"/> is shorter than 10 bytes.</exception>
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
@@ -135,8 +138,13 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public static Ulid New(long timestamp, Span<byte> random)
+	public static Ulid New(long timestamp, ReadOnlySpan<byte> random)
 	{
+		if (random.Length < _ulidSizeRandom)
+		{
+			ThrowRandomTooShort();
+		}
+
 		Unsafe.SkipInit(out Ulid ulid);
 
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
@@ -147,12 +155,18 @@ public readonly partial struct Ulid
 		// Fill random
 		Unsafe.CopyBlockUnaligned(
 			ref Unsafe.Add(ref ulidRef, _ulidSizeTime),
-			ref random.GetPinnableReference(),
+			ref MemoryMarshal.GetReference(random),
 			_ulidSizeRandom
 		);
 
 		return ulid;
 	}
+
+	[DoesNotReturn]
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	[SuppressMessage("ReSharper", "NotResolvedInText")]
+	private static void ThrowRandomTooShort()
+		=> throw new ArgumentException($"The random component must be at least {_ulidSizeRandom} bytes long.", "random");
 
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
