@@ -30,7 +30,7 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Microsoft.OpenApi" Version="1.2.3" PrivateAssets="all" Condition="'$(TargetFramework)' != 'net9.0' and '$(TargetFramework)' != 'net10.0'" />
-    <PackageReference Include="Microsoft.OpenApi" Version="1.6.17" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.OpenApi" Version="3.10.2" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net9.0'" />
     <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net10.0'" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.0.0" PrivateAssets="all" Condition="'$(TargetFramework)' != 'net10.0'" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.0.0" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net10.0'" />
