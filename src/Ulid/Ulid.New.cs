@@ -42,7 +42,8 @@ public readonly partial struct Ulid
 	public static Ulid New(GenerationOptions? options = null)
 		// We can avoid Offset-related allocations by using DateTime over DateTimeOffset
 		// For public API, DateTimeOffset is an official recommendation
-		=> New((DateTime.UtcNow.Ticks - _unixEpochTicks) / TimeSpan.TicksPerMillisecond, options);
+		// Unsigned division is cheaper, the current time is always after the Unix epoch
+		=> New((long)((ulong)(DateTime.UtcNow.Ticks - _unixEpochTicks) / TimeSpan.TicksPerMillisecond), options);
 
 	/// <summary>
 	/// Creates a new <see cref="Ulid"/> with the specified timestamp.

@@ -101,17 +101,10 @@ public readonly partial struct Ulid
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get
 		{
-			// Combine the 6 bytes into a 48-bit timestamp (big-endian order)
-			var time =
-				((long)_t0 << 40) |
-				((long)_t1 << 32) |
-				((long)_t2 << 24) |
-				((long)_t3 << 16) |
-				((long)_t4 << 8) |
-				_t5
-			;
+			// The first 8 bytes in big-endian order hold the 48-bit timestamp in their upper bits
+			var time = ReverseOnLittleEndian(Unsafe.As<Ulid, ulong>(ref Unsafe.AsRef(in this))) >> 16;
 
-			return DateTimeOffset.FromUnixTimeMilliseconds(time);
+			return DateTimeOffset.FromUnixTimeMilliseconds((long)time);
 		}
 	}
 
