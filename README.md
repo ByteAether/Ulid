@@ -235,6 +235,8 @@ The `Ulid` implementation provides the following properties and methods:
 - `Ulid.IsValid(ReadOnlySpan<byte> ulidBytes)`\
   Validates whether the specified byte array represents a valid ULID.
 
+A valid ULID string is exactly 26 characters of [Crockford's Base32](https://www.crockford.com/base32.html) alphabet, read case-insensitively, with `I` and `L` accepted as `1`, and `O` as `0`. The first character must be between `0` and `7`, as larger values do not fit into 128 bits.
+
 ### Parsing
 
 - `Ulid.Parse(ReadOnlySpan<char> chars, IFormatProvider? provider = null)`\
@@ -245,6 +247,12 @@ The `Ulid` implementation provides the following properties and methods:
   Parses a ULID from a string in canonical format. The `IFormatProvider` is ignored.
 - `Ulid.TryParse(string? s, IFormatProvider? provider, out Ulid result)`\
   Tries to parse a ULID from a string in canonical format. Returns `true` if successful.
+- `Ulid.Parse(ReadOnlySpan<byte> bytes, IFormatProvider? provider = null)`\
+  Parses a ULID from a UTF-8 encoded byte span in canonical format. The `IFormatProvider` is ignored.
+- `Ulid.TryParse(ReadOnlySpan<byte> s, IFormatProvider? provider, out Ulid result)`\
+  Tries to parse a ULID from a UTF-8 encoded byte span in canonical format. Returns `true` if successful.
+
+Parsing applies the same rules as validation (see Checking Validity above). `Parse` throws a `FormatException` for input that `IsValid` rejects, while `TryParse` returns `false` without throwing.
 
 ### Properties
 

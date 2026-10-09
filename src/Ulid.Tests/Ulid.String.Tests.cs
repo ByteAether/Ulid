@@ -218,6 +218,88 @@ public class UlidStringTests
 		Assert.Equal(default, ulid);
 	}
 
+	public static TheoryData<int, char> InvalidCharacters()
+	{
+		// Characters outside the alphabet, and non-ASCII characters whose low byte is a valid character
+		var invalidChars = new[] { 'U', 'u', '!', '@', '[', '`', '{', ' ', '\0', '\u00FF', '\u0130', '\u0141', '\uFF10' };
+
+		var data = new TheoryData<int, char>();
+		for (var position = 0; position < Ulid.UlidStringLength; position++)
+		{
+			foreach (var invalidChar in invalidChars)
+			{
+				data.Add(position, invalidChar);
+			}
+		}
+
+		return data;
+	}
+
+	[Theory]
+	[MemberData(nameof(InvalidCharacters))]
+	public void TryParse_InvalidCharacter_ShouldReturnFalse(int position, char invalidChar)
+	{
+		// Arrange
+		var chars = _goodUlidString.ToCharArray();
+		chars[position] = invalidChar;
+		var inputString = new string(chars);
+
+		// Act & Assert
+		Assert.False(Ulid.TryParse(inputString, null, out var ulid));
+		Assert.Equal(default, ulid);
+		Assert.False(Ulid.TryParse(inputString.AsSpan(), null, out _));
+		Assert.Throws<FormatException>(() => Ulid.Parse(inputString));
+		Assert.Throws<FormatException>(() => Ulid.Parse(inputString.AsSpan()));
+		Assert.False(Ulid.IsValid(inputString));
+
+		if (invalidChar <= 0xFF)
+		{
+			// Same input, one byte per character
+			var bytes = chars.Select(x => (byte)x).ToArray();
+			Assert.False(Ulid.TryParse(bytes, null, out _));
+			Assert.Throws<FormatException>(() => Ulid.Parse(bytes));
+		}
+	}
+
+	[Theory]
+	[InlineData('8')]
+	[InlineData('9')]
+	[InlineData('A')]
+	[InlineData('Z')]
+	[InlineData('z')]
+	public void TryParse_ValueLargerThan128Bits_ShouldReturnFalse(char firstChar)
+	{
+		// Arrange
+		var inputString = firstChar + _goodUlidString[1..];
+
+		// Act & Assert
+		Assert.False(Ulid.TryParse(inputString, null, out _));
+		Assert.False(Ulid.TryParse(Encoding.UTF8.GetBytes(inputString), null, out _));
+		Assert.Throws<FormatException>(() => Ulid.Parse(inputString));
+	}
+
+	[Fact]
+	public void Parse_MaxValue_ShouldSucceed()
+	{
+		// Act
+		var ulid = Ulid.Parse("7ZZZZZZZZZZZZZZZZZZZZZZZZZ");
+
+		// Assert
+		Assert.Equal(Ulid.MaxValue, ulid);
+	}
+
+	[Fact]
+	public void Parse_LowerCase_ShouldEqualUpperCase()
+	{
+		// Act
+		var lower = Ulid.Parse(_goodUlidString.ToLowerInvariant());
+		var lowerUtf8 = Ulid.Parse(Encoding.UTF8.GetBytes(_goodUlidString.ToLowerInvariant()));
+
+		// Assert
+		Assert.Equal(_goodUlidString, lower.ToString());
+		Assert.Equal(_goodUlidString, lowerUtf8.ToString());
+	}
+
 	[Fact]
 	public void ToString_WrongLetters_ShouldReplaceWithCorrect()
 	{
