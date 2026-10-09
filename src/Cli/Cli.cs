@@ -53,7 +53,7 @@ public static class Cli
 	{
 		if (!TryNormalizeFormat(options.Format, out var format))
 		{
-			stderr.WriteLine($"Error: Unknown format '{options.Format}'. Available formats: crockford32 (crockford, base32, canonical), hex, guid.");
+			stderr.WriteLine($"Error: Unknown format '{options.Format}'. Available formats: base32 (default), hex, guid.");
 			return 1;
 		}
 
