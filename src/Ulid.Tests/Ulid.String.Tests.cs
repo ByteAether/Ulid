@@ -258,6 +258,7 @@ public class UlidStringTests
 			var bytes = chars.Select(x => (byte)x).ToArray();
 			Assert.False(Ulid.TryParse(bytes, null, out _));
 			Assert.Throws<FormatException>(() => Ulid.Parse(bytes));
+			Assert.False(Ulid.IsValid(bytes));
 		}
 	}
 

@@ -233,8 +233,8 @@ The `Ulid` implementation provides the following properties and methods:
   Validates whether the specified string represents a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<char> ulidString)`\
   Validates whether the specified span of characters represents a valid ULID.
-- `Ulid.IsValid(ReadOnlySpan<byte> ulidBytes)`\
-  Validates whether the specified byte array represents a valid ULID.
+- `Ulid.IsValid(ReadOnlySpan<byte> utf8Text)`\
+  Validates whether the specified UTF-8 encoded byte span represents a valid ULID string.
 
 A valid ULID string is exactly 26 characters of [Crockford's Base32](https://www.crockford.com/base32.html) alphabet, read case-insensitively, with `I` and `L` accepted as `1`, and `O` as `0`. The first character must be between `0` and `7`, as larger values do not fit into 128 bits.
 
