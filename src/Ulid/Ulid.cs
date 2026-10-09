@@ -49,7 +49,8 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <remarks>
 	/// The random component consists of the last 10 bytes of the ULID and is generated randomly to ensure uniqueness.<br/>
-	/// This component does not encode any timestamp or other structured information.
+	/// This component does not encode any timestamp or other structured information.<br/>
+	/// On .NET Standard 2.0 the returned span is backed by a new copy of the bytes, which allocates (see <see cref="AsByteSpan"/>).
 	/// </remarks>
 	/// <returns>
 	/// A byte array containing 10 random bytes that represent the random portion of the ULID.
@@ -69,7 +70,8 @@ public readonly partial struct Ulid
 	/// Gets the time component of the ULID as a byte array.
 	/// </summary>
 	/// <remarks>
-	/// The time component consists of the first 6 bytes of the ULID and is generated during ULID creation.
+	/// The time component consists of the first 6 bytes of the ULID and is generated during ULID creation.<br/>
+	/// On .NET Standard 2.0 the returned span is backed by a new copy of the bytes, which allocates (see <see cref="AsByteSpan"/>).
 	/// </remarks>
 	/// <returns>
 	/// A byte array containing 6 time bytes that represent the time portion of the ULID.
@@ -124,12 +126,25 @@ public readonly partial struct Ulid
 		}
 	}
 
+#if NETSTANDARD2_0
+	/// <summary>
+	/// Creates a read-only span of bytes representing the current instance of the <see cref="Ulid"/> struct.
+	/// </summary>
+	/// <remarks>
+	/// On .NET Standard 2.0 there is no GC-safe way to create a span over the instance itself.
+	/// The returned span is backed by a new copy of the bytes (see <see cref="ToByteArray"/>), which allocates.
+	/// </remarks>
+	/// <returns>
+	/// A <see cref="ReadOnlySpan{T}"/> over a copy of the raw byte representation of the current <see cref="Ulid"/> struct.
+	/// </returns>
+#else
 	/// <summary>
 	/// Creates a read-only span of bytes representing the current instance of the <see cref="Ulid"/> struct.
 	/// </summary>
 	/// <returns>
 	/// A <see cref="ReadOnlySpan{T}"/> that points to the raw byte representation of the current <see cref="Ulid"/> struct.
 	/// </returns>
+#endif
 #if NET5_0_OR_GREATER
 	[SkipLocalsInit]
 #endif
@@ -138,8 +153,12 @@ public readonly partial struct Ulid
 #else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 #endif
-	public unsafe ReadOnlySpan<byte> AsByteSpan()
-		=> new(Unsafe.AsPointer(ref Unsafe.AsRef(in this)), _ulidSize);
+	public ReadOnlySpan<byte> AsByteSpan()
+#if NETSTANDARD2_0
+		=> ToByteArray();
+#else
+		=> MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<Ulid, byte>(ref Unsafe.AsRef(in this)), _ulidSize);
+#endif
 
 	/// <summary>
 	/// Converts the ULID to a byte array.

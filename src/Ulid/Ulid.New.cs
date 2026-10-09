@@ -209,7 +209,7 @@ public readonly partial struct Ulid
 
 		var state = options.CurrentState;
 
-		using (state.Lock.Enter())
+		using (state.EnterLock())
 		{
 			// Read the last timestamp (from bytes 0-7 of "last ULID")
 			// Shift it to get 48 bits.

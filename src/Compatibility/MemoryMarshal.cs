@@ -1,4 +1,4 @@
-#if NETSTANDARD
+#if NETSTANDARD2_0
 using System.Runtime.CompilerServices;
 
 // ReSharper disable All
