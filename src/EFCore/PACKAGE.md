@@ -100,9 +100,9 @@ While all storage formats are fully supported, their ability to preserve chronol
 
 ## ⚡ Native AOT & Trimming Compatibility
 
-`ByteAether.Ulid.EntityFrameworkCore` is fully trimmed and annotated for **Native AOT** compilation. It introduces zero reflection or dynamic code generation.
+`ByteAether.Ulid.EntityFrameworkCore` is annotated `IsAotCompatible` and introduces no reflection or dynamic code generation of its own beyond the `Expression<Func<...>>`-based `ValueConverter<,>` registrations that EF Core itself compiles once per model, at model-build time rather than per query.
 
-> While this extension package is entirely AOT-safe, your underlying application must still conform to [Entity Framework Core's native AOT constraints](https://learn.microsoft.com/en-us/ef/core/performance/nativeaot-and-precompiled-queries) (such as using EF Core Precompiled Models via `dotnet ef dbcontext optimize`).
+> Your underlying application must still conform to [Entity Framework Core's native AOT constraints](https://learn.microsoft.com/en-us/ef/core/performance/nativeaot-and-precompiled-queries) (such as using EF Core Precompiled Models via `dotnet ef dbcontext optimize`).
 
 ## 📜 License
 
