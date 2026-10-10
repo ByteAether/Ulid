@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" VersionOverride="$(TargetFramework.Replace('net', '')).0.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" VersionOverride="$(TargetFramework.Replace('net', '')).0">
       <PrivateAssets>build;analyzers</PrivateAssets>
     </PackageReference>
   </ItemGroup>
