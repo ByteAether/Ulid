@@ -71,7 +71,7 @@ While all storage formats are fully supported, their ability to preserve chronol
 
 ## ⚡ Native AOT & Trimming Compatibility
 
-`ByteAether.Ulid.linq2db` is fully trimmed and annotated for **Native AOT** compilation. It introduces zero reflection or dynamic code generation.
+`ByteAether.Ulid.linq2db` is annotated `IsAotCompatible` and introduces no reflection or dynamic code generation of its own beyond the `Expression<Func<...>>`-based conversions registered via `MappingSchema.SetConvertExpression`, which LinqToDB itself compiles and caches.
 
 ## 📜 License
 
