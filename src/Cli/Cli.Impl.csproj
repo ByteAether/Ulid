@@ -7,7 +7,6 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>ulid</ToolCommandName>
     <RollForward>Major</RollForward>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
