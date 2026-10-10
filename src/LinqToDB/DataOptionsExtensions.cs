@@ -2,6 +2,7 @@ using ByteAether.Ulid.DB.Shared;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace ByteAether.Ulid.LinqToDB;
 
@@ -27,9 +28,9 @@ public static class DataOptionsExtensions
         switch (storageFormat)
         {
             case UlidStorageFormat.String:
-                mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, ulid.ToString(), DataType.Char));
+                mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, ulid.ToString(), DataType.Char, 26));
 
-                mappingSchema.SetDataType(typeof(Ulid), DataType.Char);
+                mappingSchema.SetDataType(typeof(Ulid), new SqlDataType(DataType.Char, typeof(Ulid), 26));
                 break;
 
             case UlidStorageFormat.Binary:
