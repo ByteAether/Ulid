@@ -12,11 +12,12 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the string is a valid ULID, <c>false</c> otherwise.
 	/// </returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	/// <remarks>
+	/// The input must be exactly 26 characters of Crockford's Base32 alphabet. It is read case-insensitively, with
+	/// <c>I</c> and <c>L</c> accepted as <c>1</c>, and <c>O</c> as <c>0</c>. The first character must be between
+	/// <c>0</c> and <c>7</c>, otherwise the value would not fit into 128 bits.
+	/// </remarks>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static bool IsValid(string ulidString) => IsValid(ulidString.AsSpan());
 
 	/// <summary>
@@ -26,12 +27,11 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the character span is a valid ULID, <c>false</c> otherwise.
 	/// </returns>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
+	/// <remarks>
+	/// The input must be exactly 26 characters of Crockford's Base32 alphabet. It is read case-insensitively, with
+	/// <c>I</c> and <c>L</c> accepted as <c>1</c>, and <c>O</c> as <c>0</c>. The first character must be between
+	/// <c>0</c> and <c>7</c>, otherwise the value would not fit into 128 bits.
+	/// </remarks>
 	public static unsafe bool IsValid(ReadOnlySpan<char> ulidString)
 	{
 		if (ulidString.Length != UlidStringLength) // 26
@@ -43,7 +43,7 @@ public readonly partial struct Ulid
 		{
 			// 1. Fast check for the first character (prevent 128-bit overflow)
 			uint c0 = src[0];
-			if (c0 > 255 || _inverseBase32[c0] > 7)
+			if (c0 > 255 || _inverseBase32[(int)c0] > 7)
 			{
 				return false;
 			}
@@ -113,16 +113,56 @@ public readonly partial struct Ulid
 	}
 
 	/// <summary>
-	/// Validates if the given byte array represents a valid ULID.
+	/// Validates if the given UTF-8 encoded span of bytes is a valid ULID string.
 	/// </summary>
-	/// <param name="ulidBytes">The byte array to validate.</param>
+	/// <param name="utf8Text">The UTF-8 encoded ULID string to validate.</param>
 	/// <returns>
-	/// <c>true</c> if the byte array is a valid ULID, <c>false</c> otherwise.
+	/// <c>true</c> if the byte span contains a valid ULID string, <c>false</c> otherwise.
 	/// </returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-	public static bool IsValid(ReadOnlySpan<byte> ulidBytes) => ulidBytes.Length == _ulidSize;
+	/// <remarks>
+	/// The input must be exactly 26 characters of Crockford's Base32 alphabet. It is read case-insensitively, with
+	/// <c>I</c> and <c>L</c> accepted as <c>1</c>, and <c>O</c> as <c>0</c>. The first character must be between
+	/// <c>0</c> and <c>7</c>, otherwise the value would not fit into 128 bits.
+	/// </remarks>
+	public static unsafe bool IsValid(ReadOnlySpan<byte> utf8Text)
+	{
+		if (utf8Text.Length != UlidStringLength) // 26
+		{
+			return false;
+		}
+
+		// Non-ASCII bytes (0x80 and above) are mapped to 255 in the table
+		fixed (byte* src = &MemoryMarshal.GetReference(utf8Text))
+		fixed (byte* table = _inverseBase32)
+		{
+			// Fast check for the first character (prevent 128-bit overflow)
+			if (table[src[0]] > 7)
+			{
+				return false;
+			}
+
+			if (
+				table[src[1]] == 255 || table[src[2]] == 255 || table[src[3]] == 255
+				|| table[src[4]] == 255 || table[src[5]] == 255 || table[src[6]] == 255
+				|| table[src[7]] == 255 || table[src[8]] == 255 || table[src[9]] == 255
+				|| table[src[10]] == 255 || table[src[11]] == 255 || table[src[12]] == 255
+			)
+			{
+				return false;
+			}
+
+			if (
+				table[src[13]] == 255 || table[src[14]] == 255 || table[src[15]] == 255
+				|| table[src[16]] == 255 || table[src[17]] == 255 || table[src[18]] == 255
+				|| table[src[19]] == 255 || table[src[20]] == 255 || table[src[21]] == 255
+				|| table[src[22]] == 255 || table[src[23]] == 255 || table[src[24]] == 255
+				|| table[src[25]] == 255
+			)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
 }

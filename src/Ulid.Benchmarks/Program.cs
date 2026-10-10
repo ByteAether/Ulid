@@ -312,99 +312,140 @@ public class GetHashCode : BenchmarkBase
 public abstract class BenchmarkBase
 {
 	protected const int _iterationSize = 1024;
-    private int _idx;
+	private int _idx;
 
-    protected ByteAether.Ulid.Ulid[] _byteAether0 = null!;
-    protected ByteAether.Ulid.Ulid[] _byteAether1 = null!;
+	protected ByteAether.Ulid.Ulid[] _byteAether0 = null!;
+	protected ByteAether.Ulid.Ulid[] _byteAether1 = null!;
 
-    protected NetUlid.Ulid[] _netUlid0 = null!;
-    protected NetUlid.Ulid[] _netUlid1 = null!;
+	protected NetUlid.Ulid[] _netUlid0 = null!;
+	protected NetUlid.Ulid[] _netUlid1 = null!;
 
-    protected System.Ulid[] _cysharp0 = null!;
-    protected System.Ulid[] _cysharp1 = null!;
+	protected System.Ulid[] _cysharp0 = null!;
+	protected System.Ulid[] _cysharp1 = null!;
 
-    protected NUlid.Ulid[] _nulid0 = null!;
-    protected NUlid.Ulid[] _nulid1 = null!;
+	protected NUlid.Ulid[] _nulid0 = null!;
+	protected NUlid.Ulid[] _nulid1 = null!;
 
-    protected System.Guid[] _guid0 = null!;
-    protected System.Guid[] _guid1 = null!;
+	protected System.Guid[] _guid0 = null!;
+	protected System.Guid[] _guid1 = null!;
 
-    protected string[] _base32 = null!;
-    protected string[] _guidHex = null!;
-    protected byte[][] _bytes = null!;
+	protected string[] _base32 = null!;
+	protected string[] _guidHex = null!;
+	protected byte[][] _bytes = null!;
 
-    /// <summary>
-    /// Fetches the current index and increments/wraps it without branching.
-    /// Inlining guarantees zero benchmark method call overhead.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected int GetNextIndex()
-    {
-	    var current = _idx;
-	    _idx = (current + 1) & (_idx - 1);
-	    return current;
-    }
+	/// <summary>
+	/// Fetches the current index and increments/wraps it without branching.
+	/// Inlining guarantees zero benchmark method call overhead.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected int GetNextIndex()
+	{
+		var current = _idx;
+		_idx = (current + 1) & (_iterationSize - 1);
+		return current;
+	}
 
-    [GlobalSetup]
-    public void GlobalSetup()
-    {
-	    _idx = 0;
+	[GlobalSetup]
+	public void GlobalSetup()
+	{
+		_idx = 0;
 
-        _byteAether0 = new ByteAether.Ulid.Ulid[_iterationSize];
-        _byteAether1 = new ByteAether.Ulid.Ulid[_iterationSize];
+		_byteAether0 = new ByteAether.Ulid.Ulid[_iterationSize];
+		_byteAether1 = new ByteAether.Ulid.Ulid[_iterationSize];
 
-        _netUlid0 = new NetUlid.Ulid[_iterationSize];
-        _netUlid1 = new NetUlid.Ulid[_iterationSize];
+		_netUlid0 = new NetUlid.Ulid[_iterationSize];
+		_netUlid1 = new NetUlid.Ulid[_iterationSize];
 
-        _cysharp0 = new System.Ulid[_iterationSize];
-        _cysharp1 = new System.Ulid[_iterationSize];
+		_cysharp0 = new System.Ulid[_iterationSize];
+		_cysharp1 = new System.Ulid[_iterationSize];
 
-        _nulid0 = new NUlid.Ulid[_iterationSize];
-        _nulid1 = new NUlid.Ulid[_iterationSize];
+		_nulid0 = new NUlid.Ulid[_iterationSize];
+		_nulid1 = new NUlid.Ulid[_iterationSize];
 
-        _guid0 = new System.Guid[_iterationSize];
-        _guid1 = new System.Guid[_iterationSize];
+		_guid0 = new System.Guid[_iterationSize];
+		_guid1 = new System.Guid[_iterationSize];
 
-        _base32 = new string[_iterationSize];
-        _guidHex = new string[_iterationSize];
-        _bytes = new byte[_iterationSize][];
+		_base32 = new string[_iterationSize];
+		_guidHex = new string[_iterationSize];
+		_bytes = new byte[_iterationSize][];
 
-        var rand = new System.Random(42);
-        var leftBuffer = new byte[16];
-        var rightBuffer = new byte[16];
+		var rand = new System.Random(42);
 
-        for (var i = 0; i < _iterationSize; i++)
-        {
-            rand.NextBytes(leftBuffer);
-            rand.NextBytes(rightBuffer);
+		// Not a limitation of the ULID specification itself (it allows timestamps up to 2^48-1 ms,
+		// i.e. up to roughly year 10889) - this is .NET's DateTime/DateTimeOffset max (year 9999)
+		// leaking through. NUlid eagerly materializes a DateTimeOffset while parsing/constructing,
+		// so a fully random timestamp has a ~10% chance of making it throw, even though every other
+		// library here can store/round-trip such a ULID fine as long as it isn't asked to project it
+		// into a DateTime/DateTimeOffset. Capping the generated timestamp keeps the corpus usable
+		// across all libraries being compared.
+		var maxTimestampMs = (ulong)System.DateTimeOffset.MaxValue.ToUnixTimeMilliseconds();
 
-            // Scenarios
-            switch (i % 4)
-            {
-	            case 0: break; // Left and Right are completely random
-	            case 1: rightBuffer = leftBuffer; break; // Same values
-	            case 2: System.Array.Copy(leftBuffer, 0, rightBuffer, 0, 6); break; // The first 6 bytes are the same (same timestamp)
-	            case 3: System.Array.Copy(leftBuffer, 0, rightBuffer, 0, 15); break; // The first 15 bytes are the same (+1 increment)
-            }
+		for (var i = 0; i < _iterationSize; i++)
+		{
+			var leftBuffer = new byte[16];
+			var rightBuffer = new byte[16];
+			rand.NextBytes(leftBuffer);
+			rand.NextBytes(rightBuffer);
 
-            _byteAether0[i] = ByteAether.Ulid.Ulid.New(leftBuffer);
-            _byteAether1[i] = ByteAether.Ulid.Ulid.New(rightBuffer);
+			CapTimestamp(leftBuffer, maxTimestampMs);
+			CapTimestamp(rightBuffer, maxTimestampMs);
 
-            _netUlid0[i] = new(leftBuffer);
-            _netUlid1[i] = new(rightBuffer);
+			// Scenarios
+			switch (i % 4)
+			{
+				case 0:
+					break; // Left and Right are completely random
+				case 1:
+					System.Array.Copy(leftBuffer, rightBuffer, 16);
+					break; // Same values
+				case 2:
+					System.Array.Copy(leftBuffer, 0, rightBuffer, 0, 6);
+					break; // The first 6 bytes are the same (same timestamp)
+				case 3:
+					System.Array.Copy(leftBuffer, 0, rightBuffer, 0, 15);
+					break; // The first 15 bytes are the same (+1 increment)
+			}
 
-            _cysharp0[i] = new(leftBuffer);
-            _cysharp1[i] = new(rightBuffer);
+			_byteAether0[i] = ByteAether.Ulid.Ulid.New(leftBuffer);
+			_byteAether1[i] = ByteAether.Ulid.Ulid.New(rightBuffer);
 
-            _nulid0[i] = new(leftBuffer);
-            _nulid1[i] = new(rightBuffer);
+			_netUlid0[i] = new(leftBuffer);
+			_netUlid1[i] = new(rightBuffer);
 
-            _guid0[i] = new(leftBuffer);
-            _guid1[i] = new(rightBuffer);
+			_cysharp0[i] = new(leftBuffer);
+			_cysharp1[i] = new(rightBuffer);
 
-            _base32[i] = _byteAether0[i].ToString();
-            _guidHex[i] = _guid0[i].ToString();
-            _bytes[i] = leftBuffer;
-        }
-    }
+			_nulid0[i] = new(leftBuffer);
+			_nulid1[i] = new(rightBuffer);
+
+			_guid0[i] = new(leftBuffer);
+			_guid1[i] = new(rightBuffer);
+
+			_base32[i] = _byteAether0[i].ToString();
+			_guidHex[i] = _guid0[i].ToString();
+			_bytes[i] = leftBuffer;
+		}
+	}
+
+	// The ULID's 48-bit timestamp occupies the first 6 bytes, big-endian.
+	private static void CapTimestamp(byte[] ulidBytes, ulong maxTimestampMs)
+	{
+		ulong timestampMs = 0;
+		for (var i = 0; i < 6; i++)
+		{
+			timestampMs = (timestampMs << 8) | ulidBytes[i];
+		}
+
+		if (timestampMs <= maxTimestampMs)
+		{
+			return;
+		}
+
+		timestampMs = maxTimestampMs;
+		for (var i = 5; i >= 0; i--)
+		{
+			ulidBytes[i] = (byte)timestampMs;
+			timestampMs >>= 8;
+		}
+	}
 }

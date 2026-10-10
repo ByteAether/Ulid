@@ -1,4 +1,6 @@
-﻿namespace ByteAether.Ulid.Tests;
+﻿using System.Text;
+
+namespace ByteAether.Ulid.Tests;
 
 public class UlidIsValidTests
 {
@@ -64,30 +66,46 @@ public class UlidIsValidTests
 		Assert.False(isValid);
 	}
 
-	[Fact]
-	public void IsValid_GoodByteArray()
+	[Theory]
+	[InlineData("01AN4Z07BY79KA1307SR9X4MV3")]
+	[InlineData("00000000000000000000000000")]
+	[InlineData("oooooooooooooooooooooooooo")]
+	[InlineData("7ZZZZZZZZZZZZZZZZZZZZZZZZZ")]
+	public void IsValid_GoodUtf8(string goodString)
 	{
-		// Arrange
-		var validUlidBytes = new byte[16];
-
 		// Act
-		var result = Ulid.IsValid(new ReadOnlySpan<byte>(validUlidBytes));
+		var isValid = Ulid.IsValid(Encoding.UTF8.GetBytes(goodString).AsSpan());
 
 		// Assert
-		Assert.True(result);
+		Assert.True(isValid);
 	}
 
 	[Theory]
-	[InlineData(0)]
-	[InlineData(15)]
-	[InlineData(17)]
-	public void IsValid_BadByteArray(int length)
+	[InlineData("80000000000000000000000000")]
+	[InlineData("ZZZZZZZZZZZZZZZZZZZZZZZZZZ")]
+	[InlineData("")]
+	[InlineData("01AN4Z07BY79KA1307SR9X4MV")]
+	[InlineData("01AN4Z07BY79KA1307SR9X4MV3A")]
+	[InlineData("01AN4Z07BY79KA1307SR9X4MVU")]
+	[InlineData("01AN4Z07BY79KA1307SR9X4MV@")]
+	[InlineData("01AN4Z07BY79KA1307SR9X4M\u00C0")]
+	public void IsValid_BadUtf8(string badString)
+	{
+		// Act
+		var isValid = Ulid.IsValid(Encoding.UTF8.GetBytes(badString).AsSpan());
+
+		// Assert
+		Assert.False(isValid);
+	}
+
+	[Fact]
+	public void IsValid_BinaryUlidBytes_ShouldReturnFalse()
 	{
 		// Arrange
-		var validUlidBytes = new byte[length];
+		var binaryUlid = Ulid.New().ToByteArray();
 
 		// Act
-		var result = Ulid.IsValid(new ReadOnlySpan<byte>(validUlidBytes));
+		var result = Ulid.IsValid(new ReadOnlySpan<byte>(binaryUlid));
 
 		// Assert
 		Assert.False(result);

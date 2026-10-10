@@ -72,6 +72,28 @@ public class UlidTests
 	}
 
 	[Fact]
+	public void AsByteSpan_HeapInstance_ShouldSurviveCompactingGc()
+	{
+		// Arrange
+		for (var i = 0; i < 64; i++)
+		{
+			// Garbage in front of the array, so that compaction moves it
+			_ = new byte[1024];
+		}
+
+		var ulids = new[] { CreateUlid(_sampleUlidBytes) };
+
+		// Act
+		var byteSpan = ulids[0].AsByteSpan();
+		var random = ulids[0].Random;
+		GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+
+		// Assert
+		Assert.Equal(_sampleUlidBytes, byteSpan.ToArray());
+		Assert.Equal(_sampleUlidBytes[6..], random.ToArray());
+	}
+
+	[Fact]
 	public void ToByteArray_ShouldReturnAll16Bytes()
 	{
 		// Arrange

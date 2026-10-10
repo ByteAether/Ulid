@@ -158,6 +158,7 @@ The monotonicity state (last generated timestamp and 80-bit random payload) is b
 
 * **Instance Reuse (Recommended for Sequences):** Reusing a single `GenerationOptions` instance across calls guarantees strict, cross-thread monotonic ordering via lock-free atomic compare-and-exchange (CAS) operations.
 * **Instance Isolation:** Passing a new `GenerationOptions` instance on each call isolates state, disabling monotonic sequence tracking between calls and eliminating CAS contention.
+* **Copies:** A copy made with a `with` expression (e.g. `options with { Monotonicity = ... }`) gets its own, fresh state. It never continues or shares the sequence of the instance it was copied from.
 
 ```csharp
 using System;
@@ -232,8 +233,10 @@ The `Ulid` implementation provides the following properties and methods:
   Validates whether the specified string represents a valid ULID.
 - `Ulid.IsValid(ReadOnlySpan<char> ulidString)`\
   Validates whether the specified span of characters represents a valid ULID.
-- `Ulid.IsValid(ReadOnlySpan<byte> ulidBytes)`\
-  Validates whether the specified byte array represents a valid ULID.
+- `Ulid.IsValid(ReadOnlySpan<byte> utf8Text)`\
+  Validates whether the specified UTF-8 encoded byte span represents a valid ULID string.
+
+A valid ULID string is exactly 26 characters of [Crockford's Base32](https://www.crockford.com/base32.html) alphabet, read case-insensitively, with `I` and `L` accepted as `1`, and `O` as `0`. The first character must be between `0` and `7`, as larger values do not fit into 128 bits.
 
 ### Parsing
 
@@ -245,6 +248,12 @@ The `Ulid` implementation provides the following properties and methods:
   Parses a ULID from a string in canonical format. The `IFormatProvider` is ignored.
 - `Ulid.TryParse(string? s, IFormatProvider? provider, out Ulid result)`\
   Tries to parse a ULID from a string in canonical format. Returns `true` if successful.
+- `Ulid.Parse(ReadOnlySpan<byte> bytes, IFormatProvider? provider = null)`\
+  Parses a ULID from a UTF-8 encoded byte span in canonical format. The `IFormatProvider` is ignored.
+- `Ulid.TryParse(ReadOnlySpan<byte> s, IFormatProvider? provider, out Ulid result)`\
+  Tries to parse a ULID from a UTF-8 encoded byte span in canonical format. Returns `true` if successful.
+
+Parsing applies the same rules as validation (see Checking Validity above). `Parse` throws a `FormatException` for input that `IsValid` rejects, while `TryParse` returns `false` without throwing.
 
 ### Properties
 
@@ -665,72 +674,72 @@ Job=DefaultJob
 
 | Type            | Method             | Mean        | Error     | Gen0   | Allocated |
 |---------------- |------------------- |------------:|----------:|-------:|----------:|
-| Generate        | ByteAetherUlid     |  38.4429 ns | 0.1005 ns |      - |         - |
-| Generate        | ByteAetherUlidR1Bp |  46.7557 ns | 0.1100 ns |      - |         - |
-| Generate        | ByteAetherUlidR4Bp |  48.3786 ns | 0.1072 ns |      - |         - |
-| Generate        | ByteAetherUlidR1Bc |  80.0063 ns | 0.2238 ns |      - |         - |
-| Generate        | ByteAetherUlidR4Bc |  87.7467 ns | 0.2226 ns |      - |         - |
-| Generate        | NetUlid *(1)       | 159.7123 ns | 0.4390 ns | 0.0095 |      80 B |
-| Generate        | NUlid *(2)         |  49.1889 ns | 0.0990 ns |      - |         - |
+| Generate        | ByteAetherUlid     |  38.1463 ns | 0.0679 ns |      - |         - |
+| Generate        | ByteAetherUlidR1Bp |  40.3767 ns | 0.1023 ns |      - |         - |
+| Generate        | ByteAetherUlidR4Bp |  45.8267 ns | 0.1110 ns |      - |         - |
+| Generate        | ByteAetherUlidR1Bc |  84.1466 ns | 0.4368 ns |      - |         - |
+| Generate        | ByteAetherUlidR4Bc |  87.0893 ns | 0.3336 ns |      - |         - |
+| Generate        | NetUlid *(1)       | 159.8722 ns | 0.8177 ns | 0.0095 |      80 B |
+| Generate        | NUlid *(2)         |  49.0189 ns | 0.1703 ns |      - |         - |
 
-| GenerateNonMono | ByteAetherUlid     |  88.3031 ns | 0.2193 ns |      - |         - |
-| GenerateNonMono | ByteAetherUlidP    |  41.1218 ns | 0.1085 ns |      - |         - |
-| GenerateNonMono | Ulid *(3,4)        |  38.0705 ns | 0.0841 ns |      - |         - |
-| GenerateNonMono | NUlid              |  93.6811 ns | 0.1897 ns |      - |         - |
-| GenerateNonMono | Guid *(5)          |  48.6814 ns | 0.1394 ns |      - |         - |
-| GenerateNonMono | GuidV7 *(3,5)      |  79.1241 ns | 0.2201 ns |      - |         - |
+| GenerateNonMono | ByteAetherUlid     |  86.2648 ns | 0.4680 ns |      - |         - |
+| GenerateNonMono | ByteAetherUlidP    |  37.8072 ns | 0.1707 ns |      - |         - |
+| GenerateNonMono | Ulid *(3,4)        |  39.4395 ns | 0.2104 ns |      - |         - |
+| GenerateNonMono | NUlid              |  93.3513 ns | 0.4815 ns |      - |         - |
+| GenerateNonMono | Guid *(5)          |  48.3969 ns | 0.2306 ns |      - |         - |
+| GenerateNonMono | GuidV7 *(3,5)      |  79.1905 ns | 0.2090 ns |      - |         - |
 
-| FromByteArray   | ByteAetherUlid     |   0.7968 ns | 0.0067 ns |      - |         - |
-| FromByteArray   | NetUlid            |   1.7080 ns | 0.0080 ns |      - |         - |
-| FromByteArray   | Ulid               |   1.1822 ns | 0.0105 ns |      - |         - |
-| FromByteArray   | NUlid              |   1.1613 ns | 0.0085 ns |      - |         - |
-| FromByteArray   | Guid               |   1.0453 ns | 0.0065 ns |      - |         - |
+| FromByteArray   | ByteAetherUlid     |   0.6981 ns | 0.0093 ns |      - |         - |
+| FromByteArray   | NetUlid            |   1.7206 ns | 0.0174 ns |      - |         - |
+| FromByteArray   | Ulid               |   1.2139 ns | 0.0160 ns |      - |         - |
+| FromByteArray   | NUlid              |   1.1370 ns | 0.0118 ns |      - |         - |
+| FromByteArray   | Guid               |   1.0113 ns | 0.0072 ns |      - |         - |
 
-| FromGuid        | ByteAetherUlid     |   0.7992 ns | 0.0089 ns |      - |         - |
-| FromGuid        | NetUlid            |   1.9640 ns | 0.0159 ns |      - |         - |
-| FromGuid        | Ulid               |   1.9993 ns | 0.0364 ns |      - |         - |
-| FromGuid        | NUlid              |   1.0107 ns | 0.0081 ns |      - |         - |
+| FromGuid        | ByteAetherUlid     |   0.6360 ns | 0.0117 ns |      - |         - |
+| FromGuid        | NetUlid            |   1.7273 ns | 0.0226 ns |      - |         - |
+| FromGuid        | Ulid               |   1.8704 ns | 0.0426 ns |      - |         - |
+| FromGuid        | NUlid              |   0.8229 ns | 0.0090 ns |      - |         - |
 
-| FromString      | ByteAetherUlid     |  14.5914 ns | 0.0334 ns |      - |         - |
-| FromString      | NetUlid            |  27.2466 ns | 0.1181 ns |      - |         - |
-| FromString      | Ulid               |  17.1977 ns | 0.0523 ns |      - |         - |
-| FromString      | NUlid              |  50.1281 ns | 0.3708 ns | 0.0086 |      72 B |
-| FromString      | Guid               |  21.7563 ns | 0.0550 ns |      - |         - |
+| FromString      | ByteAetherUlid     |  15.7206 ns | 0.1081 ns |      - |         - |
+| FromString      | NetUlid            |  27.4088 ns | 0.0853 ns |      - |         - |
+| FromString      | Ulid               |  17.2080 ns | 0.0880 ns |      - |         - |
+| FromString      | NUlid              |  49.9503 ns | 0.2598 ns | 0.0086 |      72 B |
+| FromString      | Guid               |  21.7319 ns | 0.1089 ns |      - |         - |
 
-| ToByteArray     | ByteAetherUlid     |   4.5509 ns | 0.1130 ns | 0.0048 |      40 B |
-| ToByteArray     | AsByteSpan *(6)    |   0.7737 ns | 0.0084 ns |      - |         - |
-| ToByteArray     | NetUlid            |   9.8672 ns | 0.1395 ns | 0.0048 |      40 B |
-| ToByteArray     | Ulid               |   4.2313 ns | 0.0324 ns | 0.0048 |      40 B |
-| ToByteArray     | NUlid              |   8.5998 ns | 0.1060 ns | 0.0048 |      40 B |
+| ToByteArray     | ByteAetherUlid     |   4.2862 ns | 0.1354 ns | 0.0048 |      40 B |
+| ToByteArray     | AsByteSpan *(6)    |   0.6701 ns | 0.0074 ns |      - |         - |
+| ToByteArray     | NetUlid            |   9.5231 ns | 0.1255 ns | 0.0048 |      40 B |
+| ToByteArray     | Ulid               |   4.4401 ns | 0.1018 ns | 0.0048 |      40 B |
+| ToByteArray     | NUlid              |   8.5761 ns | 0.0941 ns | 0.0048 |      40 B |
 
-| ToGuid          | ByteAetherUlid     |   0.7951 ns | 0.0088 ns |      - |         - |
-| ToGuid          | NetUlid            |   8.9098 ns | 0.0496 ns |      - |         - |
-| ToGuid          | Ulid               |   1.2389 ns | 0.0132 ns |      - |         - |
-| ToGuid          | NUlid              |   0.7842 ns | 0.0059 ns |      - |         - |
+| ToGuid          | ByteAetherUlid     |   0.6665 ns | 0.0121 ns |      - |         - |
+| ToGuid          | NetUlid            |   8.7326 ns | 0.0263 ns |      - |         - |
+| ToGuid          | Ulid               |   1.2456 ns | 0.0287 ns |      - |         - |
+| ToGuid          | NUlid              |   0.7064 ns | 0.0096 ns |      - |         - |
 
-| ToString        | ByteAetherUlid     |  19.1704 ns | 0.2129 ns | 0.0095 |      80 B |
-| ToString        | NetUlid            |  23.5829 ns | 0.2413 ns | 0.0095 |      80 B |
-| ToString        | Ulid               |  19.5133 ns | 0.1625 ns | 0.0095 |      80 B |
-| ToString        | NUlid              |  30.6928 ns | 0.1726 ns | 0.0095 |      80 B |
-| ToString        | Guid               |   8.5533 ns | 0.2321 ns | 0.0115 |      96 B |
+| ToString        | ByteAetherUlid     |  14.5372 ns | 0.2029 ns | 0.0095 |      80 B |
+| ToString        | NetUlid            |  22.8099 ns | 0.1848 ns | 0.0095 |      80 B |
+| ToString        | Ulid               |  19.6863 ns | 0.4276 ns | 0.0095 |      80 B |
+| ToString        | NUlid              |  30.7311 ns | 0.2561 ns | 0.0095 |      80 B |
+| ToString        | Guid               |   8.5187 ns | 0.2234 ns | 0.0115 |      96 B |
 
-| CompareTo       | ByteAetherUlid     |   2.0684 ns | 0.0243 ns |      - |         - |
-| CompareTo       | NetUlid            |   4.1654 ns | 0.0136 ns |      - |         - |
-| CompareTo       | Ulid               |   6.6872 ns | 0.0348 ns |      - |         - |
-| CompareTo       | NUlid              |   9.1807 ns | 0.0463 ns |      - |         - |
-| CompareTo       | Guid               |   4.8127 ns | 0.0138 ns |      - |         - |
+| GetHashCode     | ByteAetherUlid     |   0.8390 ns | 0.0066 ns |      - |         - |
+| GetHashCode     | NetUlid            |   8.7579 ns | 0.0287 ns |      - |         - |
+| GetHashCode     | Ulid               |   0.8428 ns | 0.0099 ns |      - |         - |
+| GetHashCode     | NUlid              |   6.6177 ns | 0.0360 ns |      - |         - |
+| GetHashCode     | Guid               |   0.7400 ns | 0.0150 ns |      - |         - |
 
-| Equals          | ByteAetherUlid     |   1.1008 ns | 0.0114 ns |      - |         - |
-| Equals          | NetUlid            |   2.0444 ns | 0.0402 ns |      - |         - |
-| Equals          | Ulid               |   1.0745 ns | 0.0106 ns |      - |         - |
-| Equals          | NUlid              |   1.0961 ns | 0.0072 ns |      - |         - |
-| Equals          | Guid               |   1.0809 ns | 0.0070 ns |      - |         - |
+| CompareTo       | ByteAetherUlid     |   1.3273 ns | 0.0215 ns |      - |         - |
+| CompareTo       | NetUlid            |   4.0820 ns | 0.0202 ns |      - |         - |
+| CompareTo       | Ulid               |   6.8477 ns | 0.0239 ns |      - |         - |
+| CompareTo       | NUlid              |   9.5116 ns | 0.0626 ns |      - |         - |
+| CompareTo       | Guid               |   4.9821 ns | 0.0270 ns |      - |         - |
 
-| GetHashCode     | ByteAetherUlid     |   0.9083 ns | 0.0083 ns |      - |         - |
-| GetHashCode     | NetUlid            |   8.9188 ns | 0.0272 ns |      - |         - |
-| GetHashCode     | Ulid               |   0.9349 ns | 0.0095 ns |      - |         - |
-| GetHashCode     | NUlid              |   6.7673 ns | 0.0399 ns |      - |         - |
-| GetHashCode     | Guid               |   0.9332 ns | 0.0105 ns |      - |         - |
+| Equals          | ByteAetherUlid     |   0.9571 ns | 0.0100 ns |      - |         - |
+| Equals          | NetUlid            |   1.9630 ns | 0.0140 ns |      - |         - |
+| Equals          | Ulid               |   0.9663 ns | 0.0121 ns |      - |         - |
+| Equals          | NUlid              |   0.9564 ns | 0.0077 ns |      - |         - |
+| Equals          | Guid               |   0.9610 ns | 0.0105 ns |      - |         - |
 ```
 
 Alternative .NET ecosystem solutions exhibit design constraints or spec deviations under heavy production loads:

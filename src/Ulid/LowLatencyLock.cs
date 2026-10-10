@@ -1,114 +1,42 @@
 using System.Runtime.CompilerServices;
-#if !NET7_0_OR_GREATER
-using System.Runtime.InteropServices;
-#endif
 
 namespace ByteAether.Ulid;
 
 internal struct LowLatencyLock
 {
-    internal int LockState;
+	internal int LockState;
 
-    internal readonly ref struct Scope
-    {
-#if NET7_0_OR_GREATER
-	    private readonly ref int _lockState;
-
-	    [SkipLocalsInit]
-	    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-	    internal Scope(ref LowLatencyLock @lock)
-	    {
-		    _lockState = ref @lock.LockState;
-	    }
-
-	    [SkipLocalsInit]
-	    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-	    public void Dispose()
-	    {
-		    Volatile.Write(ref _lockState, 0);
-	    }
-#else
-        // This is fully supported in .NET Standard 2.0 / .NET 5.0.
-        private readonly Span<int> _lockState;
-
-#if NET5_0_OR_GREATER
-        [SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        internal Scope(ref LowLatencyLock @lock)
-        {
-            _lockState =
-#if NETCOREAPP
-				MemoryMarshal.CreateSpan(ref @lock.LockState, 1);
-#else
-				Compatibility.MemoryMarshal.CreateSpan(ref @lock.LockState, 1);
-#endif
-        }
-
-#if NET5_0_OR_GREATER
-        [SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-        public void Dispose()
-        {
-            Volatile.Write(ref MemoryMarshal.GetReference(_lockState), 0);
-        }
-#endif
-
-    }
-}
-
-internal static class LowLatencyLockExtensions
-{
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-    public static LowLatencyLock.Scope Enter(ref this LowLatencyLock @lock)
-    {
-        if (Interlocked.CompareExchange(ref @lock.LockState, 1, 0) != 0)
-        {
-            ContendedEnter(ref @lock);
-        }
+	internal void Enter()
+	{
+		if (Interlocked.CompareExchange(ref LockState, 1, 0) != 0)
+		{
+			ContendedEnter(ref LockState);
+		}
+	}
 
-        return new(ref @lock);
-    }
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal void Exit()
+		=> Volatile.Write(ref LockState, 0);
 
-#if NET5_0_OR_GREATER
-    [SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.NoInlining)]
-#endif
-    private static void ContendedEnter(ref LowLatencyLock @lock)
-    {
-        var spinner = new SpinWait();
-        while (true)
-        {
-            if (Interlocked.CompareExchange(ref @lock.LockState, 1, 0) == 0)
-            {
-                return;
-            }
+	private static void ContendedEnter(ref int lockState)
+	{
+		// Test-and-test-and-set: spin on a plain read, which keeps the cache line shared,
+		// and only attempt the exclusive compare-exchange once the lock looks free.
+		var spinner = new SpinWait();
+		while (true)
+		{
+			if (Volatile.Read(ref lockState) == 0 && Interlocked.CompareExchange(ref lockState, 1, 0) == 0)
+			{
+				return;
+			}
 
 #if NET5_0_OR_GREATER
-            spinner.SpinOnce(-1);
+			spinner.SpinOnce(-1);
 #else
-            spinner.SpinOnce();
+			spinner.SpinOnce();
 #endif
-        }
-    }
+		}
+	}
 }

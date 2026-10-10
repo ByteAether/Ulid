@@ -15,11 +15,7 @@ public readonly struct CryptographicallySecureRandomProvider : IRandomProvider
 #endif
 
 	/// <inheritdoc/>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public void GetBytes(Span<byte> buffer)
 	{
 #if NETCOREAPP3_0_OR_GREATER

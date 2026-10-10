@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace ByteAether.Ulid;
@@ -107,10 +107,20 @@ public readonly partial struct Ulid
 		public MonotonicityOptions Monotonicity
 		{
 			get;
-			init => field = Enum.IsDefined(typeof(MonotonicityOptions), value)
-				? value
-				: throw new ArgumentOutOfRangeException(nameof(Monotonicity), value, "Invalid monotonicity option.");
+			init
+			{
+				field = value is >= MonotonicityOptions.NonMonotonic and <= MonotonicityOptions.MonotonicRandom4Byte
+					? value
+					: throw new ArgumentOutOfRangeException(nameof(Monotonicity), value, "Invalid monotonicity option.");
+
+				// Keeps the lowest N bytes of a random increment for the MonotonicRandomNByte options
+				IncrementMask = value > MonotonicityOptions.MonotonicIncrement
+					? (uint)((1UL << ((int)value * 8)) - 1)
+					: 0;
+			}
 		} = MonotonicityOptions.MonotonicIncrement;
+
+		internal readonly uint IncrementMask;
 
 		/// <summary>
 		/// Initial random source used for ULID generation.
@@ -144,43 +154,85 @@ public readonly partial struct Ulid
 
 		internal readonly State CurrentState = new();
 
+		/// <summary>
+		/// Initializes a new instance of <see cref="GenerationOptions"/> with default values and its own monotonicity state.
+		/// </summary>
+		public GenerationOptions()
+		{
+		}
+
+		/// <summary>
+		/// Initializes a copy of <paramref name="original"/> with its own monotonicity state.
+		/// </summary>
+		/// <remarks>
+		/// This constructor is invoked by <c>with</c> expressions. The copy never shares the monotonicity state
+		/// (last generated ULID) with <paramref name="original"/>, so the two instances generate independent sequences.
+		/// </remarks>
+		/// <param name="original">The instance to copy the configuration from.</param>
+		protected GenerationOptions(GenerationOptions original)
+		{
+			Monotonicity = original.Monotonicity;
+			InitialRandomSource = original.InitialRandomSource;
+			IncrementRandomSource = original.IncrementRandomSource;
+
+			// Field initializers do not run for record copy constructors
+			CurrentState = new();
+		}
+
 		// Separates Lock and LastUlid into different cache lines to prevent "false sharing"
 		// x64 has 64-byte cache lines; ARM64 (e.g., Apple Silicon) has 128-byte cache lines
+		// The leading and trailing padding keep neighboring heap objects off those cache lines.
 		[StructLayout(LayoutKind.Explicit)]
 		internal class State
 		{
-			// Cache Line 1
-			[FieldOffset(16)] public LowLatencyLock Lock;
+			private const int _cacheLineSize = 128;
 
-			// Cache Line 2(ARM64)/3(x64)
+			[FieldOffset(_cacheLineSize)] public LowLatencyLock Lock;
+
+			// The last generated ULID as two numeric (not byte order) halves, so that increments need no byte swaps
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
-			[FieldOffset(16+128)] public ulong LastUlidPart0;
-			[FieldOffset(16+128+8)] public ulong LastUlidPart1;
+			[FieldOffset(_cacheLineSize * 2)] public ulong LastUlidPart0;
+			[FieldOffset(_cacheLineSize * 2 + 8)] public ulong LastUlidPart1;
+
+#pragma warning disable CS0169 // Padding field is never used
+			[FieldOffset(_cacheLineSize * 3 + 8)] private readonly ulong _trailingPadding;
+#pragma warning restore CS0169
 #pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
 
-#if NET5_0_OR_GREATER
-			[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-			[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			internal Scope EnterLock()
+			{
+				Lock.Enter();
+				return new(this);
+			}
+
+			// Holds the owning object rather than a reference into it, so the GC can move the state while the lock is held.
+			internal readonly ref struct Scope
+			{
+				private readonly State _state;
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				internal Scope(State state) => _state = state;
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				public void Dispose() => _state.Lock.Exit();
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			internal void Increment(uint addition)
 			{
 				var increment = (ulong)addition + 1; // carry = 1 is built-in
-				var part1 = ReverseOnLittleEndian(LastUlidPart1);
+				var part1 = LastUlidPart1;
 				var newPart1 = part1 + increment;
-				LastUlidPart1 = ReverseOnLittleEndian(newPart1);
+				LastUlidPart1 = newPart1;
 
 				if (newPart1 >= part1)
 				{
 					return;
 				}
 
-				var part0 = ReverseOnLittleEndian(LastUlidPart0);
-				part0++;
-				LastUlidPart0 = ReverseOnLittleEndian(part0);
+				var part0 = LastUlidPart0 + 1;
+				LastUlidPart0 = part0;
 				if (part0 == 0)
 				{
 					throw new OverflowException("Addition resulted in a ULID value larger than the absolute maximum ULID value.");

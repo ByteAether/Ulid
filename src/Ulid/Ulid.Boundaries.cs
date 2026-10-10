@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 #if NET7_0_OR_GREATER
 using System.Numerics;
 #endif
@@ -9,9 +10,6 @@ public readonly partial struct Ulid
 	: IMinMaxValue<Ulid>
 #endif
 {
-	private static readonly byte[] _randomMin = Enumerable.Repeat((byte)0x00, _ulidSizeRandom).ToArray();
-	private static readonly byte[] _randomMax = Enumerable.Repeat((byte)0xFF, _ulidSizeRandom).ToArray();
-
 	/// <summary>Gets the minimum value of the ULID type.</summary>
 	/// <remarks>
 	/// The <see cref="MinValue"/> field is a ULID with all components set to zero.
@@ -26,7 +24,7 @@ public readonly partial struct Ulid
 	/// The <see cref="MaxValue"/> field is a ULID where all byte components are set to their highest possible value (0xFF).
 	/// It can be used as a sentinel or boundary value in comparison operations or range validations.
 	/// </remarks>
-	public static Ulid MaxValue { get; } = New(Enumerable.Repeat((byte)0xFF, _ulidSize).ToArray());
+	public static Ulid MaxValue { get; } = FromParts(ulong.MaxValue, ulong.MaxValue);
 
 	/// <summary>
 	/// Represents an empty ULID value.
@@ -43,26 +41,39 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="timestamp">The timestamp used to create the minimum <see cref="Ulid"/> value.</param>
 	/// <returns>The minimum <see cref="Ulid"/> value for the given timestamp.</returns>
-	public static Ulid MinAt(long timestamp) => New(timestamp, _randomMin);
+	public static Ulid MinAt(long timestamp) => FromParts((ulong)timestamp << 16, 0);
 
 	/// <summary>
 	/// Creates the minimum possible <see cref="Ulid"/> value for the specified timestamp.
 	/// </summary>
 	/// <param name="datetime">The timestamp used to create the minimum <see cref="Ulid"/> value.</param>
 	/// <returns>The minimum <see cref="Ulid"/> value for the given timestamp.</returns>
-	public static Ulid MinAt(DateTimeOffset datetime) => New(datetime, _randomMin);
+	public static Ulid MinAt(DateTimeOffset datetime) => MinAt(datetime.ToUnixTimeMilliseconds());
 
 	/// <summary>
 	/// Creates the maximum possible <see cref="Ulid"/> value for the specified timestamp.
 	/// </summary>
 	/// <param name="timestamp">The timestamp used to create the maximum <see cref="Ulid"/> value.</param>
 	/// <returns>The maximum <see cref="Ulid"/> value for the given timestamp.</returns>
-	public static Ulid MaxAt(long timestamp) => New(timestamp, _randomMax);
+	public static Ulid MaxAt(long timestamp) => FromParts(((ulong)timestamp << 16) | 0xFFFF, ulong.MaxValue);
 
 	/// <summary>
 	/// Creates the maximum possible <see cref="Ulid"/> value for the specified timestamp.
 	/// </summary>
 	/// <param name="datetime">The timestamp used to create the maximum <see cref="Ulid"/> value.</param>
 	/// <returns>The maximum <see cref="Ulid"/> value for the given timestamp.</returns>
-	public static Ulid MaxAt(DateTimeOffset datetime) => New(datetime, _randomMax);
+	public static Ulid MaxAt(DateTimeOffset datetime) => MaxAt(datetime.ToUnixTimeMilliseconds());
+
+	// Creates a ULID from its two numeric 64-bit halves
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static Ulid FromParts(ulong part0, ulong part1)
+	{
+		Unsafe.SkipInit(out Ulid ulid);
+
+		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
+		Unsafe.WriteUnaligned(ref ulidRef, ReverseOnLittleEndian(part0));
+		Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, sizeof(ulong)), ReverseOnLittleEndian(part1));
+
+		return ulid;
+	}
 }

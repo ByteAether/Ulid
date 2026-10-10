@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -25,11 +26,7 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="bytes">The byte array to initialize the <see cref="Ulid"/> with.</param>
 	/// <returns>Given bytes as an <see cref="Ulid"/> instance.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid New(ReadOnlySpan<byte> bytes)
 		=> MemoryMarshal.Read<Ulid>(bytes);
 
@@ -41,15 +38,12 @@ public readonly partial struct Ulid
 	/// Otherwise, uses the specified <see cref="GenerationOptions"/> to control the ULID generation behavior.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid New(GenerationOptions? options = null)
 		// We can avoid Offset-related allocations by using DateTime over DateTimeOffset
 		// For public API, DateTimeOffset is an official recommendation
-		=> New((DateTime.UtcNow.Ticks - _unixEpochTicks) / TimeSpan.TicksPerMillisecond, options);
+		// Unsigned division is cheaper, the current time is always after the Unix epoch
+		=> New((long)((ulong)(DateTime.UtcNow.Ticks - _unixEpochTicks) / TimeSpan.TicksPerMillisecond), options);
 
 	/// <summary>
 	/// Creates a new <see cref="Ulid"/> with the specified timestamp.
@@ -60,11 +54,7 @@ public readonly partial struct Ulid
 	/// Otherwise, uses the specified <see cref="GenerationOptions"/> to control the ULID generation behavior.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid New(DateTimeOffset dateTimeOffset, GenerationOptions? options = null)
 		=> New(dateTimeOffset.ToUnixTimeMilliseconds(), options);
 
@@ -77,12 +67,9 @@ public readonly partial struct Ulid
 	/// Must be at least 10 bytes long to populate the random component of the Ulid.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	/// <exception cref="ArgumentException">Thrown if <paramref name="random"/> is shorter than 10 bytes.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-	public static Ulid New(DateTimeOffset dateTimeOffset, Span<byte> random)
+	public static Ulid New(DateTimeOffset dateTimeOffset, ReadOnlySpan<byte> random)
 		=> New(dateTimeOffset.ToUnixTimeMilliseconds(), random);
 
 	/// <summary>
@@ -94,14 +81,7 @@ public readonly partial struct Ulid
 	/// Otherwise, uses the specified <see cref="GenerationOptions"/> to control the ULID generation behavior.
 	/// </param>
 	/// <returns>A new <see cref="Ulid"/> instance.</returns>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid New(long timestamp, GenerationOptions? options = null)
 	{
 		Unsafe.SkipInit(out Ulid ulid);
@@ -127,16 +107,15 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// A new <see cref="Ulid"/> instance composed of the given timestamp and random byte sequence.
 	/// </returns>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	/// <exception cref="ArgumentException">Thrown if <paramref name="random"/> is shorter than 10 bytes.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
-	public static Ulid New(long timestamp, Span<byte> random)
+	public static Ulid New(long timestamp, ReadOnlySpan<byte> random)
 	{
+		if (random.Length < _ulidSizeRandom)
+		{
+			ThrowRandomTooShort();
+		}
+
 		Unsafe.SkipInit(out Ulid ulid);
 
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
@@ -147,21 +126,20 @@ public readonly partial struct Ulid
 		// Fill random
 		Unsafe.CopyBlockUnaligned(
 			ref Unsafe.Add(ref ulidRef, _ulidSizeTime),
-			ref random.GetPinnableReference(),
+			ref MemoryMarshal.GetReference(random),
 			_ulidSizeRandom
 		);
 
 		return ulid;
 	}
 
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	[DoesNotReturn]
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	[SuppressMessage("ReSharper", "NotResolvedInText")]
+	private static void ThrowRandomTooShort()
+		=> throw new ArgumentException($"The random component must be at least {_ulidSizeRandom} bytes long.", "random");
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	private static void FillTimestamp(ref byte ulidBytesRef, long timestamp)
 	{
 		var ts = (ulong)timestamp << 16;
@@ -169,14 +147,7 @@ public readonly partial struct Ulid
 		Unsafe.WriteUnaligned(ref ulidBytesRef, ts);
 	}
 
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	private static void Fill(ref byte ulidBytesRef, long timestamp, GenerationOptions options)
 	{
 		// Calculate offset to a random part
@@ -192,12 +163,6 @@ public readonly partial struct Ulid
 		FillMonotonic(ref ulidBytesRef, timestamp, options, monotonicity);
 	}
 
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
 	private static void FillMonotonic(
 		ref byte ulidBytesRef,
 		long timestamp,
@@ -209,12 +174,10 @@ public readonly partial struct Ulid
 
 		var state = options.CurrentState;
 
-		using (state.Lock.Enter())
+		using (state.EnterLock())
 		{
-			// Read the last timestamp (from bytes 0-7 of "last ULID")
-			// Shift it to get 48 bits.
-			var lastTime = ReverseOnLittleEndian(state.LastUlidPart0);
-			lastTime >>= 16;
+			// The last timestamp is in the upper 48 bits of the first half of "last ULID"
+			var lastTime = state.LastUlidPart0 >> 16;
 
 			// If the timestamp is bigger than the last one, generate a new ULID
 			if (timestamp > (long)lastTime)
@@ -225,9 +188,9 @@ public readonly partial struct Ulid
 				// Generate a new random to the generated ULID
 				options.InitialRandomSource.GetBytes(CreateSpan(ref ulidBytesRandomRef, _ulidSizeRandom));
 
-				// Store the generated ULID as two native-width words in the state.
-				state.LastUlidPart0 = Unsafe.ReadUnaligned<ulong>(ref ulidBytesRef);
-				state.LastUlidPart1 = Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong)));
+				// Store the generated ULID in the state as two numeric halves.
+				state.LastUlidPart0 = ReverseOnLittleEndian(Unsafe.ReadUnaligned<ulong>(ref ulidBytesRef));
+				state.LastUlidPart1 = ReverseOnLittleEndian(Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong))));
 			}
 			else // Otherwise, increment the last ULID
 			{
@@ -241,19 +204,15 @@ public readonly partial struct Ulid
 					// We can use the random bytes of incomplete ULID for the random increment span
 					var tempSpan = CreateSpan(ref ulidBytesRandomRef, sizeof(uint));
 					options.IncrementRandomSource.GetBytes(tempSpan[..(int)monotonicity]);
-					var increment = BinaryPrimitives.ReadUInt32LittleEndian(tempSpan);
-
 					// The tempSpan may contain garbage, so mask that out
-					var totalBitsToKeep = (int)monotonicity * 8;
-					var mask = (uint)((1UL << totalBitsToKeep) - 1);
-					increment &= mask;
+					var increment = BinaryPrimitives.ReadUInt32LittleEndian(tempSpan) & options.IncrementMask;
 
 					state.Increment(increment);
 				}
 
-				// Copy the state back as two native-width words.
-				Unsafe.WriteUnaligned(ref ulidBytesRef, state.LastUlidPart0);
-				Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong)), state.LastUlidPart1);
+				// Copy the state back in big-endian byte order.
+				Unsafe.WriteUnaligned(ref ulidBytesRef, ReverseOnLittleEndian(state.LastUlidPart0));
+				Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidBytesRef, sizeof(ulong)), ReverseOnLittleEndian(state.LastUlidPart1));
 			}
 		}
 	}

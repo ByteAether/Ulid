@@ -6,6 +6,10 @@ using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
 #endif
 
+#if NET5_0_OR_GREATER
+[module: SkipLocalsInit]
+#endif
+
 namespace ByteAether.Ulid;
 
 /// <summary>
@@ -49,7 +53,8 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <remarks>
 	/// The random component consists of the last 10 bytes of the ULID and is generated randomly to ensure uniqueness.<br/>
-	/// This component does not encode any timestamp or other structured information.
+	/// This component does not encode any timestamp or other structured information.<br/>
+	/// On .NET Standard 2.0 the returned span is backed by a new copy of the bytes, which allocates (see <see cref="AsByteSpan"/>).
 	/// </remarks>
 	/// <returns>
 	/// A byte array containing 10 random bytes that represent the random portion of the ULID.
@@ -57,11 +62,7 @@ public readonly partial struct Ulid
 	[IgnoreDataMember]
 	public ReadOnlySpan<byte> Random
 	{
-#if NETCOREAPP3_0_OR_GREATER
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 		get => AsByteSpan()[_ulidSizeTime..];
 	}
 
@@ -69,7 +70,8 @@ public readonly partial struct Ulid
 	/// Gets the time component of the ULID as a byte array.
 	/// </summary>
 	/// <remarks>
-	/// The time component consists of the first 6 bytes of the ULID and is generated during ULID creation.
+	/// The time component consists of the first 6 bytes of the ULID and is generated during ULID creation.<br/>
+	/// On .NET Standard 2.0 the returned span is backed by a new copy of the bytes, which allocates (see <see cref="AsByteSpan"/>).
 	/// </remarks>
 	/// <returns>
 	/// A byte array containing 6 time bytes that represent the time portion of the ULID.
@@ -77,11 +79,7 @@ public readonly partial struct Ulid
 	[IgnoreDataMember]
 	public ReadOnlySpan<byte> TimeBytes
 	{
-#if NETCOREAPP3_0_OR_GREATER
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 		get => AsByteSpan()[.._ulidSizeTime];
 	}
 
@@ -100,59 +98,48 @@ public readonly partial struct Ulid
 	[IgnoreDataMember]
 	public DateTimeOffset Time
 	{
-#if NET5_0_OR_GREATER
-		[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 		get
 		{
-			// Combine the 6 bytes into a 48-bit timestamp (big-endian order)
-			var time =
-				((long)_t0 << 40) |
-				((long)_t1 << 32) |
-				((long)_t2 << 24) |
-				((long)_t3 << 16) |
-				((long)_t4 << 8) |
-				_t5
-			;
+			// The first 8 bytes in big-endian order hold the 48-bit timestamp in their upper bits
+			var time = ReverseOnLittleEndian(Unsafe.As<Ulid, ulong>(ref Unsafe.AsRef(in this))) >> 16;
 
-			return DateTimeOffset.FromUnixTimeMilliseconds(time);
+			return DateTimeOffset.FromUnixTimeMilliseconds((long)time);
 		}
 	}
 
+#if NETSTANDARD2_0
+	/// <summary>
+	/// Creates a read-only span of bytes representing the current instance of the <see cref="Ulid"/> struct.
+	/// </summary>
+	/// <remarks>
+	/// On .NET Standard 2.0 there is no GC-safe way to create a span over the instance itself.
+	/// The returned span is backed by a new copy of the bytes (see <see cref="ToByteArray"/>), which allocates.
+	/// </remarks>
+	/// <returns>
+	/// A <see cref="ReadOnlySpan{T}"/> over a copy of the raw byte representation of the current <see cref="Ulid"/> struct.
+	/// </returns>
+#else
 	/// <summary>
 	/// Creates a read-only span of bytes representing the current instance of the <see cref="Ulid"/> struct.
 	/// </summary>
 	/// <returns>
 	/// A <see cref="ReadOnlySpan{T}"/> that points to the raw byte representation of the current <see cref="Ulid"/> struct.
 	/// </returns>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
 #endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public ReadOnlySpan<byte> AsByteSpan()
+#if NETSTANDARD2_0
+		=> ToByteArray();
+#else
+		=> MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<Ulid, byte>(ref Unsafe.AsRef(in this)), _ulidSize);
 #endif
-	public unsafe ReadOnlySpan<byte> AsByteSpan()
-		=> new(Unsafe.AsPointer(ref Unsafe.AsRef(in this)), _ulidSize);
 
 	/// <summary>
 	/// Converts the ULID to a byte array.
 	/// </summary>
 	/// <returns>A byte array representing the ULID.</returns>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public byte[] ToByteArray()
 	{
 		var bytes = new byte[_ulidSize];

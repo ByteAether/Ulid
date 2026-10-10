@@ -3,6 +3,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+#if NET7_0_OR_GREATER
+using System.Runtime.Intrinsics;
+#endif
 
 namespace ByteAether.Ulid;
 
@@ -31,7 +34,8 @@ public readonly partial struct Ulid
 
 	private static readonly char[] _base32Chars = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".ToCharArray();
 	private static readonly byte[] _base32Bytes = Encoding.UTF8.GetBytes(_base32Chars);
-	private static readonly byte[] _inverseBase32 =
+	// Stored as RVA static data: no static field load, no initialization check and a constant length
+	private static ReadOnlySpan<byte> _inverseBase32 =>
 	[
 		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // controls
 		255, // space
@@ -84,28 +88,14 @@ public readonly partial struct Ulid
 	];
 
 	/// <inheritdoc />
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
 	/// <summary>
 	/// Returns a string representation of the current instance of <see cref="Ulid"/> in its canonical Crockford's Base32 format.'
 	/// </summary>
 	/// <returns>Crockford's Base32 representation of the ULID</returns>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public override string ToString()
 	{
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
@@ -123,17 +113,23 @@ public readonly partial struct Ulid
 	/// <param name="chars">The span of characters containing Crockford's Base32 representation of the ULID.</param>
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <returns>A parsed instance of <see cref="Ulid"/>.</returns>
-	/// <exception cref="FormatException">Thrown if the input span does not meet the ULID format requirements.</exception>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	/// <remarks>
+	/// Applies the same rules as <see cref="IsValid(string)"/>: the input must be exactly 26 characters of
+	/// Crockford's Base32 alphabet, read case-insensitively, with <c>I</c> and <c>L</c> accepted as <c>1</c>, and
+	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
+	/// </remarks>
+	/// <exception cref="FormatException">Thrown if the input span is not a valid ULID string representation.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid Parse(ReadOnlySpan<char> chars, IFormatProvider? provider = null)
-		=> ParseCore(chars);
+	{
+		var ulid = ParseCore(chars, out var isValid);
+		if (!isValid)
+		{
+			ThrowInvalidFormat();
+		}
+
+		return ulid;
+	}
 
 	/// <summary>
 	/// Parses a ULID from a read-only span of bytes and returns the corresponding ULID value.
@@ -141,112 +137,288 @@ public readonly partial struct Ulid
 	/// <param name="bytes">The read-only span of bytes containing the ULID string representation in Crockford's Base32 format.</param>
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <returns>The ULID parsed from the specified byte span.</returns>
+	/// <remarks>
+	/// Applies the same rules as <see cref="IsValid(string)"/>: the input must be exactly 26 characters of
+	/// Crockford's Base32 alphabet, read case-insensitively, with <c>I</c> and <c>L</c> accepted as <c>1</c>, and
+	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
+	/// </remarks>
 	/// <exception cref="FormatException">Thrown if the input byte span does not contain a valid ULID string representation.</exception>
-#if NET5_0_OR_GREATER
-	[SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid Parse(ReadOnlySpan<byte> bytes, IFormatProvider? provider = null)
-		=> ParseCore(bytes);
-
-#if NET5_0_OR_GREATER
-    [SkipLocalsInit]
-#endif
-#if NETCOREAPP3_0_OR_GREATER
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
-    private static unsafe Ulid ParseCore<T>(ReadOnlySpan<T> input)
-	    where T : unmanaged
 	{
-		// Every T element is read as a byte. Other bits are ignored.
-		// We create 2 blocks of big-endian ulong values then reverse the endianness
-		// Creating a big-endian ulong and then reversing it is faster than creating directly a little-endian ulong
+		var ulid = ParseCore(bytes, out var isValid);
+		if (!isValid)
+		{
+			ThrowInvalidFormat();
+		}
 
-	    if (input.Length != UlidStringLength)
-	    {
-	        throw new FormatException("The input sequence is not a valid ULID string representation.");
-	    }
-
-	    var stepSize = sizeof(T); // We read the span as bytes and iterate by the size of an element
-	    Ulid result = default;
-
-	    fixed (T* pSrc = &MemoryMarshal.GetReference(input))
-	    {
-	        var pBytes = (byte*)pSrc;
-	        ref var tableRef = ref _inverseBase32[0];
-	        ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref result);
-
-	        ulong t00 = Unsafe.Add(ref tableRef, pBytes[00 * stepSize]);
-	        ulong t01 = Unsafe.Add(ref tableRef, pBytes[01 * stepSize]);
-	        ulong t02 = Unsafe.Add(ref tableRef, pBytes[02 * stepSize]);
-	        ulong t03 = Unsafe.Add(ref tableRef, pBytes[03 * stepSize]);
-	        ulong t04 = Unsafe.Add(ref tableRef, pBytes[04 * stepSize]);
-	        ulong t05 = Unsafe.Add(ref tableRef, pBytes[05 * stepSize]);
-	        ulong t06 = Unsafe.Add(ref tableRef, pBytes[06 * stepSize]);
-	        ulong t07 = Unsafe.Add(ref tableRef, pBytes[07 * stepSize]);
-	        ulong t08 = Unsafe.Add(ref tableRef, pBytes[08 * stepSize]);
-	        ulong t09 = Unsafe.Add(ref tableRef, pBytes[09 * stepSize]);
-	        ulong r00 = Unsafe.Add(ref tableRef, pBytes[10 * stepSize]);
-	        ulong r01 = Unsafe.Add(ref tableRef, pBytes[11 * stepSize]);
-	        ulong r02 = Unsafe.Add(ref tableRef, pBytes[12 * stepSize]);
-	        ulong r03 = Unsafe.Add(ref tableRef, pBytes[13 * stepSize]);
-
-	        var block1 =
-		        (t00 << 61)
-		        | (t01 << 56)
-		        | (t02 << 51)
-		        | (t03 << 46)
-		        | (t04 << 41)
-		        | (t05 << 36)
-		        | (t06 << 31)
-		        | (t07 << 26)
-		        | (t08 << 21)
-		        | (t09 << 16)
-		        | (r00 << 11)
-		        | (r01 << 6)
-		        | (r02 << 1)
-		        | (r03 >> 4);
-
-	        Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, 0), ReverseOnLittleEndian(block1));
-
-	        // Second block - ulong 64 bits
-	        ulong r04 = Unsafe.Add(ref tableRef, pBytes[14 * stepSize]);
-	        ulong r05 = Unsafe.Add(ref tableRef, pBytes[15 * stepSize]);
-	        ulong r06 = Unsafe.Add(ref tableRef, pBytes[16 * stepSize]);
-	        ulong r07 = Unsafe.Add(ref tableRef, pBytes[17 * stepSize]);
-	        ulong r08 = Unsafe.Add(ref tableRef, pBytes[18 * stepSize]);
-	        ulong r09 = Unsafe.Add(ref tableRef, pBytes[19 * stepSize]);
-	        ulong r10 = Unsafe.Add(ref tableRef, pBytes[20 * stepSize]);
-	        ulong r11 = Unsafe.Add(ref tableRef, pBytes[21 * stepSize]);
-	        ulong r12 = Unsafe.Add(ref tableRef, pBytes[22 * stepSize]);
-	        ulong r13 = Unsafe.Add(ref tableRef, pBytes[23 * stepSize]);
-	        ulong r14 = Unsafe.Add(ref tableRef, pBytes[24 * stepSize]);
-	        ulong r15 = Unsafe.Add(ref tableRef, pBytes[25 * stepSize]);
-
-	        var block2 =
-		        (r03 << 60)
-		        | (r04 << 55)
-		        | (r05 << 50)
-		        | (r06 << 45)
-		        | (r07 << 40)
-		        | (r08 << 35)
-		        | (r09 << 30)
-		        | (r10 << 25)
-		        | (r11 << 20)
-		        | (r12 << 15)
-		        | (r13 << 10)
-		        | (r14 << 5)
-		        | r15;
-
-	        Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, 8), ReverseOnLittleEndian(block2));
-	    }
-
-	    return result;
+		return ulid;
 	}
+
+	private static Ulid ParseCore(ReadOnlySpan<char> input, out bool isValid)
+	{
+		if (input.Length != UlidStringLength)
+		{
+			isValid = false;
+			return default;
+		}
+
+		// Every char must be ASCII, as only its lowest byte is decoded below
+#if NET7_0_OR_GREATER
+		ref var units = ref Unsafe.As<char, ushort>(ref MemoryMarshal.GetReference(input));
+		var nonAscii = (
+			Vector128.LoadUnsafe(ref units)
+			| Vector128.LoadUnsafe(ref units, 8)
+			| Vector128.LoadUnsafe(ref units, 10)
+			| Vector128.LoadUnsafe(ref units, 18)
+		) & Vector128.Create((ushort)0xFF80);
+
+		if (nonAscii != Vector128<ushort>.Zero)
+#else
+		// The 26 chars (52 bytes) are checked as 6 ulongs and 1 uint, independent of the endianness
+		ref var bytes = ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(input));
+		var units =
+			Unsafe.ReadUnaligned<ulong>(ref bytes)
+			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 8))
+			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 16))
+			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 24))
+			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 32))
+			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 40))
+			| Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref bytes, 48));
+
+		if ((units & 0xFF80_FF80_FF80_FF80) != 0)
+#endif
+		{
+			isValid = false;
+			return default;
+		}
+
+		ref var src = ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(input));
+		ref var tableRef = ref MemoryMarshal.GetReference(_inverseBase32);
+
+		// The 128-bit value is built as 2 big-endian 64-bit blocks (a | b and c | d), then the endianness is reversed.
+		// Every character is decoded and accumulated right away, which keeps the register pressure low,
+		// and 2 accumulators per block keep the dependency chains short.
+		ulong a, b, c, d, invalidA, invalidB, value;
+
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 0));
+		invalidA = value << 2; // The first character must be 0..7, otherwise the value overflows 128 bits
+		a = value << 61;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 1));
+		invalidA |= value;
+		a |= value << 56;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 2));
+		invalidA |= value;
+		a |= value << 51;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 3));
+		invalidA |= value;
+		a |= value << 46;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 4));
+		invalidA |= value;
+		a |= value << 41;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 5));
+		invalidA |= value;
+		a |= value << 36;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 6));
+		invalidA |= value;
+		a |= value << 31;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 7));
+		invalidB = value;
+		b = value << 26;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 8));
+		invalidB |= value;
+		b |= value << 21;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 9));
+		invalidB |= value;
+		b |= value << 16;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 10));
+		invalidB |= value;
+		b |= value << 11;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 11));
+		invalidB |= value;
+		b |= value << 6;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 12));
+		invalidB |= value;
+		b |= value << 1;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 13));
+		invalidB |= value;
+		b |= value >> 4;
+		c = value << 60;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 14));
+		invalidA |= value;
+		c |= value << 55;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 15));
+		invalidA |= value;
+		c |= value << 50;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 16));
+		invalidA |= value;
+		c |= value << 45;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 17));
+		invalidA |= value;
+		c |= value << 40;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 18));
+		invalidA |= value;
+		c |= value << 35;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 19));
+		invalidA |= value;
+		c |= value << 30;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 20));
+		invalidB |= value;
+		d = value << 25;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 21));
+		invalidB |= value;
+		d |= value << 20;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 22));
+		invalidB |= value;
+		d |= value << 15;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 23));
+		invalidB |= value;
+		d |= value << 10;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 24));
+		invalidB |= value;
+		d |= value << 5;
+		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 25));
+		invalidB |= value;
+		d |= value << 0;
+
+		// Every table value is either 0..31 or 255 (invalid character)
+		if (((invalidA | invalidB) & 0xE0) != 0)
+		{
+			isValid = false;
+			return default;
+		}
+
+		Unsafe.SkipInit(out Ulid ulid);
+		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
+		Unsafe.WriteUnaligned(ref ulidRef, ReverseOnLittleEndian(a | b));
+		Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, sizeof(ulong)), ReverseOnLittleEndian(c | d));
+
+		isValid = true;
+		return ulid;
+	}
+
+	// Reads the lowest byte of the char at index, independent of the endianness
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static byte ReadLowByte(ref byte src, int index)
+		=> (byte)Unsafe.ReadUnaligned<ushort>(ref Unsafe.Add(ref src, index * sizeof(char)));
+
+	private static Ulid ParseCore(ReadOnlySpan<byte> input, out bool isValid)
+	{
+		if (input.Length != UlidStringLength)
+		{
+			isValid = false;
+			return default;
+		}
+
+		// Non-ASCII bytes (0x80 and above) are mapped to an invalid value in the table
+		ref var src = ref MemoryMarshal.GetReference(input);
+		ref var tableRef = ref MemoryMarshal.GetReference(_inverseBase32);
+
+		// The 128-bit value is built as 2 big-endian 64-bit blocks (a | b and c | d), then the endianness is reversed.
+		// Every character is decoded and accumulated right away, which keeps the register pressure low,
+		// and 2 accumulators per block keep the dependency chains short.
+		ulong a, b, c, d, invalidA, invalidB, value;
+
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 0));
+		invalidA = value << 2; // The first character must be 0..7, otherwise the value overflows 128 bits
+		a = value << 61;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 1));
+		invalidA |= value;
+		a |= value << 56;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 2));
+		invalidA |= value;
+		a |= value << 51;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 3));
+		invalidA |= value;
+		a |= value << 46;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 4));
+		invalidA |= value;
+		a |= value << 41;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 5));
+		invalidA |= value;
+		a |= value << 36;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 6));
+		invalidA |= value;
+		a |= value << 31;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 7));
+		invalidB = value;
+		b = value << 26;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 8));
+		invalidB |= value;
+		b |= value << 21;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 9));
+		invalidB |= value;
+		b |= value << 16;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 10));
+		invalidB |= value;
+		b |= value << 11;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 11));
+		invalidB |= value;
+		b |= value << 6;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 12));
+		invalidB |= value;
+		b |= value << 1;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 13));
+		invalidB |= value;
+		b |= value >> 4;
+		c = value << 60;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 14));
+		invalidA |= value;
+		c |= value << 55;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 15));
+		invalidA |= value;
+		c |= value << 50;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 16));
+		invalidA |= value;
+		c |= value << 45;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 17));
+		invalidA |= value;
+		c |= value << 40;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 18));
+		invalidA |= value;
+		c |= value << 35;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 19));
+		invalidA |= value;
+		c |= value << 30;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 20));
+		invalidB |= value;
+		d = value << 25;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 21));
+		invalidB |= value;
+		d |= value << 20;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 22));
+		invalidB |= value;
+		d |= value << 15;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 23));
+		invalidB |= value;
+		d |= value << 10;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 24));
+		invalidB |= value;
+		d |= value << 5;
+		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 25));
+		invalidB |= value;
+		d |= value << 0;
+
+		// Every table value is either 0..31 or 255 (invalid character)
+		if (((invalidA | invalidB) & 0xE0) != 0)
+		{
+			isValid = false;
+			return default;
+		}
+
+		Unsafe.SkipInit(out Ulid ulid);
+		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
+		Unsafe.WriteUnaligned(ref ulidRef, ReverseOnLittleEndian(a | b));
+		Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, sizeof(ulong)), ReverseOnLittleEndian(c | d));
+
+		isValid = true;
+		return ulid;
+	}
+
+	[DoesNotReturn]
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ThrowInvalidFormat()
+		=> throw new FormatException("The input sequence is not a valid ULID string representation.");
 
 	/// <summary>
 	/// Parses a string representation of a ULID and returns the corresponding ULID instance.
@@ -254,13 +426,15 @@ public readonly partial struct Ulid
 	/// <param name="s">The string representation of the ULID to parse.</param>
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <returns>A new <see cref="Ulid"/> instance parsed from the specified string.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	/// <remarks>
+	/// Applies the same rules as <see cref="IsValid(string)"/>: the input must be exactly 26 characters of
+	/// Crockford's Base32 alphabet, read case-insensitively, with <c>I</c> and <c>L</c> accepted as <c>1</c>, and
+	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
+	/// </remarks>
+	/// <exception cref="FormatException">Thrown if the input string is not a valid ULID string representation.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static Ulid Parse(string s, IFormatProvider? provider = null)
-		=> ParseCore(s.AsSpan());
+		=> Parse(s.AsSpan(), provider);
 
 	/// <summary>
 	/// Attempts to parse a string representation of a ULID into a <see cref="Ulid"/> instance.
@@ -269,11 +443,12 @@ public readonly partial struct Ulid
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <param name="result">When this method returns, contains the parsed <see cref="Ulid"/> value if the parse was successful; otherwise, the default value of <see cref="Ulid"/>.</param>
 	/// <returns><c>true</c> if the parsing was successful; otherwise, <c>false</c>.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	/// <remarks>
+	/// Applies the same rules as <see cref="IsValid(string)"/>: the input must be exactly 26 characters of
+	/// Crockford's Base32 alphabet, read case-insensitively, with <c>I</c> and <c>L</c> accepted as <c>1</c>, and
+	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
+	/// </remarks>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out Ulid result)
 		=> TryParse(s.AsSpan(), provider, out result);
 
@@ -284,23 +459,16 @@ public readonly partial struct Ulid
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <param name="result">When the method returns, contains the parsed ULID if the operation succeeds, or the default value if it fails.</param>
 	/// <returns><c>true</c> if the parsing operation succeeded; otherwise, <c>false</c>.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	/// <remarks>
+	/// Applies the same rules as <see cref="IsValid(string)"/>: the input must be exactly 26 characters of
+	/// Crockford's Base32 alphabet, read case-insensitively, with <c>I</c> and <c>L</c> accepted as <c>1</c>, and
+	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
+	/// </remarks>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Ulid result)
 	{
-		try
-		{
-			result = ParseCore(s);
-			return true;
-		}
-		catch
-		{
-			result = default;
-			return false;
-		}
+		result = ParseCore(s, out var isValid);
+		return isValid;
 	}
 
 	/// <summary>
@@ -310,23 +478,16 @@ public readonly partial struct Ulid
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <param name="result">When the method returns, contains the parsed ULID if parsing was successful; otherwise, the default value for ULID.</param>
 	/// <returns><c>true</c> if parsing was successful; otherwise, <c>false</c>.</returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	/// <remarks>
+	/// Applies the same rules as <see cref="IsValid(string)"/>: the input must be exactly 26 characters of
+	/// Crockford's Base32 alphabet, read case-insensitively, with <c>I</c> and <c>L</c> accepted as <c>1</c>, and
+	/// <c>O</c> as <c>0</c>. The first character must be between <c>0</c> and <c>7</c>.
+	/// </remarks>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static bool TryParse(ReadOnlySpan<byte> s, IFormatProvider? provider, out Ulid result)
 	{
-		try
-		{
-			result = ParseCore(s);
-			return true;
-		}
-		catch
-		{
-			result = default;
-			return false;
-		}
+		result = ParseCore(s, out var isValid);
+		return isValid;
 	}
 
 	/// <summary>
@@ -339,11 +500,7 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the formatting is successful and the destination span is large enough to contain the formatted data; otherwise, <c>false</c>.
 	/// </returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public bool TryFormat(
 		Span<char> destination,
 		out int charsWritten,
@@ -372,11 +529,7 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the formatting was successful; <c>false</c> if the destination span was too short to contain the formatted value.
 	/// </returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public bool TryFormat(
 		Span<byte> destination,
 		out int bytesWritten,
@@ -395,40 +548,40 @@ public readonly partial struct Ulid
 		return true;
 	}
 
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
 	private void Fill<T>(Span<T> span, T[] map) where T: unmanaged
 	{
-		// Encode randomness
-		span[25] = map[_r9 & 0x1F];                      // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111|11111|]
-		span[24] = map[((_r8 & 0x3) << 3) | (_r9 >> 5)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][111111|11][111|11111]
-		span[23] = map[(_r8 >> 2) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][1|11111|11][11111111]
-		span[22] = map[((_r7 & 0xF) << 1) | (_r8 >> 7)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][1111|1111][1|1111111][11111111]
-		span[21] = map[((_r6 & 0x1) << 4) | (_r7 >> 4)]; // [11111111][11111111][11111111][11111111][11111111][11111111][1111111|1][1111|1111][11111111][11111111]
-		span[20] = map[(_r6 >> 1) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11|11111|1][11111111][11111111][11111111]
-		span[19] = map[((_r5 & 0x7) << 2) | (_r6 >> 6)]; // [11111111][11111111][11111111][11111111][11111111][11111|111][11|111111][11111111][11111111][11111111]
-		span[18] = map[(_r5 >> 3) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][|11111|111][11111111][11111111][11111111][11111111]
-		span[17] = map[_r4 & 0x1F];                      // [11111111][11111111][11111111][11111111][111|11111|][11111111][11111111][11111111][11111111][11111111]
-		span[16] = map[((_r3 & 0x3) << 3) | (_r4 >> 5)]; // [11111111][11111111][11111111][11111111][111111|11][111|11111][11111111][11111111][11111111][11111111]
-		span[15] = map[(_r3 >> 2) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[14] = map[((_r2 & 0xF) << 1) | (_r3 >> 7)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[13] = map[((_r1 & 0x1) << 4) | (_r2 >> 4)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[12] = map[(_r1 >> 1) & 0x1F];               // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[11] = map[((_r0 & 0x7) << 2) | (_r1 >> 6)]; // [11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
-		span[10] = map[(_r0 >> 3) & 0x1F];               // [|11111|111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111][11111111]
+		// Load the ULID as two big-endian 64-bit halves and extract the 5-bit groups with shifts
+		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref Unsafe.AsRef(in this));
+		var hi = ReverseOnLittleEndian(Unsafe.ReadUnaligned<ulong>(ref ulidRef));
+		var lo = ReverseOnLittleEndian(Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref ulidRef, sizeof(ulong))));
 
-		// Encode timestamp
-		span[9] = map[_t5 & 0x1F];                       // 00[11111111][11111111][11111111][11111111][11111111][111|11111|]
-		span[8] = map[((_t4 & 0x3) << 3) | (_t5 >> 5)];  // 00[11111111][11111111][11111111][11111111][111111|11][111|11111]
-		span[7] = map[(_t4 >> 2) & 0x1F];                // 00[11111111][11111111][11111111][11111111][1|11111|11][11111111]
-		span[6] = map[((_t3 & 0xF) << 1) | (_t4 >> 7)];  // 00[11111111][11111111][11111111][1111|1111][1|1111111][11111111]
-		span[5] = map[((_t2 & 0x1) << 4) | (_t3 >> 4)];  // 00[11111111][11111111][1111111|1][1111|1111][11111111][11111111]
-		span[4] = map[(_t2 >> 1) & 0x1F];                // 00[11111111][11111111][11|11111|1][11111111][11111111][11111111]
-		span[3] = map[((_t1 & 0x7) << 2) | (_t2 >> 6)];  // 00[11111111][11111|111][11|111111][11111111][11111111][11111111]
-		span[2] = map[_t1 >> 3];                         // 00[11111111][|11111|111][11111111][11111111][11111111][11111111]
-		span[1] = map[_t0 & 0x1F];                       // 00[111|11111|][11111111][11111111][11111111][11111111][11111111]
-		span[0] = map[_t0 >> 5];                         // |00[111|11111][11111111][11111111][11111111][11111111][11111111]
+		// Writing the last element first removes the bounds checks of the other elements
+		span[25] = map[(int)lo & 0x1F];
+		span[24] = map[(int)(lo >> 5) & 0x1F];
+		span[23] = map[(int)(lo >> 10) & 0x1F];
+		span[22] = map[(int)(lo >> 15) & 0x1F];
+		span[21] = map[(int)(lo >> 20) & 0x1F];
+		span[20] = map[(int)(lo >> 25) & 0x1F];
+		span[19] = map[(int)(lo >> 30) & 0x1F];
+		span[18] = map[(int)(lo >> 35) & 0x1F];
+		span[17] = map[(int)(lo >> 40) & 0x1F];
+		span[16] = map[(int)(lo >> 45) & 0x1F];
+		span[15] = map[(int)(lo >> 50) & 0x1F];
+		span[14] = map[(int)(lo >> 55) & 0x1F];
+		span[13] = map[(int)((hi << 4) | (lo >> 60)) & 0x1F]; // Lowest bit of hi, highest 4 bits of lo
+		span[12] = map[(int)(hi >> 1) & 0x1F];
+		span[11] = map[(int)(hi >> 6) & 0x1F];
+		span[10] = map[(int)(hi >> 11) & 0x1F];
+		span[9] = map[(int)(hi >> 16) & 0x1F];
+		span[8] = map[(int)(hi >> 21) & 0x1F];
+		span[7] = map[(int)(hi >> 26) & 0x1F];
+		span[6] = map[(int)(hi >> 31) & 0x1F];
+		span[5] = map[(int)(hi >> 36) & 0x1F];
+		span[4] = map[(int)(hi >> 41) & 0x1F];
+		span[3] = map[(int)(hi >> 46) & 0x1F];
+		span[2] = map[(int)(hi >> 51) & 0x1F];
+		span[1] = map[(int)(hi >> 56) & 0x1F];
+		span[0] = map[(int)(hi >> 61)];
 	}
 
 	/// <summary>
@@ -436,22 +589,15 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="ulid"></param>
 	/// <returns></returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static implicit operator string(Ulid ulid) => ulid.ToString();
 
 	/// <summary>
 	/// Allows implicit conversion of <see cref="string"/> to <see cref="Ulid"/>.
 	/// </summary>
-	/// <param name="str"></param>
-	/// <returns></returns>
-#if NETCOREAPP3_0_OR_GREATER
-	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-#else
+	/// <param name="str">The ULID string representation. See <see cref="Parse(string, IFormatProvider)"/>.</param>
+	/// <returns>The parsed <see cref="Ulid"/>.</returns>
+	/// <exception cref="FormatException">Thrown if <paramref name="str"/> is not a valid ULID string representation.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
 	public static implicit operator Ulid(string str) => Parse(str);
 }
