@@ -4,7 +4,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.Bcl.Memory" Version="10.0.13" />
     <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
 
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
