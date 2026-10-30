@@ -5,7 +5,6 @@
     <OutputType>library</OutputType>
     <IsAotCompatible>true</IsAotCompatible>
     <NoWarn>NU1903</NoWarn>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
