@@ -90,11 +90,17 @@ public readonly partial struct Ulid
 	/// The timestamp component represents the number of milliseconds since the Unix epoch
 	/// (1970-01-01T00:00:00Z). It is stored in the first 6 bytes of the ULID and ensures
 	/// lexicographical sorting by time.<br/>
-	/// The timestamp is extracted in a way that is compatible with both little-endian and big-endian systems.
+	/// The timestamp is extracted in a way that is compatible with both little-endian and big-endian systems.<br/>
+	/// A ULID stores a 48-bit timestamp (up to the year 10889), while <see cref="DateTimeOffset"/> ends at the year 9999.
+	/// Every ULID from <c>76EZ91ZQ000000000000000000</c> upwards, including <see cref="MaxValue"/>, is valid but its
+	/// timestamp cannot be represented as a <see cref="DateTimeOffset"/>. Use <see cref="TimeBytes"/> to read such a timestamp.
 	/// </remarks>
 	/// <returns>
 	/// A <see cref="DateTimeOffset"/> representing the timestamp portion of the ULID.
 	/// </returns>
+	/// <exception cref="ArgumentOutOfRangeException">
+	/// Thrown if the timestamp is beyond the latest <see cref="DateTimeOffset"/> (9999-12-31T23:59:59.999Z).
+	/// </exception>
 	[IgnoreDataMember]
 	public DateTimeOffset Time
 	{

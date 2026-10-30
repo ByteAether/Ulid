@@ -23,7 +23,7 @@ For more detailed documentation, visit our [GitHub repository](https://github.co
 
 - **Universally Unique**: Ensures global uniqueness across systems.
 - **Sortable**: Lexicographically ordered for time-based sorting.
-- **Lock-Free Synchronization**: Monotonic generation utilizes a high-performance, **lock-free compare-and-exchange (CAS)** approach.
+- **Low-Latency Synchronization**: Monotonic generation is serialized by a **test-and-test-and-set (TTAS) lock** with compare-and-swap (CAS) acquisition.
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
 - **Ahead-of-Time (AOT) Compilation**: Fully compatible with Native AOT for improved startup performance and smaller binary footprints.
@@ -145,7 +145,7 @@ Parsing applies the same rules as validation (see Checking Validity above). `Par
 - `Ulid.DefaultGenerationOptions`\
   Default configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
 - `.Time`\
-  Gets the timestamp component of the ULID as a `DateTimeOffset`.
+  Gets the timestamp component of the ULID as a `DateTimeOffset`. A ULID stores a 48-bit millisecond timestamp (up to the year 10889), but `DateTimeOffset` ends at the year 9999, so `.Time` throws `ArgumentOutOfRangeException` for valid ULIDs from `76EZ91ZQ000000000000000000` upwards (including `Ulid.MaxValue`). Use `.TimeBytes` to read the raw timestamp without that limit.
 - `.TimeBytes`\
   Gets the timestamp component of the ULID as a `ReadOnlySpan<byte>`.
 - `.Random`\

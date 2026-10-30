@@ -8,6 +8,13 @@ public readonly partial struct Ulid
 	/// <summary>
 	/// Configuration options for ULID generation.
 	/// </summary>
+	/// <remarks>
+	/// An instance owns the monotonic sequence (the last generated ULID) of the ULIDs that are generated with it.<br/>
+	/// Reusing one instance continues that sequence across calls and threads, while every new instance starts its own,
+	/// independent sequence.<br/>
+	/// A copy of an instance, such as one made with a <c>with</c> expression, gets its own fresh state:
+	/// it never shares or continues the sequence of the instance it was copied from.
+	/// </remarks>
 	public record GenerationOptions
 	{
 		/// <summary>
