@@ -4,6 +4,7 @@ using System.Numerics;
 #endif
 
 namespace ByteAether.Ulid;
+
 public readonly partial struct Ulid : IComparable, IComparable<Ulid>
 #if NET7_0_OR_GREATER
 	, IComparisonOperators<Ulid, Ulid, bool>

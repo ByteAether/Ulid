@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
 namespace ByteAether.Ulid.Tests;
+
 public class UlidTests
 {
 	private static readonly byte[] _sampleUlidBytes =

@@ -1,6 +1,7 @@
 ﻿using System.Text;
 
 namespace ByteAether.Ulid.Tests;
+
 public class UlidStringTests
 {
 	private const string _goodUlidString = "01F8MECHZX3TBDSZG8P8X7XRMM";

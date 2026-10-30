@@ -267,7 +267,7 @@ public class UlidNewTests
 		var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 		var initialRandom = new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 		//Set all the last bytes to 0x00 that should be incremented later
-		for(var i = initialRandom.Length - incrementSize; i < initialRandom.Length; i++)
+		for (var i = initialRandom.Length - incrementSize; i < initialRandom.Length; i++)
 		{
 			initialRandom[i] = 0x00;
 		}

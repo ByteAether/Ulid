@@ -1,4 +1,5 @@
 ﻿namespace ByteAether.Ulid.Tests;
+
 public class UlidGuidTests
 {
 	[Fact]

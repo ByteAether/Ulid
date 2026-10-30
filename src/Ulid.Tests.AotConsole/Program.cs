@@ -83,17 +83,17 @@ Console.WriteLine($"    Equality check (ulid1_1 == ulid3_1): {ulid1_1 == ulid3_1
 // 3.2 TryParse from string
 if (Ulid.TryParse("01ARZ3NDEKTSV4RRQ6S5KF8XRY", null, out var ulid3_2))
 {
-    Console.WriteLine($"3.2 TryParse successful: {ulid3_2}");
+	Console.WriteLine($"3.2 TryParse successful: {ulid3_2}");
 }
 else
 {
-    throw new("3.2 ERROR: TryParse failed for valid ULID.");
+	throw new("3.2 ERROR: TryParse failed for valid ULID.");
 }
 
 // 3.3 TryParse with invalid string
 if (!Ulid.TryParse("INVALID_ULID_STRING", null, out var ulid3_3))
 {
-    Console.WriteLine("3.3 TryParse correctly failed for invalid ULID string.");
+	Console.WriteLine("3.3 TryParse correctly failed for invalid ULID string.");
 }
 else
 {
@@ -162,8 +162,8 @@ Console.WriteLine("ByteAether.Ulid AOT Compatibility Test Completed.");
 
 internal class MyClassWithUlid
 {
-    public Ulid Id { get; set; }
-    public string? Name { get; set; }
+	public Ulid Id { get; set; }
+	public string? Name { get; set; }
 }
 
 [JsonSerializable(typeof(Ulid))]

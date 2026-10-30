@@ -8,284 +8,292 @@ namespace ByteAether.Ulid.LinqToDB.IntegrationTests;
 
 public class TestEntity
 {
-    [PrimaryKey, Identity]
-    public int Id { get; set; }
+	[PrimaryKey, Identity]
+	public int Id { get; set; }
 
-    [Column, NotNull]
-    public Ulid SystemUlid { get; set; }
+	[Column, NotNull]
+	public Ulid SystemUlid { get; set; }
 
-    [Column, Nullable]
-    public Ulid? NullableUlid { get; set; }
+	[Column, Nullable]
+	public Ulid? NullableUlid { get; set; }
 }
 
 public class RelatedChildEntity
 {
-    [PrimaryKey, Identity]
-    public int Id { get; set; }
+	[PrimaryKey, Identity]
+	public int Id { get; set; }
 
-    [Column, NotNull]
-    public Ulid ParentSystemUlid { get; set; }
+	[Column, NotNull]
+	public Ulid ParentSystemUlid { get; set; }
 
-    [Column, Nullable]
-    public string Description { get; set; } = string.Empty;
+	[Column, Nullable]
+	public string Description { get; set; } = string.Empty;
 }
 
 public class UlidLinqToDbIntegrationTests : IDisposable
 {
 	private readonly SqliteConnection _connection;
 
-    public UlidLinqToDbIntegrationTests()
-    {
-	    // Shared open connection to preserve database scope for individual test runs
-        _connection = new("Filename=:memory:");
-        _connection.Open();
-    }
+	public UlidLinqToDbIntegrationTests()
+	{
+		// Shared open connection to preserve database scope for individual test runs
+		_connection = new("Filename=:memory:");
+		_connection.Open();
+	}
 
-    private DataConnection CreateConnection(UlidStorageFormat format)
-    {
-        var options = new DataOptions()
-	        .UseSQLite()
-	        .UseConnection(_connection)
-	        .RegisterUlid(format);
+	private DataConnection CreateConnection(UlidStorageFormat format)
+	{
+		var options = new DataOptions()
+			.UseSQLite()
+			.UseConnection(_connection)
+			.RegisterUlid(format);
 
-        var connection = new DataConnection(options);
+		var connection = new DataConnection(options);
 
-        // Natively construct volatile mock schema tables for testing execution paths
-        try { connection.CreateTable<TestEntity>(); } catch { /* Ignore table already exists if hit */ }
-        try { connection.CreateTable<RelatedChildEntity>(); } catch { /* Ignore table already exists if hit */ }
+		// Natively construct volatile mock schema tables for testing execution paths
+		try
+		{
+			connection.CreateTable<TestEntity>();
+		}
+		catch { /* Ignore table already exists if hit */ }
+		try
+		{
+			connection.CreateTable<RelatedChildEntity>();
+		}
+		catch { /* Ignore table already exists if hit */ }
 
-        return connection;
-    }
+		return connection;
+	}
 
-    [Theory]
-    [InlineData(UlidStorageFormat.Binary)]
-    [InlineData(UlidStorageFormat.String)]
-    [InlineData(UlidStorageFormat.Guid)]
-    [InlineData(UlidStorageFormat.SqlServerGuid)]
-    public async Task LinqToDB_ShouldSuccessfullyRoundTrip_BothNonNullAndNullableUlids(UlidStorageFormat format)
-    {
-        // Arrange
-        var originalUlid = Ulid.New();
-        var entity = new TestEntity
-        {
-            SystemUlid = originalUlid,
-            NullableUlid = null
-        };
+	[Theory]
+	[InlineData(UlidStorageFormat.Binary)]
+	[InlineData(UlidStorageFormat.String)]
+	[InlineData(UlidStorageFormat.Guid)]
+	[InlineData(UlidStorageFormat.SqlServerGuid)]
+	public async Task LinqToDB_ShouldSuccessfullyRoundTrip_BothNonNullAndNullableUlids(UlidStorageFormat format)
+	{
+		// Arrange
+		var originalUlid = Ulid.New();
+		var entity = new TestEntity
+		{
+			SystemUlid = originalUlid,
+			NullableUlid = null
+		};
 
-        // Act - Step 1: Write to database
-        await using (var writeContext = CreateConnection(format))
-        {
-            await writeContext.InsertAsync(entity, token: TestContext.Current.CancellationToken);
-        }
+		// Act - Step 1: Write to database
+		await using (var writeContext = CreateConnection(format))
+		{
+			await writeContext.InsertAsync(entity, token: TestContext.Current.CancellationToken);
+		}
 
-        // Act - Step 2: Read back via an isolated, stateless connection
-        await using (var readContext = CreateConnection(format))
-        {
-            var dbEntity = await readContext.GetTable<TestEntity>()
-                .FirstOrDefaultAsync(e => e.SystemUlid == originalUlid, token: TestContext.Current.CancellationToken);
+		// Act - Step 2: Read back via an isolated, stateless connection
+		await using (var readContext = CreateConnection(format))
+		{
+			var dbEntity = await readContext.GetTable<TestEntity>()
+				.FirstOrDefaultAsync(e => e.SystemUlid == originalUlid, token: TestContext.Current.CancellationToken);
 
-            // Assert
-            Assert.NotNull(dbEntity);
-            Assert.Equal(originalUlid, dbEntity.SystemUlid);
-            Assert.Null(dbEntity.NullableUlid);
+			// Assert
+			Assert.NotNull(dbEntity);
+			Assert.Equal(originalUlid, dbEntity.SystemUlid);
+			Assert.Null(dbEntity.NullableUlid);
 
-            // Step 3: Test update conversion behavior on nullable property types
-            var updatedUlid = Ulid.New();
-            dbEntity.NullableUlid = updatedUlid;
-            await readContext.UpdateAsync(dbEntity, token: TestContext.Current.CancellationToken);
-        }
+			// Step 3: Test update conversion behavior on nullable property types
+			var updatedUlid = Ulid.New();
+			dbEntity.NullableUlid = updatedUlid;
+			await readContext.UpdateAsync(dbEntity, token: TestContext.Current.CancellationToken);
+		}
 
-        // Act - Step 4: Validate update persistence
-        await using (var verifyContext = CreateConnection(format))
-        {
-            var dbEntity = await verifyContext.GetTable<TestEntity>().FirstOrDefaultAsync(token: TestContext.Current.CancellationToken);
-            Assert.NotNull(dbEntity);
-            Assert.Equal(originalUlid, dbEntity.SystemUlid);
-            Assert.NotNull(dbEntity.NullableUlid);
+		// Act - Step 4: Validate update persistence
+		await using (var verifyContext = CreateConnection(format))
+		{
+			var dbEntity = await verifyContext.GetTable<TestEntity>().FirstOrDefaultAsync(token: TestContext.Current.CancellationToken);
+			Assert.NotNull(dbEntity);
+			Assert.Equal(originalUlid, dbEntity.SystemUlid);
+			Assert.NotNull(dbEntity.NullableUlid);
 
-            // Step 5: Test reversing a value back to null (Null-to-Null round trip)
-            dbEntity.NullableUlid = null;
-            await verifyContext.UpdateAsync(dbEntity, token: TestContext.Current.CancellationToken);
-        }
+			// Step 5: Test reversing a value back to null (Null-to-Null round trip)
+			dbEntity.NullableUlid = null;
+			await verifyContext.UpdateAsync(dbEntity, token: TestContext.Current.CancellationToken);
+		}
 
-        // Act - Step 6: Final check that reverting to null persisted properly
-        await using (var finalVerifyContext = CreateConnection(format))
-        {
-	        var dbEntity = await finalVerifyContext.GetTable<TestEntity>().FirstOrDefaultAsync(token: TestContext.Current.CancellationToken);
-	        Assert.NotNull(dbEntity);
-	        Assert.Null(dbEntity.NullableUlid);
-        }
-    }
+		// Act - Step 6: Final check that reverting to null persisted properly
+		await using (var finalVerifyContext = CreateConnection(format))
+		{
+			var dbEntity = await finalVerifyContext.GetTable<TestEntity>().FirstOrDefaultAsync(token: TestContext.Current.CancellationToken);
+			Assert.NotNull(dbEntity);
+			Assert.Null(dbEntity.NullableUlid);
+		}
+	}
 
-    [Theory]
-    [InlineData(UlidStorageFormat.Binary)]
-    [InlineData(UlidStorageFormat.String)]
-    //[InlineData(UlidStorageFormat.Guid)] // Not correct on SQLite
-    //[InlineData(UlidStorageFormat.SqlServerGuid)] // Not supported on SQLite - should work on MSSQL
-    public async Task LinqToDB_ShouldTranslateLINQRangeQueries_ProperlyWithParameters(UlidStorageFormat format)
-    {
-        // Arrange
-        await using var context = CreateConnection(format);
+	[Theory]
+	[InlineData(UlidStorageFormat.Binary)]
+	[InlineData(UlidStorageFormat.String)]
+	//[InlineData(UlidStorageFormat.Guid)] // Not correct on SQLite
+	//[InlineData(UlidStorageFormat.SqlServerGuid)] // Not supported on SQLite - should work on MSSQL
+	public async Task LinqToDB_ShouldTranslateLINQRangeQueries_ProperlyWithParameters(UlidStorageFormat format)
+	{
+		// Arrange
+		await using var context = CreateConnection(format);
 
-        var minUlid = Ulid.MinAt(DateTimeOffset.UtcNow.AddDays(-1));
-        var targetUlid = Ulid.New();
-        var maxUlid = Ulid.MaxAt(DateTimeOffset.UtcNow.AddDays(1));
+		var minUlid = Ulid.MinAt(DateTimeOffset.UtcNow.AddDays(-1));
+		var targetUlid = Ulid.New();
+		var maxUlid = Ulid.MaxAt(DateTimeOffset.UtcNow.AddDays(1));
 
-        await context.InsertAsync(new TestEntity { SystemUlid = targetUlid }, token: TestContext.Current.CancellationToken);
+		await context.InsertAsync(new TestEntity { SystemUlid = targetUlid }, token: TestContext.Current.CancellationToken);
 
-        // Act - Validate that LinqToDB command tree translates logical bounds matching type conversions
-        var results = await context.GetTable<TestEntity>()
-            .Where(e => e.SystemUlid >= minUlid && e.SystemUlid <= maxUlid)
-            .ToListAsync(token: TestContext.Current.CancellationToken);
+		// Act - Validate that LinqToDB command tree translates logical bounds matching type conversions
+		var results = await context.GetTable<TestEntity>()
+			.Where(e => e.SystemUlid >= minUlid && e.SystemUlid <= maxUlid)
+			.ToListAsync(token: TestContext.Current.CancellationToken);
 
-        // Assert
-        Assert.Single(results);
-        Assert.Equal(targetUlid, results[0].SystemUlid);
-    }
+		// Assert
+		Assert.Single(results);
+		Assert.Equal(targetUlid, results[0].SystemUlid);
+	}
 
-    [Theory]
-    [InlineData(UlidStorageFormat.Binary)]
-    [InlineData(UlidStorageFormat.String)]
-    [InlineData(UlidStorageFormat.Guid)]
-    [InlineData(UlidStorageFormat.SqlServerGuid)]
-    public async Task LinqToDB_ShouldSuccessfullyProject_UlidToAnonymousAndDtoTypes(UlidStorageFormat format)
-    {
-        // Arrange
-        await using var context = CreateConnection(format);
-        var targetUlid = Ulid.New();
+	[Theory]
+	[InlineData(UlidStorageFormat.Binary)]
+	[InlineData(UlidStorageFormat.String)]
+	[InlineData(UlidStorageFormat.Guid)]
+	[InlineData(UlidStorageFormat.SqlServerGuid)]
+	public async Task LinqToDB_ShouldSuccessfullyProject_UlidToAnonymousAndDtoTypes(UlidStorageFormat format)
+	{
+		// Arrange
+		await using var context = CreateConnection(format);
+		var targetUlid = Ulid.New();
 
-        await context.InsertAsync(new TestEntity { SystemUlid = targetUlid, NullableUlid = Ulid.New() }, token: TestContext.Current.CancellationToken);
+		await context.InsertAsync(new TestEntity { SystemUlid = targetUlid, NullableUlid = Ulid.New() }, token: TestContext.Current.CancellationToken);
 
-        // Act - Step 1: Query compilation evaluation over anonymous shape allocations
-        var anonymousResult = await context.GetTable<TestEntity>()
-            .Select(e => new { e.Id, e.SystemUlid, e.NullableUlid })
-            .FirstOrDefaultAsync(e => e.SystemUlid == targetUlid, token: TestContext.Current.CancellationToken);
+		// Act - Step 1: Query compilation evaluation over anonymous shape allocations
+		var anonymousResult = await context.GetTable<TestEntity>()
+			.Select(e => new { e.Id, e.SystemUlid, e.NullableUlid })
+			.FirstOrDefaultAsync(e => e.SystemUlid == targetUlid, token: TestContext.Current.CancellationToken);
 
-        // Act - Step 2: Extract scalar data projections
-        var rawUlidList = await context.GetTable<TestEntity>()
-            .Select(e => e.SystemUlid)
-            .ToListAsync(token: TestContext.Current.CancellationToken);
+		// Act - Step 2: Extract scalar data projections
+		var rawUlidList = await context.GetTable<TestEntity>()
+			.Select(e => e.SystemUlid)
+			.ToListAsync(token: TestContext.Current.CancellationToken);
 
-        // Assert
-        Assert.NotNull(anonymousResult);
-        Assert.Equal(targetUlid, anonymousResult.SystemUlid);
-        Assert.NotNull(anonymousResult.NullableUlid);
+		// Assert
+		Assert.NotNull(anonymousResult);
+		Assert.Equal(targetUlid, anonymousResult.SystemUlid);
+		Assert.NotNull(anonymousResult.NullableUlid);
 
-        Assert.Contains(targetUlid, rawUlidList);
-    }
+		Assert.Contains(targetUlid, rawUlidList);
+	}
 
-    [Theory]
-    [InlineData(UlidStorageFormat.Binary)]
-    [InlineData(UlidStorageFormat.String)]
-    [InlineData(UlidStorageFormat.Guid)]
-    [InlineData(UlidStorageFormat.SqlServerGuid)]
-    public async Task LinqToDB_ShouldTranslateContainsQuery_WhenUsingUlidCollections(UlidStorageFormat format)
-    {
-        // Arrange
-        await using var context = CreateConnection(format);
+	[Theory]
+	[InlineData(UlidStorageFormat.Binary)]
+	[InlineData(UlidStorageFormat.String)]
+	[InlineData(UlidStorageFormat.Guid)]
+	[InlineData(UlidStorageFormat.SqlServerGuid)]
+	public async Task LinqToDB_ShouldTranslateContainsQuery_WhenUsingUlidCollections(UlidStorageFormat format)
+	{
+		// Arrange
+		await using var context = CreateConnection(format);
 
-        var targetUlid = Ulid.New();
+		var targetUlid = Ulid.New();
 
-        await context.InsertAsync(new TestEntity { NullableUlid = targetUlid }, token: TestContext.Current.CancellationToken);
-        await context.InsertAsync(new TestEntity { NullableUlid = null }, token: TestContext.Current.CancellationToken);
+		await context.InsertAsync(new TestEntity { NullableUlid = targetUlid }, token: TestContext.Current.CancellationToken);
+		await context.InsertAsync(new TestEntity { NullableUlid = null }, token: TestContext.Current.CancellationToken);
 
-        // Strategy: Include null directly inside the searchable target criteria collection
-        var searchCriteria = new Ulid?[] { targetUlid, null };
+		// Strategy: Include null directly inside the searchable target criteria collection
+		var searchCriteria = new Ulid?[] { targetUlid, null };
 
-        // Act
-        var results = await context.GetTable<TestEntity>()
-            .Where(e => searchCriteria.Contains(e.NullableUlid))
-            .ToListAsync(token: TestContext.Current.CancellationToken);
+		// Act
+		var results = await context.GetTable<TestEntity>()
+			.Where(e => searchCriteria.Contains(e.NullableUlid))
+			.ToListAsync(token: TestContext.Current.CancellationToken);
 
-        // Assert
-        Assert.Equal(2, results.Count);
-        Assert.Contains(results, e => e.NullableUlid == targetUlid);
-        Assert.Contains(results, e => e.NullableUlid == null);
-    }
+		// Assert
+		Assert.Equal(2, results.Count);
+		Assert.Contains(results, e => e.NullableUlid == targetUlid);
+		Assert.Contains(results, e => e.NullableUlid == null);
+	}
 
-    [Theory]
-    [InlineData(UlidStorageFormat.Binary)]
-    [InlineData(UlidStorageFormat.String)]
-    //[InlineData(UlidStorageFormat.Guid)] // Not correct on SQLite
-    //[InlineData(UlidStorageFormat.SqlServerGuid)] // Not correct on SQLite - should work on MSSQL
-    public async Task LinqToDB_ShouldMaintainChronologicalOrder_WhenOrderingByUlid(UlidStorageFormat format)
-    {
-        // Arrange
-        await using var context = CreateConnection(format);
+	[Theory]
+	[InlineData(UlidStorageFormat.Binary)]
+	[InlineData(UlidStorageFormat.String)]
+	//[InlineData(UlidStorageFormat.Guid)] // Not correct on SQLite
+	//[InlineData(UlidStorageFormat.SqlServerGuid)] // Not correct on SQLite - should work on MSSQL
+	public async Task LinqToDB_ShouldMaintainChronologicalOrder_WhenOrderingByUlid(UlidStorageFormat format)
+	{
+		// Arrange
+		await using var context = CreateConnection(format);
 
-        var first = Ulid.New();
-        await Task.Delay(10, TestContext.Current.CancellationToken); // Enforce clear hardware timestamp increments
-        var second = Ulid.New();
-        await Task.Delay(10, TestContext.Current.CancellationToken);
-        var third = Ulid.New();
+		var first = Ulid.New();
+		await Task.Delay(10, TestContext.Current.CancellationToken); // Enforce clear hardware timestamp increments
+		var second = Ulid.New();
+		await Task.Delay(10, TestContext.Current.CancellationToken);
+		var third = Ulid.New();
 
-        // Insert scrambled chronological payloads
-        await context.InsertAsync(new TestEntity { SystemUlid = second }, token: TestContext.Current.CancellationToken);
-        await context.InsertAsync(new TestEntity { SystemUlid = third }, token: TestContext.Current.CancellationToken);
-        await context.InsertAsync(new TestEntity { SystemUlid = first }, token: TestContext.Current.CancellationToken);
+		// Insert scrambled chronological payloads
+		await context.InsertAsync(new TestEntity { SystemUlid = second }, token: TestContext.Current.CancellationToken);
+		await context.InsertAsync(new TestEntity { SystemUlid = third }, token: TestContext.Current.CancellationToken);
+		await context.InsertAsync(new TestEntity { SystemUlid = first }, token: TestContext.Current.CancellationToken);
 
-        // Act
-        var orderedList = await context.GetTable<TestEntity>()
-            .OrderBy(e => e.SystemUlid)
-            .ToListAsync(token: TestContext.Current.CancellationToken);
+		// Act
+		var orderedList = await context.GetTable<TestEntity>()
+			.OrderBy(e => e.SystemUlid)
+			.ToListAsync(token: TestContext.Current.CancellationToken);
 
-        // Assert
-        Assert.Equal(3, orderedList.Count);
-        Assert.Equal(first, orderedList[0].SystemUlid);
-        Assert.Equal(second, orderedList[1].SystemUlid);
-        Assert.Equal(third, orderedList[2].SystemUlid);
-    }
+		// Assert
+		Assert.Equal(3, orderedList.Count);
+		Assert.Equal(first, orderedList[0].SystemUlid);
+		Assert.Equal(second, orderedList[1].SystemUlid);
+		Assert.Equal(third, orderedList[2].SystemUlid);
+	}
 
-    [Theory]
-    [InlineData(UlidStorageFormat.Binary)]
-    [InlineData(UlidStorageFormat.String)]
-    [InlineData(UlidStorageFormat.Guid)]
-    [InlineData(UlidStorageFormat.SqlServerGuid)]
-    public async Task LinqToDB_ShouldSuccessfullyExecuteJoins_OnUlidProperties(UlidStorageFormat format)
-    {
-        // Arrange
-        await using var context = CreateConnection(format);
+	[Theory]
+	[InlineData(UlidStorageFormat.Binary)]
+	[InlineData(UlidStorageFormat.String)]
+	[InlineData(UlidStorageFormat.Guid)]
+	[InlineData(UlidStorageFormat.SqlServerGuid)]
+	public async Task LinqToDB_ShouldSuccessfullyExecuteJoins_OnUlidProperties(UlidStorageFormat format)
+	{
+		// Arrange
+		await using var context = CreateConnection(format);
 
-        var parentUlid = Ulid.New();
-        await context.InsertAsync(new TestEntity { SystemUlid = parentUlid }, token: TestContext.Current.CancellationToken);
-        await context.InsertAsync(new RelatedChildEntity { ParentSystemUlid = parentUlid, Description = "Child linked via ULID" }, token: TestContext.Current.CancellationToken);
+		var parentUlid = Ulid.New();
+		await context.InsertAsync(new TestEntity { SystemUlid = parentUlid }, token: TestContext.Current.CancellationToken);
+		await context.InsertAsync(new RelatedChildEntity { ParentSystemUlid = parentUlid, Description = "Child linked via ULID" }, token: TestContext.Current.CancellationToken);
 
-        // Act - Enforce expression evaluation trees across relational predicates
-        var joinResult = await context.GetTable<TestEntity>()
-            .Join(
-                context.GetTable<RelatedChildEntity>(),
-                parent => parent.SystemUlid,
-                child => child.ParentSystemUlid,
-                (parent, child) => new { parent.Id, parent.SystemUlid, child.Description }
-            )
-            .FirstOrDefaultAsync(x => x.SystemUlid == parentUlid, token: TestContext.Current.CancellationToken);
+		// Act - Enforce expression evaluation trees across relational predicates
+		var joinResult = await context.GetTable<TestEntity>()
+			.Join(
+				context.GetTable<RelatedChildEntity>(),
+				parent => parent.SystemUlid,
+				child => child.ParentSystemUlid,
+				(parent, child) => new { parent.Id, parent.SystemUlid, child.Description }
+			)
+			.FirstOrDefaultAsync(x => x.SystemUlid == parentUlid, token: TestContext.Current.CancellationToken);
 
-        // Assert
-        Assert.NotNull(joinResult);
-        Assert.Equal(parentUlid, joinResult.SystemUlid);
-        Assert.Equal("Child linked via ULID", joinResult.Description);
-    }
+		// Assert
+		Assert.NotNull(joinResult);
+		Assert.Equal(parentUlid, joinResult.SystemUlid);
+		Assert.Equal("Child linked via ULID", joinResult.Description);
+	}
 
-    [Theory]
-    [InlineData(UlidStorageFormat.String, DataType.Char)]
-    [InlineData(UlidStorageFormat.Binary, DataType.Binary)]
-    [InlineData(UlidStorageFormat.Guid, DataType.Guid)]
-    [InlineData(UlidStorageFormat.SqlServerGuid, DataType.Guid)]
-    public async Task SchemaMetadata_ShouldRegisterCorrectDataTypeHints(UlidStorageFormat format, DataType expectedDataType)
-    {
-        // Arrange
-        await using var context = CreateConnection(format);
-        var schema = context.MappingSchema;
+	[Theory]
+	[InlineData(UlidStorageFormat.String, DataType.Char)]
+	[InlineData(UlidStorageFormat.Binary, DataType.Binary)]
+	[InlineData(UlidStorageFormat.Guid, DataType.Guid)]
+	[InlineData(UlidStorageFormat.SqlServerGuid, DataType.Guid)]
+	public async Task SchemaMetadata_ShouldRegisterCorrectDataTypeHints(UlidStorageFormat format, DataType expectedDataType)
+	{
+		// Arrange
+		await using var context = CreateConnection(format);
+		var schema = context.MappingSchema;
 
-        // Act
-        var columnInformation = schema.GetDataType(typeof(Ulid));
+		// Act
+		var columnInformation = schema.GetDataType(typeof(Ulid));
 
-        // Assert - Ensures that LinqToDB maps to proper native column variants instead of fallback configurations
-        Assert.Equal(expectedDataType, columnInformation.Type.DataType);
-    }
+		// Assert - Ensures that LinqToDB maps to proper native column variants instead of fallback configurations
+		Assert.Equal(expectedDataType, columnInformation.Type.DataType);
+	}
 
-    public void Dispose()
-    {
-        _connection.Dispose();
-    }
+	public void Dispose()
+	{
+		_connection.Dispose();
+	}
 }

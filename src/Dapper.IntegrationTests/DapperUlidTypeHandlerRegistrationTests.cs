@@ -1,5 +1,5 @@
-using Microsoft.Data.Sqlite;
 using Dapper;
+using Microsoft.Data.Sqlite;
 
 namespace ByteAether.Ulid.Dapper.IntegrationTests;
 
