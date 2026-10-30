@@ -298,6 +298,43 @@ public class UlidNewTests
 	}
 
 	[Fact]
+	public void New_WithLongerBytes_ShouldUseFirst16Bytes()
+	{
+		// Arrange
+		var bytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+
+		// Act
+		var ulid = Ulid.New(bytes);
+
+		// Assert
+		Assert.Equal(bytes[..16], ulid.ToByteArray());
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(5)]
+	[InlineData(15)]
+	public void New_WithTooShortBytes_ShouldThrowArgumentException(int length)
+	{
+		// Arrange
+		var bytes = new byte[length];
+
+		// Act & Assert
+		Assert.Throws<ArgumentException>("bytes", () => Ulid.New(bytes));
+	}
+
+	[Fact]
+	public void DefaultGenerationOptions_SetNull_ShouldThrowArgumentNullException()
+	{
+		// Arrange
+		var original = Ulid.DefaultGenerationOptions;
+
+		// Act & Assert
+		Assert.Throws<ArgumentNullException>("value", () => Ulid.DefaultGenerationOptions = null!);
+		Assert.Same(original, Ulid.DefaultGenerationOptions);
+	}
+
+	[Fact]
 	public void New_Monotonic_ShouldRemainUniqueWhenGeneratedConcurrently()
 	{
 		var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();

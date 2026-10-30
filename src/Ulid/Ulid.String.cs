@@ -260,10 +260,24 @@ public readonly partial struct Ulid
 	/// <param name="provider">Ignored. The ULID is always formatted in its canonical Crockford's Base32 format.</param>
 	/// <returns>A new <see cref="Ulid"/> instance parsed from the specified string.</returns>
 	/// <inheritdoc cref="IsValid(string)" path="/remarks"/>
+	/// <exception cref="ArgumentNullException">Thrown if <paramref name="s"/> is <c>null</c>.</exception>
 	/// <exception cref="FormatException">Thrown if the input string is not a valid ULID string representation.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Ulid Parse(string s, IFormatProvider? provider = null)
-		=> Parse(s.AsSpan(), provider);
+	{
+		if (s is null)
+		{
+			ThrowNullString();
+		}
+
+		return Parse(s.AsSpan(), provider);
+	}
+
+	[DoesNotReturn]
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	[SuppressMessage("ReSharper", "NotResolvedInText")]
+	private static void ThrowNullString()
+		=> throw new ArgumentNullException("s");
 
 	/// <summary>
 	/// Attempts to parse a string representation of a ULID into a <see cref="Ulid"/> instance.
@@ -414,6 +428,7 @@ public readonly partial struct Ulid
 	/// </summary>
 	/// <param name="str">The ULID string representation. See <see cref="Parse(string, IFormatProvider)"/>.</param>
 	/// <returns>The parsed <see cref="Ulid"/>.</returns>
+	/// <exception cref="ArgumentNullException">Thrown if <paramref name="str"/> is <c>null</c>.</exception>
 	/// <exception cref="FormatException">Thrown if <paramref name="str"/> is not a valid ULID string representation.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator Ulid(string str) => Parse(str);

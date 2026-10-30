@@ -20,6 +20,20 @@ public class UlidStringTests
 	}
 
 	[Fact]
+	public void Parse_NullString_ShouldThrowArgumentNullException()
+	{
+		Assert.Throws<ArgumentNullException>("s", () => Ulid.Parse((string)null!));
+		Assert.Throws<ArgumentNullException>(() => (Ulid)(string)null!);
+	}
+
+	[Fact]
+	public void TryParse_NullString_ShouldReturnFalse()
+	{
+		Assert.False(Ulid.TryParse((string?)null, null, out var ulid));
+		Assert.Equal(default, ulid);
+	}
+
+	[Fact]
 	public void Parse_ValidString_ShouldReturnUlid()
 	{
 		// Act

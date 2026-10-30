@@ -16,7 +16,12 @@ public readonly partial struct Ulid
 	/// incremented scenarios during the generation of the ULID. Modifying this property
 	/// affects the global default behavior for ULID generation across the application.
 	/// </remarks>
-	public static GenerationOptions DefaultGenerationOptions { get; set; } = new();
+	/// <exception cref="ArgumentNullException">Thrown when setting the value to <c>null</c>.</exception>
+	public static GenerationOptions DefaultGenerationOptions
+	{
+		get;
+		set => field = value ?? throw new ArgumentNullException(nameof(value), "The default generation options cannot be null.");
+	} = new();
 
 	// Constant for Unix Epoch (1970-01-01 UTC) in Ticks
 	private const long _unixEpochTicks = 621355968000000000;
@@ -24,11 +29,22 @@ public readonly partial struct Ulid
 	/// <summary>
 	/// Initializes a new instance of the <see cref="Ulid"/> struct using the specified byte array.
 	/// </summary>
-	/// <param name="bytes">The byte array to initialize the <see cref="Ulid"/> with.</param>
+	/// <param name="bytes">
+	/// The bytes to initialize the <see cref="Ulid"/> with, in the same order as <see cref="AsByteSpan"/> returns them.<br/>
+	/// Must be at least 16 bytes long. If it is longer, only the first 16 bytes are used.
+	/// </param>
 	/// <returns>Given bytes as an <see cref="Ulid"/> instance.</returns>
+	/// <exception cref="ArgumentException">Thrown if <paramref name="bytes"/> is shorter than 16 bytes.</exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Ulid New(ReadOnlySpan<byte> bytes)
-		=> MemoryMarshal.Read<Ulid>(bytes);
+	{
+		if (bytes.Length < _ulidSize)
+		{
+			ThrowBytesTooShort();
+		}
+
+		return MemoryMarshal.Read<Ulid>(bytes);
+	}
 
 	/// <summary>
 	/// Creates a new <see cref="Ulid"/> with the current timestamp.
@@ -132,6 +148,11 @@ public readonly partial struct Ulid
 
 		return ulid;
 	}
+
+	[DoesNotReturn]
+	[SuppressMessage("ReSharper", "NotResolvedInText")]
+	private static void ThrowBytesTooShort()
+		=> throw new ArgumentException($"The bytes must be at least {_ulidSize} bytes long.", "bytes");
 
 	[DoesNotReturn]
 	[MethodImpl(MethodImplOptions.NoInlining)]
