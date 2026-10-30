@@ -147,7 +147,8 @@ public readonly partial struct Ulid
 		return ulid;
 	}
 
-	private static Ulid ParseCore(ReadOnlySpan<char> input, out bool isValid)
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static Ulid ParseCore<T>(ReadOnlySpan<T> input, out bool isValid) where T : unmanaged
 	{
 		if (input.Length != UlidStringLength)
 		{
@@ -155,256 +156,96 @@ public readonly partial struct Ulid
 			return default;
 		}
 
-		// Every char must be ASCII, as only its lowest byte is decoded below
+		ref var src = ref MemoryMarshal.GetReference(input);
+
+		if (typeof(T) == typeof(char))
+		{
+			// Every char must be ASCII, as only its lowest byte is decoded below
 #if NET7_0_OR_GREATER
-		ref var units = ref Unsafe.As<char, ushort>(ref MemoryMarshal.GetReference(input));
-		var nonAscii = (
-			Vector128.LoadUnsafe(ref units)
-			| Vector128.LoadUnsafe(ref units, 8)
-			| Vector128.LoadUnsafe(ref units, 10)
-			| Vector128.LoadUnsafe(ref units, 18)
-		) & Vector128.Create((ushort)0xFF80);
+			ref var units = ref Unsafe.As<T, ushort>(ref src);
+			var nonAscii = (
+				Vector128.LoadUnsafe(ref units)
+				| Vector128.LoadUnsafe(ref units, 8)
+				| Vector128.LoadUnsafe(ref units, 10)
+				| Vector128.LoadUnsafe(ref units, 18)
+			) & Vector128.Create((ushort)0xFF80);
 
-		if (nonAscii != Vector128<ushort>.Zero)
+			if (nonAscii != Vector128<ushort>.Zero)
 #else
-		// The 26 chars (52 bytes) are checked as 6 ulongs and 1 uint, independent of the endianness
-		ref var bytes = ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(input));
-		var units =
-			Unsafe.ReadUnaligned<ulong>(ref bytes)
-			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 8))
-			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 16))
-			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 24))
-			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 32))
-			| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 40))
-			| Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref bytes, 48));
+			// The 26 chars (52 bytes) are checked as 6 ulongs and 1 uint, independent of the endianness
+			ref var bytes = ref Unsafe.As<T, byte>(ref src);
+			var units =
+				Unsafe.ReadUnaligned<ulong>(ref bytes)
+				| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 8))
+				| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 16))
+				| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 24))
+				| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 32))
+				| Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, 40))
+				| Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref bytes, 48));
 
-		if ((units & 0xFF80_FF80_FF80_FF80) != 0)
+			if ((units & 0xFF80_FF80_FF80_FF80) != 0)
 #endif
+			{
+				isValid = false;
+				return default;
+			}
+		}
+
+		// The 128-bit value is the first character (3 bits) followed by 5 groups of 5 characters (25 bits each).
+		// Every table value is either 0..31 or 255 (invalid character).
+		ulong invalid = 0;
+		var first = Decode(ref src, 0);
+		var group1 = DecodeGroup(ref src, 1, ref invalid);
+		var group2 = DecodeGroup(ref src, 6, ref invalid);
+		var group3 = DecodeGroup(ref src, 11, ref invalid);
+		var group4 = DecodeGroup(ref src, 16, ref invalid);
+		var group5 = DecodeGroup(ref src, 21, ref invalid);
+
+		// The first character must be 0..7, otherwise the value overflows 128 bits
+		invalid |= first << 2;
+
+		if ((invalid & 0xE0) != 0)
 		{
 			isValid = false;
 			return default;
 		}
 
-		ref var src = ref Unsafe.As<char, byte>(ref MemoryMarshal.GetReference(input));
-		ref var tableRef = ref MemoryMarshal.GetReference(_inverseBase32);
-
-		// The 128-bit value is built as 2 big-endian 64-bit blocks (a | b and c | d), then the endianness is reversed.
-		// Every character is decoded and accumulated right away, which keeps the register pressure low,
-		// and 2 accumulators per block keep the dependency chains short.
-		ulong a, b, c, d, invalidA, invalidB, value;
-
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 0));
-		invalidA = value << 2; // The first character must be 0..7, otherwise the value overflows 128 bits
-		a = value << 61;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 1));
-		invalidA |= value;
-		a |= value << 56;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 2));
-		invalidA |= value;
-		a |= value << 51;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 3));
-		invalidA |= value;
-		a |= value << 46;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 4));
-		invalidA |= value;
-		a |= value << 41;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 5));
-		invalidA |= value;
-		a |= value << 36;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 6));
-		invalidA |= value;
-		a |= value << 31;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 7));
-		invalidB = value;
-		b = value << 26;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 8));
-		invalidB |= value;
-		b |= value << 21;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 9));
-		invalidB |= value;
-		b |= value << 16;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 10));
-		invalidB |= value;
-		b |= value << 11;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 11));
-		invalidB |= value;
-		b |= value << 6;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 12));
-		invalidB |= value;
-		b |= value << 1;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 13));
-		invalidB |= value;
-		b |= value >> 4;
-		c = value << 60;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 14));
-		invalidA |= value;
-		c |= value << 55;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 15));
-		invalidA |= value;
-		c |= value << 50;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 16));
-		invalidA |= value;
-		c |= value << 45;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 17));
-		invalidA |= value;
-		c |= value << 40;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 18));
-		invalidA |= value;
-		c |= value << 35;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 19));
-		invalidA |= value;
-		c |= value << 30;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 20));
-		invalidB |= value;
-		d = value << 25;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 21));
-		invalidB |= value;
-		d |= value << 20;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 22));
-		invalidB |= value;
-		d |= value << 15;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 23));
-		invalidB |= value;
-		d |= value << 10;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 24));
-		invalidB |= value;
-		d |= value << 5;
-		value = Unsafe.Add(ref tableRef, ReadLowByte(ref src, 25));
-		invalidB |= value;
-		d |= value << 0;
-
-		// Every table value is either 0..31 or 255 (invalid character)
-		if (((invalidA | invalidB) & 0xE0) != 0)
-		{
-			isValid = false;
-			return default;
-		}
+		var hi = (first << 61) | (group1 << 36) | (group2 << 11) | (group3 >> 14);
+		var lo = (group3 << 50) | (group4 << 25) | group5;
 
 		Unsafe.SkipInit(out Ulid ulid);
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
-		Unsafe.WriteUnaligned(ref ulidRef, ReverseOnLittleEndian(a | b));
-		Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, sizeof(ulong)), ReverseOnLittleEndian(c | d));
+		Unsafe.WriteUnaligned(ref ulidRef, ReverseOnLittleEndian(hi));
+		Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, sizeof(ulong)), ReverseOnLittleEndian(lo));
 
 		isValid = true;
 		return ulid;
 	}
 
-	// Reads the lowest byte of the char at index, independent of the endianness
+	// Decodes the character at the index. Non-ASCII bytes (0x80 and above) are mapped to an invalid value in the table.
+	// For chars only the lowest byte is read, independent of the endianness.
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static byte ReadLowByte(ref byte src, int index)
-		=> (byte)Unsafe.ReadUnaligned<ushort>(ref Unsafe.Add(ref src, index * sizeof(char)));
+	private static ulong Decode<T>(ref T src, int index) where T : unmanaged
+		=> Unsafe.Add(
+			ref MemoryMarshal.GetReference(_inverseBase32),
+			typeof(T) == typeof(char)
+				? (byte)Unsafe.As<T, char>(ref Unsafe.Add(ref src, index))
+				: Unsafe.As<T, byte>(ref Unsafe.Add(ref src, index))
+		);
 
-	private static Ulid ParseCore(ReadOnlySpan<byte> input, out bool isValid)
+	// Decodes 5 characters into 25 bits and accumulates their invalid markers
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static ulong DecodeGroup<T>(ref T src, int index, ref ulong invalid) where T : unmanaged
 	{
-		if (input.Length != UlidStringLength)
-		{
-			isValid = false;
-			return default;
-		}
+		var v0 = Decode(ref src, index);
+		var v1 = Decode(ref src, index + 1);
+		var v2 = Decode(ref src, index + 2);
+		var v3 = Decode(ref src, index + 3);
+		var v4 = Decode(ref src, index + 4);
 
-		// Non-ASCII bytes (0x80 and above) are mapped to an invalid value in the table
-		ref var src = ref MemoryMarshal.GetReference(input);
-		ref var tableRef = ref MemoryMarshal.GetReference(_inverseBase32);
+		invalid |= (v0 | v1) | (v2 | v3) | v4;
 
-		// The 128-bit value is built as 2 big-endian 64-bit blocks (a | b and c | d), then the endianness is reversed.
-		// Every character is decoded and accumulated right away, which keeps the register pressure low,
-		// and 2 accumulators per block keep the dependency chains short.
-		ulong a, b, c, d, invalidA, invalidB, value;
-
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 0));
-		invalidA = value << 2; // The first character must be 0..7, otherwise the value overflows 128 bits
-		a = value << 61;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 1));
-		invalidA |= value;
-		a |= value << 56;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 2));
-		invalidA |= value;
-		a |= value << 51;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 3));
-		invalidA |= value;
-		a |= value << 46;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 4));
-		invalidA |= value;
-		a |= value << 41;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 5));
-		invalidA |= value;
-		a |= value << 36;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 6));
-		invalidA |= value;
-		a |= value << 31;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 7));
-		invalidB = value;
-		b = value << 26;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 8));
-		invalidB |= value;
-		b |= value << 21;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 9));
-		invalidB |= value;
-		b |= value << 16;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 10));
-		invalidB |= value;
-		b |= value << 11;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 11));
-		invalidB |= value;
-		b |= value << 6;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 12));
-		invalidB |= value;
-		b |= value << 1;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 13));
-		invalidB |= value;
-		b |= value >> 4;
-		c = value << 60;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 14));
-		invalidA |= value;
-		c |= value << 55;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 15));
-		invalidA |= value;
-		c |= value << 50;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 16));
-		invalidA |= value;
-		c |= value << 45;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 17));
-		invalidA |= value;
-		c |= value << 40;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 18));
-		invalidA |= value;
-		c |= value << 35;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 19));
-		invalidA |= value;
-		c |= value << 30;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 20));
-		invalidB |= value;
-		d = value << 25;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 21));
-		invalidB |= value;
-		d |= value << 20;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 22));
-		invalidB |= value;
-		d |= value << 15;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 23));
-		invalidB |= value;
-		d |= value << 10;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 24));
-		invalidB |= value;
-		d |= value << 5;
-		value = Unsafe.Add(ref tableRef, Unsafe.Add(ref src, 25));
-		invalidB |= value;
-		d |= value << 0;
-
-		// Every table value is either 0..31 or 255 (invalid character)
-		if (((invalidA | invalidB) & 0xE0) != 0)
-		{
-			isValid = false;
-			return default;
-		}
-
-		Unsafe.SkipInit(out Ulid ulid);
-		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref ulid);
-		Unsafe.WriteUnaligned(ref ulidRef, ReverseOnLittleEndian(a | b));
-		Unsafe.WriteUnaligned(ref Unsafe.Add(ref ulidRef, sizeof(ulong)), ReverseOnLittleEndian(c | d));
-
-		isValid = true;
-		return ulid;
+		return ((v0 << 20) | (v1 << 15)) | ((v2 << 10) | (v3 << 5)) | v4;
 	}
 
 	[DoesNotReturn]
