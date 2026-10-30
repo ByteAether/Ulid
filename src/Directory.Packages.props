@@ -9,7 +9,7 @@
 
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
 
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <PackageVersion Include="linq2db" Version="6.3.0" />
 
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
