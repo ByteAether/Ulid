@@ -186,9 +186,9 @@ public readonly partial struct Ulid
 			CurrentState = new();
 		}
 
-		// Separates Lock and LastUlid into different cache lines to prevent "false sharing"
-		// x64 has 64-byte cache lines; ARM64 (e.g., Apple Silicon) has 128-byte cache lines
-		// The leading and trailing padding keep neighboring heap objects off those cache lines.
+		// Keeps the lock and the last ULID on one cache line, as they are always used together, while the leading
+		// and trailing padding keep neighboring heap objects off that cache line to prevent "false sharing".
+		// x64 has 64-byte cache lines; ARM64 (e.g., Apple Silicon) has 128-byte cache lines.
 		[StructLayout(LayoutKind.Explicit)]
 		internal class State
 		{
@@ -198,11 +198,11 @@ public readonly partial struct Ulid
 
 			// The last generated ULID as two numeric (not byte order) halves, so that increments need no byte swaps
 #pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
-			[FieldOffset(_cacheLineSize * 2)] public ulong LastUlidPart0;
-			[FieldOffset(_cacheLineSize * 2 + 8)] public ulong LastUlidPart1;
+			[FieldOffset(_cacheLineSize + 8)] public ulong LastUlidPart0;
+			[FieldOffset(_cacheLineSize + 16)] public ulong LastUlidPart1;
 
 #pragma warning disable CS0169 // Padding field is never used
-			[FieldOffset(_cacheLineSize * 3 + 8)] private readonly ulong _trailingPadding;
+			[FieldOffset(_cacheLineSize * 2 + 16)] private readonly ulong _trailingPadding;
 #pragma warning restore CS0169
 #pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
 

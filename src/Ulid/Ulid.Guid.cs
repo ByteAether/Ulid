@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 #if NETCOREAPP
 using System.Runtime.Intrinsics;
-#if !NET7_0_OR_GREATER
+#if !NET10_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
 #endif
 #endif
@@ -63,7 +63,7 @@ public readonly partial struct Ulid
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static TOut Shuffle<TIn, TOut>(ref TIn bytes)
 	{
-#if NET7_0_OR_GREATER
+#if NET10_0_OR_GREATER
 		if (Vector128.IsHardwareAccelerated)
 		{
 			var vector = Unsafe.As<TIn, Vector128<byte>>(ref bytes);
@@ -71,6 +71,7 @@ public readonly partial struct Ulid
 			return Unsafe.As<Vector128<byte>, TOut>(ref vector);
 		}
 #elif NETCOREAPP3_0_OR_GREATER
+		// Vector128.Shuffle is not expanded to a single instruction before .NET 10
 		if (Ssse3.IsSupported)
 		{
 			var vector = Unsafe.As<TIn, Vector128<byte>>(ref bytes);
@@ -93,8 +94,19 @@ public readonly partial struct Ulid
 		Unsafe.SkipInit(out TOut result);
 		ref var dst = ref Unsafe.As<TOut, byte>(ref result);
 
-		Unsafe.WriteUnaligned(ref dst, lower);
-		Unsafe.WriteUnaligned(ref Unsafe.Add(ref dst, 4), upper);
+		if (typeof(TOut) == typeof(Ulid))
+		{
+			// A Ulid is read back as a whole. When its first 8 bytes are written in smaller pieces, the CPU cannot
+			// forward the stores to that wider load and stalls. The shuffle only runs on little-endian systems.
+			Unsafe.WriteUnaligned(ref dst, lower | ((ulong)upper << 32));
+		}
+		else
+		{
+			// A Guid is made of separate fields, which are written and read back one by one
+			Unsafe.WriteUnaligned(ref dst, lower);
+			Unsafe.WriteUnaligned(ref Unsafe.Add(ref dst, 4), upper);
+		}
+
 		Unsafe.WriteUnaligned(ref Unsafe.Add(ref dst, 8), Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref src, 8)));
 
 		return result;
