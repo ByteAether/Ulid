@@ -31,7 +31,8 @@
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename $(MSBuildProjectName)-$(ImplTargetFramework).trx</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)' == 'CI-Release'"><Optimize>true</Optimize>
+  <PropertyGroup Condition="'$(Configuration)' == 'CI-Release'">
+    <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
 
     <PublishRelease>true</PublishRelease>

@@ -35,8 +35,8 @@ public readonly partial struct Ulid
 	private static readonly char[] _base32Chars = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".ToCharArray();
 	private static readonly byte[] _base32Bytes = Encoding.UTF8.GetBytes(_base32Chars);
 	// Stored as RVA static data: no static field load, no initialization check and a constant length
-	private static ReadOnlySpan<byte> _inverseBase32 =>
-	[
+	private static ReadOnlySpan<byte> _inverseBase32
+	=> [
 		255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, // controls
 		255, // space
 		255, // !
@@ -548,7 +548,7 @@ public readonly partial struct Ulid
 		return true;
 	}
 
-	private void Fill<T>(Span<T> span, T[] map) where T: unmanaged
+	private void Fill<T>(Span<T> span, T[] map) where T : unmanaged
 	{
 		// Load the ULID as two big-endian 64-bit halves and extract the 5-bit groups with shifts
 		ref var ulidRef = ref Unsafe.As<Ulid, byte>(ref Unsafe.AsRef(in this));

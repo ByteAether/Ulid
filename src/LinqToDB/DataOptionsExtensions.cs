@@ -19,55 +19,55 @@ public static class DataOptionsExtensions
 	/// <returns>The modified <see cref="DataOptions"/> instance containing the registered ULID mapping schema.</returns>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown when an invalid or unsupported <see cref="UlidStorageFormat"/> is provided.</exception>
 	public static DataOptions RegisterUlid(
-        this DataOptions options,
-        UlidStorageFormat storageFormat = UlidStorageFormat.String
-    )
-    {
-	    var mappingSchema = new MappingSchema();
+		this DataOptions options,
+		UlidStorageFormat storageFormat = UlidStorageFormat.String
+	)
+	{
+		var mappingSchema = new MappingSchema();
 
-        switch (storageFormat)
-        {
-            case UlidStorageFormat.String:
-                mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, ulid.ToString(), DataType.Char, 26));
+		switch (storageFormat)
+		{
+			case UlidStorageFormat.String:
+				mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, ulid.ToString(), DataType.Char, 26));
 
-                mappingSchema.SetDataType(typeof(Ulid), new SqlDataType(DataType.Char, typeof(Ulid), 26));
-                break;
+				mappingSchema.SetDataType(typeof(Ulid), new SqlDataType(DataType.Char, typeof(Ulid), 26));
+				break;
 
-            case UlidStorageFormat.Binary:
-                mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, ulid.ToByteArray(), DataType.Binary));
-                mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(bytes));
+			case UlidStorageFormat.Binary:
+				mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, ulid.ToByteArray(), DataType.Binary));
+				mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(bytes));
 
-                mappingSchema.SetDataType(typeof(Ulid), DataType.Binary);
-                break;
+				mappingSchema.SetDataType(typeof(Ulid), DataType.Binary);
+				break;
 
-            case UlidStorageFormat.Guid:
-	            mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, ulid.ToGuid(), DataType.Guid));
+			case UlidStorageFormat.Guid:
+				mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, ulid.ToGuid(), DataType.Guid));
 
-	            mappingSchema.SetConvertExpression<Guid, Ulid>(guid => Ulid.New(guid));
-	            mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(new Guid(bytes)));
+				mappingSchema.SetConvertExpression<Guid, Ulid>(guid => Ulid.New(guid));
+				mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(new Guid(bytes)));
 
-	            mappingSchema.SetDataType(typeof(Ulid), DataType.Guid);
-                break;
+				mappingSchema.SetDataType(typeof(Ulid), DataType.Guid);
+				break;
 
-            case UlidStorageFormat.SqlServerGuid:
-                mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, MsSqlUlidShuffler.ToSqlServerGuid(ulid), DataType.Guid));
+			case UlidStorageFormat.SqlServerGuid:
+				mappingSchema.SetConvertExpression<Ulid, DataParameter>(ulid => new(null, MsSqlUlidShuffler.ToSqlServerGuid(ulid), DataType.Guid));
 
-                mappingSchema.SetConvertExpression<Guid, Ulid>(guid => MsSqlUlidShuffler.FromSqlServerGuid(guid));
-                mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(MsSqlUlidShuffler.FromSqlServerGuid(new(bytes))));
+				mappingSchema.SetConvertExpression<Guid, Ulid>(guid => MsSqlUlidShuffler.FromSqlServerGuid(guid));
+				mappingSchema.SetConvertExpression<byte[], Ulid>(bytes => Ulid.New(MsSqlUlidShuffler.FromSqlServerGuid(new(bytes))));
 
-                mappingSchema.SetDataType(typeof(Ulid), DataType.Guid);
-                break;
+				mappingSchema.SetDataType(typeof(Ulid), DataType.Guid);
+				break;
 
-            default:
-                throw new ArgumentOutOfRangeException(nameof(storageFormat), storageFormat, null);
-        }
+			default:
+				throw new ArgumentOutOfRangeException(nameof(storageFormat), storageFormat, null);
+		}
 
-        // We should always be able to parse a ULID from a string
-        mappingSchema.SetConvertExpression<string, Ulid>(bytes => Ulid.Parse(bytes));
+		// We should always be able to parse a ULID from a string
+		mappingSchema.SetConvertExpression<string, Ulid>(bytes => Ulid.Parse(bytes));
 
-        mappingSchema.SetScalarType(typeof(Ulid));
-        mappingSchema.SetCanBeNull(typeof(Ulid), true);
+		mappingSchema.SetScalarType(typeof(Ulid));
+		mappingSchema.SetCanBeNull(typeof(Ulid), true);
 
-	    return options.UseAdditionalMappingSchema(mappingSchema);
-    }
+		return options.UseAdditionalMappingSchema(mappingSchema);
+	}
 }
