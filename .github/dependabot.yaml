@@ -8,3 +8,7 @@ updates:
     directory: "/src"
     schedule:
       interval: "weekly"
+    groups:
+      nuget:
+        patterns:
+          - "*"
