@@ -27,11 +27,7 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the character span is a valid ULID, <c>false</c> otherwise.
 	/// </returns>
-	/// <remarks>
-	/// The input must be exactly 26 characters of Crockford's Base32 alphabet. It is read case-insensitively, with
-	/// <c>I</c> and <c>L</c> accepted as <c>1</c>, and <c>O</c> as <c>0</c>. The first character must be between
-	/// <c>0</c> and <c>7</c>, otherwise the value would not fit into 128 bits.
-	/// </remarks>
+	/// <inheritdoc cref="IsValid(string)" path="/remarks"/>
 	public static unsafe bool IsValid(ReadOnlySpan<char> ulidString)
 	{
 		if (ulidString.Length != UlidStringLength) // 26
@@ -119,11 +115,7 @@ public readonly partial struct Ulid
 	/// <returns>
 	/// <c>true</c> if the byte span contains a valid ULID string, <c>false</c> otherwise.
 	/// </returns>
-	/// <remarks>
-	/// The input must be exactly 26 characters of Crockford's Base32 alphabet. It is read case-insensitively, with
-	/// <c>I</c> and <c>L</c> accepted as <c>1</c>, and <c>O</c> as <c>0</c>. The first character must be between
-	/// <c>0</c> and <c>7</c>, otherwise the value would not fit into 128 bits.
-	/// </remarks>
+	/// <inheritdoc cref="IsValid(string)" path="/remarks"/>
 	public static unsafe bool IsValid(ReadOnlySpan<byte> utf8Text)
 	{
 		if (utf8Text.Length != UlidStringLength) // 26

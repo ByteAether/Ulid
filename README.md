@@ -61,7 +61,7 @@ This library explicitly **multi-targets** each runtime version listed below, ena
 
 - **Universally Unique**: Ensures global uniqueness across systems.
 - **Sortable**: Lexicographically ordered for time-based sorting.
-- **Lock-Free Synchronization**: Monotonic generation utilizes a high-performance, **lock-free compare-and-exchange (CAS)** approach.
+- **Low-Latency Synchronization**: Monotonic generation is serialized by a **test-and-test-and-set (TTAS) lock** with compare-and-swap (CAS) acquisition.
 - **Specification-Compliant**: Fully adheres to the ULID specification.
 - **Interoperable**: Includes conversion methods to and from GUIDs, [Crockford's Base32](https://www.crockford.com/base32.html) strings, and byte arrays.
 - **Ahead-of-Time (AOT) Compilation**: Fully compatible with Native AOT for improved startup performance and smaller binary footprints.
@@ -156,8 +156,8 @@ You can customize ULID generation by providing `GenerationOptions`. This allows 
 
 The monotonicity state (last generated timestamp and 80-bit random payload) is bound directly to the lifecycle of the `GenerationOptions` instance.
 
-* **Instance Reuse (Recommended for Sequences):** Reusing a single `GenerationOptions` instance across calls guarantees strict, cross-thread monotonic ordering via lock-free atomic compare-and-exchange (CAS) operations.
-* **Instance Isolation:** Passing a new `GenerationOptions` instance on each call isolates state, disabling monotonic sequence tracking between calls and eliminating CAS contention.
+* **Instance Reuse (Recommended for Sequences):** Reusing a single `GenerationOptions` instance across calls guarantees strict, cross-thread monotonic ordering, serialized by a low-latency TTAS lock (CAS acquisition with adaptive back-off).
+* **Instance Isolation:** Passing a new `GenerationOptions` instance on each call isolates state, disabling monotonic sequence tracking between calls and eliminating lock contention.
 * **Copies:** A copy made with a `with` expression (e.g. `options with { Monotonicity = ... }`) gets its own, fresh state. It never continues or shares the sequence of the instance it was copied from.
 
 ```csharp
@@ -266,7 +266,7 @@ Parsing applies the same rules as validation (see Checking Validity above). `Par
 - `Ulid.DefaultGenerationOptions`\
   Gets or sets the global default `GenerationOptions` configuration for ULID generation when no options are provided by the `Ulid.New(...)` call.
 - `.Time`\
-  Gets the timestamp component of the ULID as a `DateTimeOffset`.
+  Gets the timestamp component of the ULID as a `DateTimeOffset`. A ULID stores a 48-bit millisecond timestamp (up to the year 10889), but `DateTimeOffset` ends at the year 9999, so `.Time` throws `ArgumentOutOfRangeException` for valid ULIDs from `76EZ91ZQ000000000000000000` upwards (including `Ulid.MaxValue`). Use `.TimeBytes` to read the raw timestamp without that limit.
 - `.TimeBytes`\
   Gets the timestamp component of the ULID as a `ReadOnlySpan<byte>`.
 - `.Random`\
@@ -295,12 +295,12 @@ Parsing applies the same rules as validation (see Checking Validity above). `Par
 
 ### GenerationOptions
 
-The `GenerationOptions` class encapsulates generation strategy, state retention, and lock-free thread synchronization for monotonic ULID generation.
+The `GenerationOptions` class encapsulates generation strategy, state retention, and low-latency thread synchronization for monotonic ULID generation.
 
 Configurable properties:
 
 - `Monotonicity`\
-  Defines the monotonic strategy when generating multiple ULIDs within the same millisecond. Each instance maintains an atomic state machine using lock-free Compare-And-Swap (CAS) primitives to guarantee strict sequential ordering without mutex locking. Options include:
+  Defines the monotonic strategy when generating multiple ULIDs within the same millisecond. Each instance maintains its own state (the last generated ULID), guarded by a low-latency test-and-test-and-set (TTAS) lock with CAS acquisition, to guarantee strict sequential ordering across threads. Options include:
   - `NonMonotonic`: Generates fully random 80-bit payloads without state tracking. 
   - `MonotonicIncrement` (Default): Increments the least significant bit of the random payload upon sub-millisecond collisions. 
   - `MonotonicRandom1Byte`, `MonotonicRandom2Byte`, `MonotonicRandom3Byte`, `MonotonicRandom4Byte`: Adds a random integer increment within the specified byte range to the payload, strengthening entropy against enumeration attacks while maintaining monotonicity.

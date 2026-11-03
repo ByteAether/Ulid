@@ -349,6 +349,65 @@ public class UlidStringTests
 	}
 
 	[Fact]
+	public void Parse_RandomInputs_ShouldAgreeAcrossAllEntryPoints()
+	{
+		// Arrange
+		const string alphabet = "0123456789ABCDEFGHJKMNPQRSTVWXYZabcdefghjkmnpqrstvwxyzILOilo";
+		char[] unusual = ['U', 'u', '@', '[', '`', '{', '-', ' ', '\0', '\u007f', '\u0080', 'À', 'ÿ', 'Ā', 'İ', 'ﾀ', '￿'];
+		var random = new Random(20240607);
+		var validCount = 0;
+
+		for (var i = 0; i < 200_000; i++)
+		{
+			var length = random.Next(100) < 90 ? Ulid.UlidStringLength : random.Next(0, 40);
+			var chars = new char[length];
+			var unusualOdds = random.Next(1, 40);
+			for (var k = 0; k < length; k++)
+			{
+				chars[k] = random.Next(unusualOdds) == 0
+					? unusual[random.Next(unusual.Length)]
+					: alphabet[random.Next(alphabet.Length)];
+			}
+
+			if (length == Ulid.UlidStringLength && random.Next(3) == 0)
+			{
+				chars[0] = "01234567"[random.Next(8)];
+			}
+
+			var text = new string(chars);
+			var utf8 = Encoding.UTF8.GetBytes(text);
+
+			// Act
+			var fromString = Ulid.TryParse(text, null, out var ulidFromString);
+			var fromChars = Ulid.TryParse(text.AsSpan(), null, out var ulidFromChars);
+			var fromBytes = Ulid.TryParse(utf8, null, out var ulidFromBytes);
+
+			// Assert
+			Assert.Equal(fromString, fromChars);
+			Assert.Equal(fromString, fromBytes);
+			Assert.Equal(fromString, Ulid.IsValid(text));
+			Assert.Equal(fromString, Ulid.IsValid(text.AsSpan()));
+			Assert.Equal(fromString, Ulid.IsValid(utf8));
+			Assert.Equal(ulidFromString, ulidFromChars);
+			Assert.Equal(ulidFromString, ulidFromBytes);
+
+			if (fromString)
+			{
+				validCount++;
+				Assert.Equal(ulidFromString, Ulid.Parse(ulidFromString.ToString()));
+			}
+			else
+			{
+				Assert.Equal(default, ulidFromString);
+				Assert.Throws<FormatException>(() => Ulid.Parse(text));
+			}
+		}
+
+		// Guards against a generator that would produce no valid input at all
+		Assert.InRange(validCount, 1_000, 199_000);
+	}
+
+	[Fact]
 	public void ToString_WrongLetters_ShouldReplaceWithCorrect()
 	{
 		// Crockford's Base32 substitution test
