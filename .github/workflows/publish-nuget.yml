@@ -18,13 +18,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: |
-          10.x
-          9.x
-          8.x
-          7.x
-          6.x
-          5.x
+        dotnet-version: 10.x
 
     - name: 'Get Version'
       id: version

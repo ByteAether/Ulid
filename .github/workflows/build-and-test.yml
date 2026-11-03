@@ -14,7 +14,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-test:
+  build:
+    name: Build and pack
     runs-on: ubuntu-latest
 
     steps:
@@ -33,6 +34,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore src/ByteAether.Ulid.slnx -p:Configuration=CI-Debug
 
+      - name: Check code style
+        run: dotnet format whitespace src/ByteAether.Ulid.slnx --verify-no-changes --no-restore
+
       - name: Build
         run: dotnet build src/ByteAether.Ulid.slnx --configuration CI-Debug --no-restore
 
@@ -49,40 +53,6 @@ jobs:
             ./**/Cli/bin/**/*.dll
             ./**/Cli/bin/**/ByteAether.Ulid.Cli
 
-      - name: Run framework tests
-        run: |
-          frameworks=(
-            "net10.0"
-            "net9.0"
-            "net8.0"
-            "net7.0"
-            "net6.0"
-            "net5.0"
-            "netstandard2.1"
-            "netstandard2.0"
-          )
-          
-          failed=0
-          for tfm in "${frameworks[@]}"; do
-            echo "::group::Testing $tfm"
-            if ! (cd src && dotnet test ByteAether.Ulid.slnx --configuration CI-Debug -p:ImplTargetFramework=$tfm --results-directory "../TestResults"); then
-              echo "❌ Tests failed for $tfm"
-              failed=1
-            fi
-            echo "::endgroup::"
-          done
-          
-          if [ $failed -eq 1 ]; then
-            echo "One or more target framework tests failed."
-            exit 1
-          fi
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v7
-        with:
-          name: test-results-${{ steps.vars.outputs.sha_short }}
-          path: ./**/TestResults/**/*.trx
-
       - name: Pack
         run: dotnet pack src/ByteAether.Ulid.slnx --configuration CI-Debug -p:ContinuousIntegrationBuild=true -p:PackageVersion=0.0.0-ci-${{ steps.vars.outputs.sha_short }} -p:PackageReleaseNotes="CI Build ${{ steps.vars.outputs.sha_short }}" --output ./output
 
@@ -91,3 +61,72 @@ jobs:
         with:
           name: nugets-${{ steps.vars.outputs.sha_short }}
           path: ./output/*.nupkg
+
+  test:
+    name: Test ${{ matrix.framework }} (CI-Debug)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - net10.0
+          - net9.0
+          - net8.0
+          - net7.0
+          - net6.0
+          - net5.0
+          - netstandard2.1
+          - netstandard2.0
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.x
+
+      - name: Run tests
+        working-directory: src
+        run: dotnet test ByteAether.Ulid.slnx --configuration CI-Debug -p:ImplTargetFramework=${{ matrix.framework }} --results-directory ../TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-CI-Debug-${{ matrix.framework }}
+          path: ./**/TestResults/**/*.trx
+
+  test-release:
+    name: Test ${{ matrix.framework }} (CI-Release)
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - net10.0
+          - net6.0
+          - netstandard2.0
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.x
+
+      - name: Run core tests
+        working-directory: src
+        run: dotnet test Ulid.Tests/Tests.csproj --configuration CI-Release -p:ImplTargetFramework=${{ matrix.framework }} --results-directory ../TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-CI-Release-${{ matrix.framework }}
+          path: ./**/TestResults/**/*.trx
