@@ -34,6 +34,7 @@ dotnet publish src/Ulid.Tests.AotConsole/Tests.AotConsole.csproj --configuration
 ## C# conventions
 
 - Always use file-scoped namespaces. Follow `src/.editorconfig`: tabs, CRLF, braces, naming. Nullable and implicit usings are enabled.
+- Always format every changed file before finishing: run `dotnet format src/ByteAether.Ulid.slnx` (whitespace, code style and import ordering from `src/.editorconfig`) and check with `dotnet format src/ByteAether.Ulid.slnx --verify-no-changes`.
 - For multiline arguments/conditions, put each item on a new line, indented one tab; align the closing `)` with the construct:
   ```csharp
   Call(
