@@ -10,14 +10,14 @@
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.AspNetCore?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.AspNetCore/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.AspNetCore?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.AspNetCore/)
 
-Adds ASP.NET Core support for `ByteAether.Ulid`.
+Adds a `:ulid` route constraint, typed link generation, and OpenAPI schema support for `Ulid` in ASP.NET Core.
 
 ## ✨ Features
 
-- **Route constraints**: register a `:ulid` route parameter policy that accepts only valid ULID values.
-- **JSON support**: `Ulid` and `Ulid?` serialize as canonical 26-character strings without extra configuration in reflection-enabled applications.
-- **OpenAPI support**: expose ULIDs as strings with the `ulid` format in Swashbuckle and ASP.NET Core OpenAPI.
-- **AOT-friendly**: compatible with Native AOT; ASP.NET Core source-generated JSON metadata is required for application types.
+- **`:ulid` route constraint** accepts only valid ULID values.
+- **JSON serialization** writes `Ulid` and `Ulid?` as canonical 26-character strings without extra configuration in reflection-enabled applications.
+- **OpenAPI schemas** expose ULIDs as strings with the `ulid` format, in Swashbuckle and ASP.NET Core OpenAPI.
+- **Native AOT** support requires ASP.NET Core source-generated JSON metadata for application types.
 
 For the core library and full details, see the [GitHub repository](https://github.com/ByteAether/Ulid).
 
@@ -29,9 +29,9 @@ dotnet add package ByteAether.Ulid.AspNetCore
 
 The package depends on `ByteAether.Ulid`. OpenAPI packages are optional and are not added transitively.
 
-## 🚀 Routes and JSON
+## 🚀 Usage
 
-No extra packages are required for route constraints or JSON serialization.
+Route constraints and JSON serialization need no packages besides this one.
 
 ```csharp
 using ByteAether.Ulid;
@@ -54,7 +54,7 @@ Behavior:
 - link generation accepts `Ulid` values for `:ulid` route parameters
 - `Ulid` values in JSON bodies and responses use canonical 26-character strings; nullable values remain JSON `null`
 
-### Native AOT JSON
+### JSON in Native AOT applications
 
 For Native AOT Minimal APIs, include `Ulid` and every request/response type in a source-generated `JsonSerializerContext`, then register that context:
 
@@ -72,7 +72,7 @@ internal partial class AppJsonSerializerContext : JsonSerializerContext
 }
 ```
 
-## 📘 Optional OpenAPI support
+## 📘 OpenAPI support (optional)
 
 Choose the OpenAPI integration you already use. Install only that package; this package does not add either dependency automatically.
 

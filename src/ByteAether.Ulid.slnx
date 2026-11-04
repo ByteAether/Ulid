@@ -63,8 +63,16 @@
     </Project>
   </Folder>
 
-  <Folder Name="/Solution Items/">
+  <Folder Name="/Docs/">
     <File Path="../README.md" />
+    <File Path="../docs/api.md" />
+    <File Path="../docs/design-notes.md" />
+    <File Path="../docs/generation-options.md" />
+    <File Path="../docs/serialization.md" />
+    <File Path="../docs/storage-formats.md" />
+  </Folder>
+
+  <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="Directory.Build.targets" />
