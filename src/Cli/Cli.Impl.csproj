@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <LangVersion>Latest</LangVersion>
     <OutputType>Exe</OutputType>
     <PackAsTool>true</PackAsTool>
