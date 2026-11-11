@@ -19,9 +19,9 @@ public class RelatedChildEntity
 	public string Description { get; set; } = string.Empty;
 }
 
-public class TestDbContext(DbContextOptions<TestDbContext> Options, UlidStorageFormat StorageFormat) : DbContext(Options)
+public class TestDbContext(DbContextOptions<TestDbContext> options, UlidStorageFormat storageFormat) : DbContext(options)
 {
-	public UlidStorageFormat StorageFormat { get; } = StorageFormat;
+	public UlidStorageFormat StorageFormat { get; } = storageFormat;
 
 	public DbSet<TestEntity> TestEntities => Set<TestEntity>();
 	public DbSet<RelatedChildEntity> RelatedChildren => Set<RelatedChildEntity>();

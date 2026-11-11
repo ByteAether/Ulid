@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using CommandLine;
 
@@ -155,6 +156,7 @@ public static class Cli
 		return 0;
 	}
 
+	[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 	private static int ExecuteInspect(IEnumerator<string> ulids, GenerateOptions options, TextWriter stdout, TextWriter stderr)
 	{
 		string? errorMessage = null;

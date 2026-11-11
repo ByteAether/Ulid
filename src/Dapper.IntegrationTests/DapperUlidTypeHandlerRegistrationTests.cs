@@ -18,6 +18,7 @@ public class DapperUlidTypeHandlerRegistrationTests : IDisposable
 	{
 		// Arrange
 		SqlMapper.ResetTypeHandlers();
+		// ReSharper disable once RedundantArgumentDefaultValue
 		DapperUlid.RegisterUlid(UlidStorageFormat.String);
 
 		Ulid? value = Ulid.New();

@@ -21,6 +21,7 @@ public class PseudoRandomProviderTests
 		var threads = Enumerable.Range(0, threadCount)
 			.Select(t => new Thread(() =>
 			{
+				// ReSharper disable once AccessToDisposedClosure
 				barrier.SignalAndWait();
 				for (var i = t * perThread; i < (t + 1) * perThread; i++)
 				{
