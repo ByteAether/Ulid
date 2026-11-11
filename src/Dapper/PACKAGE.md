@@ -2,27 +2,28 @@
 *from ByteAether*
 
 [![License](https://img.shields.io/github/license/ByteAether/Ulid?logo=github&label=License)](https://github.com/ByteAether/Ulid/blob/main/LICENSE)
-![Dapper 2.0.0+](https://img.shields.io/badge/Dapper-2.0.0+-orange)
+![Dapper 2.0.4+](https://img.shields.io/badge/Dapper-2.0.4+-orange)
 [![NuGet Version](https://img.shields.io/nuget/v/ByteAether.Ulid.Dapper?logo=nuget&label=Version)](https://www.nuget.org/packages/ByteAether.Ulid.Dapper/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/ByteAether.Ulid.Dapper?logo=nuget&label=Downloads)](https://www.nuget.org/packages/ByteAether.Ulid.Dapper/)
 
-An official extension package for `ByteAether.Ulid`, providing seamless integration with [Dapper](https://github.com/DapperLib/Dapper). It enables effortless mapping of `Ulid` and `Ulid?` properties to database columns using customizable global persistence strategies.
+An extension package for `ByteAether.Ulid` that maps `Ulid` and `Ulid?` properties to database columns in [Dapper](https://github.com/DapperLib/Dapper) using one of four global storage formats.
 
-For the core library and full details, visit our [GitHub repository](https://github.com/ByteAether/Ulid).
+The core library is documented in the [GitHub repository](https://github.com/ByteAether/Ulid).
 
 ## ✨ Features
+
 ![.NET AOT Ready](https://img.shields.io/badge/.NET-AOT_Ready-blue)
 ![.NET 10.0](https://img.shields.io/badge/.NET-10.0-brightgreen)
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-brightgreen)
 ![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard_2.0-brightgreen)
 
-- **Version Support**: Fully compatible with **[Dapper](https://github.com/DapperLib/Dapper) versions 2.0.0 and newer**.
-- **Automated Configuration**: Register mappings globally across your entire application runtime using a single configuration call.
-- **Flexible Storage Strategies**: Choose how your identifiers are mapped based on your database engine constraints:
-	- `String`: 26-character [Crockford's Base32](https://www.crockford.com/base32.html) string (e.g., `CHAR(26)`). **(Default)**
-	- `Binary`: 16-byte binary payload (e.g., `BINARY(16)`).
-	- `Guid`: Native UUID format (ideal for PostgreSQL `uuid`).
-	- `SqlServerGuid`: Shuffled SQL Server sequential `uniqueidentifier` to maintain native index sorting properties.
+- Compatible with [Dapper](https://github.com/DapperLib/Dapper) **2.0.4 and newer**.
+- **Global registration** maps both `Ulid` and `Ulid?` with one call.
+- **Four storage formats** are available:
+    - **`String`** (default) stores a 26-character [Crockford's Base32](https://www.crockford.com/base32.html) string, for example in a `CHAR(26)` column.
+    - **`Binary`** stores 16 bytes, for example in a `BINARY(16)` column.
+    - **`Guid`** stores a native UUID, for example in a PostgreSQL `uuid` column.
+    - **`SqlServerGuid`** stores a shuffled SQL Server `uniqueidentifier` that keeps the native index order.
 
 ## 💾 Installation
 
@@ -33,13 +34,14 @@ dotnet add package ByteAether.Ulid.Dapper
 
 > [!NOTE]
 > This package automatically includes `ByteAether.Ulid` as a transitive dependency, so installing it separately is unnecessary.
-> If you do install `ByteAether.Ulid` directly, its version must be **greater than or equal to** `ByteAether.Ulid.Dapper`. Referencing an older version will trigger a **NU1605 (Package Downgrade)** build error.
+> If you install `ByteAether.Ulid` directly, its version must be greater than or equal to the version of `ByteAether.Ulid.Dapper`. An older version causes a NU1605 (Package Downgrade) build error; update it or remove the direct reference.
 
 ## 🚀 Usage
 
-Call `DapperUlid.RegisterUlid()` during your application's startup lifecycle (e.g., inside `Program.cs` or a global initialization block) before executing any queries:
+Call `DapperUlid.RegisterUlid()` during application startup, for example in `Program.cs`, before executing any queries:
 
 ```csharp
+using ByteAether.Ulid;
 using ByteAether.Ulid.Dapper;
 
 // Configures the mapping globally using your chosen database storage format.
@@ -47,51 +49,91 @@ using ByteAether.Ulid.Dapper;
 DapperUlid.RegisterUlid(UlidStorageFormat.Binary);
 ```
 
-Once registered, queries executing via Dapper parameters or multi-mapping configurations handle the translation transparently:
+Once registered, Dapper converts `Ulid` parameters and members automatically:
 
 ```csharp
+using System;
+using ByteAether.Ulid;
+using Dapper;
+
 public class User
 {
-    public int Id { get; set; }
-    public Ulid AccountId { get; set; }
-    public Ulid? ManagedById { get; set; }
+	public int Id { get; set; }
+	public Ulid AccountId { get; set; }
+	public Ulid? ManagedById { get; set; }
 }
 
-// Queries execute seamlessly
+// Insert: Ulid and Ulid? values (including null) are converted automatically
+connection.Execute(
+	"INSERT INTO Users (AccountId, ManagedById) VALUES (@AccountId, @ManagedById)",
+	new User { AccountId = Ulid.New(), ManagedById = null }
+);
+
+// Query by Ulid parameter
 var user = connection.QueryFirstOrDefault<User>(
-    "SELECT * FROM Users WHERE AccountId = @Id", 
-    new { Id = myUlid }
+	"SELECT * FROM Users WHERE AccountId = @Id",
+	new { Id = myUlid }
+);
+
+// Time-range query
+var recent = connection.Query<User>(
+	"SELECT * FROM Users WHERE AccountId >= @Min AND AccountId <= @Max",
+	new
+	{
+		Min = Ulid.MinAt(DateTimeOffset.UtcNow.AddDays(-1)),
+		Max = Ulid.MaxAt(DateTimeOffset.UtcNow)
+	}
 );
 ```
 
-## ⚠️ Important Architectural Limitations & Warnings
+Range queries follow the ULID order only for storage formats that preserve it; see the sort order section below.
 
-### 1. No Per-Property / Mixed Mappings
-Unlike full object-relational mappers (like Entity Framework Core) which preserve structural metadata per table column, **Dapper maps .NET types globally via a 1:1 scheme (`Type` → `TypeHandler`)**.
+## ⚠️ Limitations
 
-* **The Rule**: You can choose **exactly one** global strategy for your application lifecycle.
-* **The Constraint**: If you call `RegisterUlid(UlidStorageFormat.String)`, you **cannot** have some tables storing `Ulid` as `BINARY(16)` and others as `VARCHAR(26)` within the same execution path. The last configuration registered will override any previous configuration globally. If a mixed scheme is explicitly required, wrapper primitive types or custom parameter objects must be introduced manually.
+### One format per application
 
-### 2. Range Queries & Sorting Compatibility (`>=`, `<=`, `ORDER BY`)
+Unlike full object-relational mappers such as Entity Framework Core, Dapper maps .NET types globally in a 1:1 scheme (`Type` → `TypeHandler`). An application can use exactly one storage format. If you call `RegisterUlid(UlidStorageFormat.String)`, you cannot also have tables that store `Ulid` as `BINARY(16)` in the same process. The last registration overrides all earlier ones.
 
-While all storage formats are fully supported, their ability to preserve chronological order and execute valid range queries depends on how the underlying database engine handles byte-order comparisons and GUID representations. Because ULIDs rely on a big-endian timestamp for sorting, your choice of database provider determines which formats remain index-friendly:
+If one table needs a different format, pass and read that column as a `string` or `byte[]` and convert it yourself. The registered format then applies only to `Ulid`-typed members and parameters. For example, with `Binary` registered globally and a legacy table that stores `CHAR(26)`:
 
-* **Globally Safe (`String` and `Binary`)**: These formats preserve the raw left-to-right chronological order of ULIDs natively across all database engines (SQLite, PostgreSQL, SQL Server, etc.).
-* **Provider Dependent (`Guid`)**: Standard `.NET Guid` structures use a mixed-endian layout.
-	* **PostgreSQL**: Supported. The connection driver automatically corrects the endianness when mapping to native `uuid` columns, preserving chronological sorting.
-	* **SQLite / Others**: Incompatible for range queries. These engines store GUIDs as raw bytes or text strings, causing standard mixed-endian byte ordering to corrupt chronological comparisons (**though equality lookups remain fully functional**).
-* **SQL Server Specific (`SqlServerGuid`)**: This format explicitly optimizes byte shuffling for Microsoft SQL Server's unique sequential indexing rules.
-	* **Constraint**: This format **only** works as intended if the underlying column is typed as `uniqueidentifier`. Storing it as `BINARY(16)` or `VARCHAR` will break sorting.
-	* **Trade-off**: This byte-shuffling strategy sacrifices cross-database data portability (e.g., directly reading or migrating database rows to PostgreSQL or SQLite) to optimize index page fragmentation and B-tree insertion performance in SQL Server.
+```csharp
+public class LegacyOrder
+{
+	public string Id { get; set; } = string.Empty;
+	public string Name { get; set; } = string.Empty;
+}
 
-> [!CAUTION]
-> Before using `Guid` or `SqlServerGuid` formats for range queries (`>=`, `<=`) or `OrderBy` clauses, verify your database provider's native UUID comparison behavior. Misaligning the format with the engine's native comparison logic will lead to incorrect query ordering and omitted records during range filtering.
+var order = connection.QueryFirstOrDefault<LegacyOrder>(
+	"SELECT Id, Name FROM LegacyOrders WHERE Id = @Id",
+	new { Id = myUlid.ToString() }
+);
 
-## ⚡ Native AOT & Trimming Compatibility
+var orderId = Ulid.Parse(order.Id);
+```
 
-`ByteAether.Ulid.Dapper` introduces no runtime reflection, dynamic IL injection, or dynamic code compilation patterns inside its mapping block. The explicit `SqlMapper.TypeHandler<T>` strategy is fully safe for **Native AOT compilation** and trimming.
+### Sort order by storage format
 
-> Ensure your version of the underlying Dapper framework itself is explicitly configured to support AOT workloads
+The storage format decides whether range queries (`>=`, `<=`) and `ORDER BY` follow the chronological order of the ULIDs. ULIDs sort by a big-endian timestamp, while `System.Guid` is mixed-endian and database engines compare `uuid` and `uniqueidentifier` values with their own rules.
+
+| Format             | Column type        | Range queries and `ORDER BY` follow ULID order                                                                       |
+|--------------------|--------------------|----------------------------------------------------------------------------------------------------------------------|
+| `String` (default) | `CHAR(26)`         | Yes, with a binary or ordinal collation.                                                                             |
+| `Binary`           | `BINARY(16)`       | Yes, on every database engine.                                                                                       |
+| `Guid`             | native `uuid`      | PostgreSQL: yes, the driver corrects the byte order. SQL Server, SQLite and others: no; equality lookups still work. |
+| `SqlServerGuid`    | `uniqueidentifier` | SQL Server: yes, by timestamp to the millisecond. Not portable to other engines.                                     |
+
+- The `SqlServerGuid` column must be `uniqueidentifier`. A `BINARY(16)` or `VARCHAR` column breaks the ordering.
+- `String` columns need a binary or ordinal collation for range queries and `ORDER BY` to follow ULID order.
+- With `SqlServerGuid`, SQL Server compares the random part in a different byte-group order than the ULID does, so IDs generated within the same millisecond can sort differently from their ULID order. Time-window queries built with `Ulid.MinAt` and `Ulid.MaxAt` are exact. Use `String` or `Binary` if you depend on the exact order of IDs generated within one millisecond.
+- `SqlServerGuid` trades cross-database portability for fewer SQL Server index page splits and faster inserts. Rows read or migrated directly into PostgreSQL or SQLite do not contain valid ULID bytes.
+
+See [storage formats](https://github.com/ByteAether/Ulid/blob/main/docs/storage-formats.md) for details on each format.
+
+## ⚡ Native AOT
+
+`ByteAether.Ulid.Dapper` registers explicit `SqlMapper.TypeHandler<T>` classes and uses no reflection or runtime code generation, so it is safe for Native AOT and trimming.
+
+> Dapper's own Native AOT support is configured separately from this package; see [Dapper.AOT](https://github.com/DapperLib/DapperAOT).
 
 ## 📜 License
 

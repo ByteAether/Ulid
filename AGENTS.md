@@ -34,7 +34,7 @@ dotnet publish src/Ulid.Tests.AotConsole/Tests.AotConsole.csproj --configuration
 ## C# conventions
 
 - Always use file-scoped namespaces. Follow `src/.editorconfig`: tabs, CRLF, braces, naming. Nullable and implicit usings are enabled.
-- Always format every changed file before finishing: run `dotnet format src/ByteAether.Ulid.slnx` (whitespace, code style and import ordering from `src/.editorconfig`) and check with `dotnet format src/ByteAether.Ulid.slnx --verify-no-changes`.
+- Always format every changed file before finishing: run `dotnet format src/ByteAether.Ulid.slnx` (whitespace, code style and import ordering from `src/.editorconfig`) and check with `dotnet format src/ByteAether.Ulid.slnx --verify-no-changes`. Note: CI only runs the narrower `dotnet format whitespace src/ByteAether.Ulid.slnx --verify-no-changes --no-restore`, so the full format here is stricter than CI.
 - For multiline arguments/conditions, put each item on a new line, indented one tab; align the closing `)` with the construct:
   ```csharp
   Call(
@@ -44,4 +44,3 @@ dotnet publish src/Ulid.Tests.AotConsole/Tests.AotConsole.csproj --configuration
   ```
 - Preserve all target-framework compatibility; use `src/Compatibility/` where needed. Add/update tests for behavior changes and cover relevant `SupportedImplFrameworks`.
 - Omit contextually implied domain terms from identifier and file names (e.g., `Transformer` over `UlidTransformer`), reserving specific prefixes solely for disambiguating multiple types in the same scope (e.g., `UlidConstraint` vs. `GuidConstraint`).
-- Add/update tests for behavior changes and cover relevant `SupportedImplFrameworks`.

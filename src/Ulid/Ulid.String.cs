@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+// ReSharper disable RedundantExtendsListEntry
 #if NET7_0_OR_GREATER
 using System.Runtime.Intrinsics;
 #endif
@@ -265,6 +266,7 @@ public readonly partial struct Ulid
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Ulid Parse(string s, IFormatProvider? provider = null)
 	{
+		// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 		if (s is null)
 		{
 			ThrowNullString();
