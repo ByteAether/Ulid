@@ -15,7 +15,6 @@
     <Description>Official CLI companion tool and library for ByteAether.Ulid. Provides generation and inspection of Universally Unique Lexicographically Sortable Identifiers (ULIDs) with support for custom timestamps, time bytes, and random bytes, formatted for terminal and script interop.</Description>
 
     <PackageId>ByteAether.Ulid.Cli</PackageId>
-    <Version Condition="'$(PackageVersion)' != ''">$(PackageVersion)</Version>
     <PackageIcon>logo_ulid_tool.png</PackageIcon>
     <PackageTags>ulid;cli;tool;dotnet-tool;generator;inspector;crockford-base32;guid;unique-id;csharp</PackageTags>
     <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
