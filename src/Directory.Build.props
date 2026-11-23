@@ -20,8 +20,8 @@
     <RepositoryUrl>https://github.com/ByteAether/Ulid</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
 
-    <PackageProjectUrl>$(RepositoryUrl)/tree/v$(PackageVersion)</PackageProjectUrl>
-    <PackageReleaseNotes>See $(RepositoryUrl)/releases/tag/v$(PackageVersion)</PackageReleaseNotes>
+    <PackageProjectUrl>$(RepositoryUrl)/tree/v$(Version)</PackageProjectUrl>
+    <PackageReleaseNotes>See $(RepositoryUrl)/releases/tag/v$(Version)</PackageReleaseNotes>
 
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
 
